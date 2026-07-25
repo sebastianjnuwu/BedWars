@@ -28,9 +28,10 @@ delete:
 list:
   empty: "Nenhuma arena cadastrada."
   header: "Arenas ({0}):"
-  entry: " - {0} {1}"
-  status_ok: "[mapa OK]"
-  status_missing: "[sem mapa]"
+  entry: " - {0}: {1}"
+  status_ready: "§a[Pronta para Jogar]"
+  status_incomplete: "§e[Configuração Incompleta]"
+  status_missing_map: "§c[Sem Mapa]"
 
 # ── save ──────────────────────────────
 save:

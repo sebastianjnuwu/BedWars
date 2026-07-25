@@ -100,6 +100,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             return;
         }
         try {
+            this.restoreOriginalBlocks(arena);
             final Location pos1 = new Location(
                     world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
             final Location pos2 = new Location(
@@ -122,6 +123,25 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             }
         } catch (final Exception e) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error", e.getMessage()));
+        }
+    }
+
+    private void restoreOriginalBlocks(final Arena arena) {
+        if (arena.getArenaSpawn() != null && arena.getSpawnBlockData() != null) {
+            final var b = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0);
+            b.setBlockData(Bukkit.createBlockData(arena.getSpawnBlockData()), false);
+        }
+        for (final var team : arena.getTeams()) {
+            if (team.getSpawn() != null && team.getSpawnBlockData() != null) {
+                final var b = team.getSpawn().getBlock().getRelative(0, -1, 0);
+                b.setBlockData(Bukkit.createBlockData(team.getSpawnBlockData()), false);
+            }
+        }
+        for (final var gen : arena.getGenerators()) {
+            if (gen.getOriginBlockData() != null) {
+                final var b = gen.getLocation().getBlock().getRelative(0, -1, 0);
+                b.setBlockData(Bukkit.createBlockData(gen.getOriginBlockData()), false);
+            }
         }
     }
 }

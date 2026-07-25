@@ -129,27 +129,18 @@ public class ArenaListener implements Listener {
         if (!this.editorManager.isEditing(player, arena.getName())) return;
 
         final Block block = event.getBlock();
-        if (this.tryRestoreArenaSpawn(arena, block)) return;
-        if (this.tryRestoreTeamSpawn(arena, block)) return;
-        if (this.tryRestoreBed(arena, block)) return;
-        this.tryRestoreGenerator(arena, block);
+        if (this.tryRestoreArenaSpawn(arena, block, event)) return;
+        if (this.tryRestoreTeamSpawn(arena, block, event)) return;
+        if (this.tryRestoreBed(arena, block, event)) return;
+        this.tryRestoreGenerator(arena, block, event);
     }
 
-    /**
-     * Tenta restaurar o bloco de spawn da arena quando ele é quebrado no modo edição.
-     * <p>
-     * Se o bloco quebrado estiver localizado abaixo do marcador de spawn da arena,
-     * o bloco original é restaurado e o spawn da arena é removido.
-     * </p>
-     *
-     * @param arena a arena sendo editada (não nula)
-     * @param block o bloco quebrado (não nulo)
-     * @return {@code true} se o spawn da arena foi restaurado, {@code false} caso contrário
-     */
-    private boolean tryRestoreArenaSpawn(final Arena arena, final Block block) {
+    private boolean tryRestoreArenaSpawn(final Arena arena, final Block block, final BlockBreakEvent event) {
         if (arena.getArenaSpawn() == null || arena.getSpawnBlockData() == null) return false;
         final Location spawnBlock = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0).getLocation();
         if (!this.isSameBlock(spawnBlock, block.getLocation())) return false;
+        event.setCancelled(true);
+        event.setDropItems(false);
         block.setBlockData(org.bukkit.Bukkit.createBlockData(arena.getSpawnBlockData()), false);
         arena.setArenaSpawn(null);
         arena.setSpawnBlockData(null);
@@ -160,22 +151,13 @@ public class ArenaListener implements Listener {
         return true;
     }
 
-    /**
-     * Tenta restaurar o bloco de spawn de um time quando ele é quebrado no modo edição.
-     * <p>
-     * Itera sobre todos os times da arena. Se o bloco quebrado estiver abaixo do
-     * marcador de spawn de algum time, o bloco original é restaurado e o spawn do time é removido.
-     * </p>
-     *
-     * @param arena a arena sendo editada (não nula)
-     * @param block o bloco quebrado (não nulo)
-     * @return {@code true} se o spawn de algum time foi restaurado, {@code false} caso contrário
-     */
-    private boolean tryRestoreTeamSpawn(final Arena arena, final Block block) {
+    private boolean tryRestoreTeamSpawn(final Arena arena, final Block block, final BlockBreakEvent event) {
         for (final ArenaTeam team : arena.getTeams()) {
             if (team.getSpawn() == null || team.getSpawnBlockData() == null) continue;
             final Location markerLoc = team.getSpawn().getBlock().getRelative(0, -1, 0).getLocation();
             if (!this.isSameBlock(markerLoc, block.getLocation())) continue;
+            event.setCancelled(true);
+            event.setDropItems(false);
             block.setBlockData(org.bukkit.Bukkit.createBlockData(team.getSpawnBlockData()), false);
             team.setSpawn(null);
             team.setSpawnBlockData(null);
@@ -188,22 +170,13 @@ public class ArenaListener implements Listener {
         return false;
     }
 
-    /**
-     * Tenta restaurar a cama de um time quando ela é quebrada no modo edição.
-     * <p>
-     * Se o bloco quebrado for uma cama e pertencer a algum time da arena,
-     * a cama é removida e o bloco é substituído por ar.
-     * </p>
-     *
-     * @param arena a arena sendo editada (não nula)
-     * @param block o bloco quebrado (não nulo)
-     * @return {@code true} se a cama de algum time foi removida, {@code false} caso contrário
-     */
-    private boolean tryRestoreBed(final Arena arena, final Block block) {
+    private boolean tryRestoreBed(final Arena arena, final Block block, final BlockBreakEvent event) {
         if (!(block.getBlockData() instanceof Bed)) return false;
         for (final ArenaTeam team : arena.getTeams()) {
             if (team.getBed() == null) continue;
             if (!this.isSameBlock(team.getBed(), block.getLocation())) continue;
+            event.setCancelled(true);
+            event.setDropItems(false);
             block.setType(Material.AIR, false);
             team.setBed(null);
             team.setBedFacing(null);
@@ -216,38 +189,17 @@ public class ArenaListener implements Listener {
         return false;
     }
 
-    /**
-     * Tenta restaurar o gerador quando ele é quebrado no modo edição.
-     * <p>
-     * Itera sobre a lista de geradores da arena. Se o bloco quebrado corresponder
-     * à localização do gerador ou ao bloco acima dele, o bloco original é restaurado
-     * e o gerador é removido da lista.
-     * </p>
-     *
-     * @param arena a arena sendo editada (não nula)
-     * @param block o bloco quebrado (não nulo)
-     */
-    private void tryRestoreGenerator(final Arena arena, final Block block) {
+    private void tryRestoreGenerator(final Arena arena, final Block block, final BlockBreakEvent event) {
         final List<ArenaGenerator> gens = arena.getGenerators();
         for (int i = 0; i < gens.size(); i++) {
             final ArenaGenerator gen = gens.get(i);
             final Location loc = gen.getLocation();
-            if (this.isSameBlock(loc, block.getLocation())) {
+            final Location below = loc.getBlock().getRelative(0, -1, 0).getLocation();
+            if (this.isSameBlock(loc, block.getLocation()) || this.isSameBlock(below, block.getLocation())) {
+                event.setCancelled(true);
+                event.setDropItems(false);
                 if (gen.getOriginBlockData() != null) {
-                    block.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
-                }
-                this.removeForgeHologram(gen);
-                arena.getGenerators().remove(i);
-                this.arenaManager.save(arena);
-                block.getWorld().getPlayers().stream()
-                        .filter(p -> p.getWorld().equals(block.getWorld()))
-                        .forEach(p -> p.sendMessage(Component.text("Gerador de " + gen.getType() + " removido!", NamedTextColor.YELLOW)));
-                return;
-            }
-            final Location above = loc.clone().add(0, 1, 0);
-            if (this.isSameBlock(above, block.getLocation())) {
-                if (gen.getOriginBlockDataAbove() != null) {
-                    block.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockDataAbove()), false);
+                    below.getBlock().setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
                 }
                 this.removeForgeHologram(gen);
                 arena.getGenerators().remove(i);

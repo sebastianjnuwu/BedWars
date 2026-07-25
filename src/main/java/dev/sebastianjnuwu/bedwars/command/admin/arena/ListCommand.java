@@ -69,9 +69,21 @@ public class ListCommand extends BaseCommand implements SubCommand {
         sender.sendMessage(this.lang.text(NamedTextColor.GOLD, "list.header", String.valueOf(names.size())));
         for (final String name : names) {
             final boolean hasFile = new File(this.mapsFolder, name + ".bwmap").exists();
-            final String status = hasFile
-                    ? this.lang.raw("list.status_ok")
-                    : this.lang.raw("list.status_missing");
+            final var arena = this.arenaManager.get(name);
+            
+            final String status;
+            if (!hasFile) {
+                status = this.lang.raw("list.status_missing_map");
+            } else if (arena == null) {
+                status = "§c[Erro]";
+            } else {
+                final java.util.List<String> missing = this.gameManager.validateArena(arena);
+                if (missing.isEmpty()) {
+                    status = this.lang.raw("list.status_ready");
+                } else {
+                    status = this.lang.raw("list.status_incomplete");
+                }
+            }
             sender.sendMessage(this.lang.text("list.entry", name, status));
         }
     }

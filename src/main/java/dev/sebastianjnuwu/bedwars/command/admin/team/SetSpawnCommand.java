@@ -47,9 +47,27 @@ public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
         final Location loc = player.getLocation();
         team.setSpawn(loc);
         final var spawnBlock = loc.getBlock().getRelative(0, -1, 0);
-        team.setSpawnBlockData(spawnBlock.getBlockData().getAsString());
-        spawnBlock.setType(Material.WHITE_WOOL);
+        if (team.getSpawnBlockData() == null) {
+            team.setSpawnBlockData(spawnBlock.getBlockData().getAsString());
+        }
+        final Material woolMaterial = this.getWoolMaterial(team.getColor());
+        spawnBlock.setType(woolMaterial);
         this.arenaManager.save(arena);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.setspawn_success", colorName));
+    }
+
+    private Material getWoolMaterial(final String dyeColor) {
+        if (dyeColor == null) return Material.WHITE_WOOL;
+        return switch (dyeColor.toUpperCase()) {
+            case "RED" -> Material.RED_WOOL;
+            case "BLUE" -> Material.BLUE_WOOL;
+            case "GREEN" -> Material.GREEN_WOOL;
+            case "YELLOW" -> Material.YELLOW_WOOL;
+            case "PURPLE" -> Material.PURPLE_WOOL;
+            case "PINK" -> Material.PINK_WOOL;
+            case "ORANGE" -> Material.ORANGE_WOOL;
+            case "CYAN" -> Material.CYAN_WOOL;
+            default -> Material.WHITE_WOOL;
+        };
     }
 }

@@ -36,7 +36,9 @@ public class SpawnCommand extends BaseCommand implements ArenaSubCommand {
         final Location loc = player.getLocation();
         arena.setArenaSpawn(loc);
         final var spawnBlock = loc.getBlock().getRelative(0, -1, 0);
-        arena.setSpawnBlockData(spawnBlock.getBlockData().getAsString());
+        if (arena.getSpawnBlockData() == null) {
+            arena.setSpawnBlockData(spawnBlock.getBlockData().getAsString());
+        }
         spawnBlock.setType(Material.EMERALD_BLOCK);
         this.arenaManager.save(arena);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.spawn_success",
