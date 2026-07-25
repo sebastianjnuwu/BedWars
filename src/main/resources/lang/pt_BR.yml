@@ -138,6 +138,8 @@ game:
   you_eliminated: "Seu time foi eliminado!"
   team_wins: "TIME {0} VENCEU A PARTIDA!"
   cant_break_own_bed: "Voce nao pode quebrar a cama do seu proprio time!"
+  cant_open_inventory: "Voce nao pode abrir inventarios durante a partida!"
+  commands_blocked: "Voce nao pode usar comandos durante a partida!"
   bed_destroyed: "§c{0} §7destruiu a cama do time §c{1}§7!"
   respawned: "§aVoce reviveu!"
   no_bed: "Sua cama foi destruida! Aguarde o fim da partida."

@@ -55,6 +55,17 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private BukkitTask countdownTask;
     private int countdownSeconds;
 
+    /**
+     * Constrói uma nova instância de partida para a arena informada.
+     * <p>
+     * Inicializa todos os mapas internos e define o estado inicial como
+     * {@link GameState#WAITING}. Os times são populados a partir da configuração
+     * da arena — cada time começa com a lista de jogadores vazia.
+     * </p>
+     *
+     * @param gameManager gerenciador de partidas que controla esta instância (não nulo)
+     * @param arena       configuração da arena onde a partida será realizada (não nula)
+     */
     public Game(final GameManager gameManager, final Arena arena) {
         this.gameManager = gameManager;
         this.lang = gameManager.getLang();
@@ -73,6 +84,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
     }
 
+    /**
+     * Retorna a arena associada a esta partida.
+     *
+     * @return a arena (não nula)
+     */
     public Arena getArena() {
         return this.arena;
     }
@@ -164,6 +180,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     public void leave(final Player player) {
+        // Durante ENDING o cleanup já foi feito pelo endGame() — ignora
+        if (this.state == GameState.ENDING) return;
+
         final BukkitTask task = this.respawnTasks.remove(player.getUniqueId());
         if (task != null) {
             task.cancel();

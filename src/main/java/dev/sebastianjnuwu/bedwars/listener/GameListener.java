@@ -18,9 +18,17 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
@@ -112,6 +120,16 @@ public class GameListener implements Listener {
         }
     }
 
+    /**
+     * Mata instantaneamente jogadores em partida que caem no vazio.
+     * <p>
+     * Cancela o dano natural do vazio e define a vida para zero, garantindo
+     * que o {@link PlayerDeathEvent} seja disparado normalmente para que a
+     * lógica de kill/respawn do jogo seja executada.
+     * </p>
+     *
+     * @param event o evento de dano (não nulo)
+     */
     @EventHandler
     public void onVoidDamage(final EntityDamageEvent event) {
         if (!(event.getEntity() instanceof final Player player)) return;
@@ -123,11 +141,28 @@ public class GameListener implements Listener {
         player.setHealth(0);
     }
 
+    /**
+     * Manipula a quebra de blocos durante a partida.
+     * <p>
+     * Spectators e jogadores mortos não podem quebrar nenhum bloco. Para jogadores
+     * vivos, o único bloco com tratamento especial é a cama: se for a cama do próprio
+     * time o evento é cancelado; se for a cama de um time inimigo, a lógica de
+     * destruição de cama é acionada via {@link Game#breakBed(ArenaTeam)}.
+     * </p>
+     *
+     * @param event o evento de quebra de bloco (não nulo)
+     */
     @EventHandler
     public void onBlockBreak(final BlockBreakEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null) return;
+
+        // Spectators e jogadores mortos não podem quebrar blocos
+        if (!game.isPlaying(player)) {
+            event.setCancelled(true);
+            return;
+        }
 
         final Block block = event.getBlock();
         if (!(block.getBlockData() instanceof final Bed bedData)) return;
@@ -165,6 +200,15 @@ public class GameListener implements Listener {
         }
     }
 
+    /**
+     * Impede que jogadores em partida cliquem com o botão direito em camas.
+     * <p>
+     * Sem esse bloqueio o jogador tentaria dormir, o que lança uma exceção
+     * ou exibe mensagem estranha em mundos sem ciclo de noite/dia.
+     * </p>
+     *
+     * @param event o evento de interação (não nulo)
+     */
     @EventHandler
     public void onPlayerInteract(final PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
@@ -176,6 +220,17 @@ public class GameListener implements Listener {
         event.setCancelled(true);
     }
 
+    /**
+     * Envia a mensagem e o título de destruição de cama para todos os jogadores da partida.
+     * <p>
+     * Apenas players que pertencem a algum time recebem a mensagem. O título
+     * é exibido somente para os membros do time que perdeu a cama.
+     * </p>
+     *
+     * @param breaker o jogador que destruiu a cama (não nulo)
+     * @param game    a partida em andamento (não nula)
+     * @param team    o time que teve a cama destruída (não nulo)
+     */
     private void broadcastBedBreak(final Player breaker, final Game game, final ArenaTeam team) {
         final Component msg = this.lang.text(NamedTextColor.RED, "game.bed_destroyed", breaker.getName(), team.getName().toUpperCase());
         final Title title = Title.title(
@@ -193,6 +248,139 @@ public class GameListener implements Listener {
         }
     }
 
+    /**
+     * Impede que jogadores em partida abram inventários externos (baús, fornalhas, etc.).
+     * O inventário próprio do jogador (PLAYER) é sempre permitido.
+     *
+     * @param event o evento de abertura de inventário (não nulo)
+     */
+    @EventHandler
+    public void onInventoryOpen(final InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof final Player player)) return;
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) return;
+
+        // Permite apenas o próprio inventário do jogador
+        if (event.getInventory().getType() == InventoryType.PLAYER
+                || event.getInventory().getType() == InventoryType.CRAFTING) {
+            return;
+        }
+
+        event.setCancelled(true);
+        player.sendMessage(this.lang.text(NamedTextColor.RED, "game.cant_open_inventory"));
+    }
+
+    /**
+     * Impede cliques em inventários externos durante a partida.
+     * Garante que jogadores não manipulem baús ou outros contêineres mesmo
+     * que o evento de abertura seja bypassado.
+     *
+     * @param event o evento de clique em inventário (não nulo)
+     */
+    @EventHandler
+    public void onInventoryClick(final InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof final Player player)) return;
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) return;
+
+        // Permite apenas interações no inventário próprio do jogador
+        final InventoryType topType = event.getView().getTopInventory().getType();
+        if (topType == InventoryType.PLAYER || topType == InventoryType.CRAFTING) {
+            return;
+        }
+
+        event.setCancelled(true);
+    }
+
+    /**
+     * Cancela dano entre jogadores do mesmo time (friendly fire).
+     *
+     * @param event o evento de dano por entidade (não nulo)
+     */
+    @EventHandler
+    public void onEntityDamageByEntity(final EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof final Player victim)) return;
+        if (!(event.getDamager() instanceof final Player attacker)) return;
+
+        final Game game = this.gameManager.getPlayerGame(victim);
+        if (game == null) return;
+
+        final ArenaTeam victimTeam = game.getPlayerTeam(victim);
+        final ArenaTeam attackerTeam = game.getPlayerTeam(attacker);
+
+        if (victimTeam != null && attackerTeam != null
+                && victimTeam.getName().equals(attackerTeam.getName())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Bloqueia comandos durante a partida, exceto /bw.
+     *
+     * @param event o evento de comando (não nulo)
+     */
+    @EventHandler
+    public void onPlayerCommand(final PlayerCommandPreprocessEvent event) {
+        final Player player = event.getPlayer();
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) return;
+
+        final String cmd = event.getMessage().toLowerCase();
+        if (cmd.startsWith("/bw") || cmd.startsWith("/bedwars")) return;
+
+        event.setCancelled(true);
+        player.sendMessage(this.lang.text(NamedTextColor.RED, "game.commands_blocked"));
+    }
+
+    /**
+     * Impede que jogadores em partida dropem itens com a tecla Q.
+     * Sem isso o item some permanentemente do inventário.
+     */
+    @EventHandler
+    public void onPlayerDropItem(final PlayerDropItemEvent event) {
+        final Player player = event.getPlayer();
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) return;
+        event.setCancelled(true);
+    }
+
+    /**
+     * Impede que spectators (mortos / eliminados) peguem itens do chão.
+     * Jogadores vivos podem coletar normalmente.
+     */
+    @EventHandler
+    public void onPlayerPickupItem(final PlayerPickupItemEvent event) {
+        final Player player = event.getPlayer();
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) return;
+        if (!game.isPlaying(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Impede que spectators (mortos / eliminados) coloquem blocos.
+     * Jogadores vivos já são tratados pela lógica normal do jogo.
+     */
+    @EventHandler
+    public void onBlockPlace(final BlockPlaceEvent event) {
+        final Player player = event.getPlayer();
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) return;
+        if (!game.isPlaying(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Manipula a saída do jogador do servidor durante uma partida.
+     * <p>
+     * Delega ao {@link dev.sebastianjnuwu.bedwars.manager.GameManager#leaveGame(Player)}
+     * para limpar o estado do jogador e recalcular a condição de vitória.
+     * </p>
+     *
+     * @param event o evento de saída (não nulo)
+     */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent event) {
         final Player player = event.getPlayer();
@@ -201,6 +389,13 @@ public class GameListener implements Listener {
         }
     }
 
+    /**
+     * Verifica se duas localizações referem-se ao mesmo bloco (mesmo mundo e coordenadas inteiras).
+     *
+     * @param a primeira localização (não nula)
+     * @param b segunda localização (não nula)
+     * @return {@code true} se ambas apontam para o mesmo bloco
+     */
     private boolean isSameBlock(final Location a, final Location b) {
         return a.getWorld().equals(b.getWorld())
                 && a.getBlockX() == b.getBlockX()
