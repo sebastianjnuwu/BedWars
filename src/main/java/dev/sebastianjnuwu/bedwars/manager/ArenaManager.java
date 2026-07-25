@@ -3,19 +3,25 @@ package dev.sebastianjnuwu.bedwars.manager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand;
+import dev.sebastianjnuwu.bedwars.util.LocationUtil;
+import dev.sebastianjnuwu.bedwars.world.Schematic;
+import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.configuration.file.YamlConfiguration;
-
-import java.util.List;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,12 +36,6 @@ public class ArenaManager {
     private final File arenasFolder;
     private final File mapsFolder;
 
-    /**
-     * Cria o gerenciador de arenas.
-     *
-     * @param plugin     instância do plugin
-     * @param mapsFolder pasta onde os schematics .bwmap são salvos
-     */
     public ArenaManager(final JavaPlugin plugin, final File mapsFolder) {
         this.plugin = plugin;
         this.arenas = new HashMap<>();
@@ -44,9 +44,6 @@ public class ArenaManager {
         this.arenasFolder.mkdirs();
     }
 
-    /**
-     * Carrega todas as arenas dos arquivos na pasta arenas/.
-     */
     public void load() {
         this.arenas.clear();
         final File[] files = this.arenasFolder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -55,87 +52,165 @@ public class ArenaManager {
         }
         for (final File file : files) {
             final String name = file.getName().replace(".yml", "");
-            final YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-            final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
-            arena.setEnabled(config.getBoolean("enabled", false));
-
-            if (config.contains("lobby")) {
-                arena.setLobby(this.parseLocation(config.getString("lobby")));
-            }
-            if (config.contains("world")) {
-                arena.setWorldName(config.getString("world"));
-            }
-            if (config.contains("paste")) {
-                final String[] parts = config.getString("paste").split(",");
-                arena.setPaste(
-                        Integer.parseInt(parts[0]),
-                        Integer.parseInt(parts[1]),
-                        Integer.parseInt(parts[2])
-                );
-            }
-            if (config.contains("schematic_size")) {
-                final String[] parts = config.getString("schematic_size").split(",");
-                arena.setSchematicSize(
-                        Integer.parseInt(parts[0]),
-                        Integer.parseInt(parts[1]),
-                        Integer.parseInt(parts[2])
-                );
-            }
-            if (config.contains("arena_spawn")) {
-                arena.setArenaSpawn(this.parseLocation(config.getString("arena_spawn")));
-            }
-            if (config.contains("spawn_block")) {
-                arena.setSpawnBlockData(config.getString("spawn_block"));
-            }
-            arena.setMinPlayers(config.getInt("min_players", 2));
-            arena.setCountdown(config.getInt("countdown", 15));
-            if (config.contains("teams")) {
-                for (final String key : config.getConfigurationSection("teams").getKeys(false)) {
-                    final String path = "teams." + key;
-                    final var team = new dev.sebastianjnuwu.bedwars.model.ArenaTeam(key, config.getString(path + ".color"));
-                    if (config.contains(path + ".spawn")) {
-                        team.setSpawn(this.parseLocation(config.getString(path + ".spawn")));
-                    }
-                    if (config.contains(path + ".spawn_block")) {
-                        team.setSpawnBlockData(config.getString(path + ".spawn_block"));
-                    }
-                    if (config.contains(path + ".bed")) {
-                        team.setBed(this.parseLocation(config.getString(path + ".bed")));
-                    }
-                    if (config.contains(path + ".bed_facing")) {
-                        team.setBedFacing(config.getString(path + ".bed_facing"));
-                    }
-                    arena.addTeam(team);
-                }
-            }
-            if (config.contains("generators")) {
-                for (final String key : config.getConfigurationSection("generators").getKeys(false)) {
-                    final String path = "generators." + key;
-                    final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(
-                            config.getString(path + ".type"),
-                            this.parseLocation(config.getString(path + ".location"))
-                    );
-                    if (config.contains(path + ".origin_block")) {
-                        gen.setOriginBlockData(config.getString(path + ".origin_block"));
-                    }
-                    if (config.contains(path + ".origin_block_above")) {
-                        gen.setOriginBlockDataAbove(config.getString(path + ".origin_block_above"));
-                    }
-                    arena.addGenerator(gen);
-                }
-            }
-
-            this.arenas.put(name, arena);
+            this.arenas.put(name, this.loadArenaFromFile(name, file));
         }
         this.plugin.getLogger().info("Arenas carregadas: " + this.arenas.size());
     }
 
     /**
-     * Salva uma arena específica no arquivo arenas/&lt;nome&gt;.yml.
-     *
-     * @param arena arena a ser salva
+     * Recarrega uma arena do disco, atualizando locations quando o mundo estiver carregado.
      */
+    public void reload(final String name) {
+        final File file = new File(this.arenasFolder, name + ".yml");
+        if (!file.exists()) {
+            return;
+        }
+        this.arenas.put(name, this.loadArenaFromFile(name, file));
+    }
+
+    /**
+     * Garante que o mundo da arena está carregado e recarrega os dados do yml.
+     */
+    public boolean ensureArenaReady(final Arena arena) {
+        if (arena == null) {
+            return false;
+        }
+        final World world = this.ensureWorldLoaded(arena);
+        if (world == null) {
+            return false;
+        }
+        this.reload(arena.getName());
+        final Arena refreshed = this.get(arena.getName());
+        return refreshed != null && refreshed.getArenaSpawn() != null;
+    }
+
+    /**
+     * Repasta o schematic e recarrega a configuração da arena após uma partida.
+     */
+    public boolean resetArenaMap(final String name) {
+        final Arena arena = this.get(name);
+        if (arena == null) {
+            return false;
+        }
+        final File mapFile = this.getMapFile(name);
+        if (mapFile == null) {
+            return false;
+        }
+        final World world = this.ensureWorldLoaded(arena);
+        if (world == null) {
+            return false;
+        }
+        try {
+            final Schematic schematic = Schematic.load(mapFile);
+            final Location pasteLocation = LocationUtil.getPasteLocation(arena, world);
+            schematic.paste(pasteLocation);
+            // Reload first so showMarkerBlocks uses fresh data from disk
+            this.reload(name);
+            this.showMarkerBlocks(this.get(name));
+            // Do NOT save here — the file already has correct generator data;
+            // saving would risk overwriting it with a partially-populated in-memory object.
+            return true;
+        } catch (final IOException e) {
+            this.plugin.getLogger().severe("Erro ao resetar arena " + name + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public @Nullable File getMapFile(final String name) {
+        File file = new File(this.mapsFolder, name + ".schem");
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name + ".schematic");
+        }
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name + ".bwmap");
+        }
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name + ".nbt");
+        }
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name);
+        }
+        return file.exists() ? file : null;
+    }
+
+    public @Nullable World ensureWorldLoaded(final Arena arena) {
+        String worldName = arena.getWorldName();
+        if (worldName == null || worldName.isBlank()) {
+            worldName = "bw_" + arena.getName();
+        }
+        World world = Bukkit.getWorld(worldName);
+        if (world != null) {
+            return world;
+        }
+        final File mapFile = this.getMapFile(arena.getName());
+        if (mapFile == null) {
+            return null;
+        }
+        final WorldCreator wc = new WorldCreator(worldName);
+        wc.generator(new VoidGenerator());
+        world = wc.createWorld();
+        if (world == null) {
+            return null;
+        }
+        try {
+            final Schematic schematic = Schematic.load(mapFile);
+            final Location pasteLocation = LocationUtil.getPasteLocation(arena, world);
+            schematic.paste(pasteLocation);
+            world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
+            arena.setWorldName(worldName);
+            this.save(arena);
+            this.reload(arena.getName());
+            return world;
+        } catch (final IOException e) {
+            this.plugin.getLogger().severe("Erro ao carregar mundo da arena " + arena.getName() + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    public void showMarkerBlocks(final Arena arena) {
+        if (arena == null) {
+            return;
+        }
+        if (arena.getArenaSpawn() != null) {
+            final var block = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0);
+            if (arena.getSpawnBlockData() == null) {
+                arena.setSpawnBlockData(block.getBlockData().getAsString());
+            }
+            block.setType(Material.EMERALD_BLOCK, false);
+        }
+        for (final ArenaTeam team : arena.getTeams()) {
+            if (team.getSpawn() != null) {
+                final var block = team.getSpawn().getBlock().getRelative(0, -1, 0);
+                if (team.getSpawnBlockData() == null) {
+                    team.setSpawnBlockData(block.getBlockData().getAsString());
+                }
+                block.setType(SetSpawnCommand.getSpawnMarkerMaterial(team.getColor()), false);
+            }
+        }
+        for (final ArenaGenerator generator : arena.getGenerators()) {
+            if (generator.getLocation() == null) {
+                continue;
+            }
+            final var below = generator.getLocation().getBlock().getRelative(0, -1, 0);
+            if (generator.getOriginBlockData() == null) {
+                generator.setOriginBlockData(below.getBlockData().getAsString());
+            }
+            final Material marker = this.getGeneratorMarker(generator.getType());
+            below.setType(marker, false);
+        }
+    }
+
+    private Material getGeneratorMarker(final String type) {
+        return switch (type.toLowerCase()) {
+            case "iron"    -> Material.IRON_ORE;
+            case "gold"    -> Material.GOLD_ORE;
+            case "diamond" -> Material.DIAMOND_ORE;
+            case "emerald" -> Material.EMERALD_ORE;
+            case "forge"   -> Material.BLAST_FURNACE;
+            default        -> Material.SPONGE;
+        };
+    }
+
     public void save(final Arena arena) {
         final File file = new File(this.arenasFolder, arena.getName() + ".yml");
         final YamlConfiguration config = new YamlConfiguration();
@@ -185,6 +260,9 @@ public class ArenaManager {
             final String path = "generators." + i;
             config.set(path + ".type", gen.getType());
             config.set(path + ".location", this.serializeLocation(gen.getLocation()));
+            if (gen.getTeam() != null) {
+                config.set(path + ".team", gen.getTeam());
+            }
             if (gen.getOriginBlockData() != null) {
                 config.set(path + ".origin_block", gen.getOriginBlockData());
             }
@@ -200,28 +278,18 @@ public class ArenaManager {
         }
     }
 
-    /**
-     * Cria uma nova arena com o nome especificado.
-     *
-     * @param name nome da arena
-     * @return a arena criada, ou null se já existir
-     */
     public Arena create(final String name) {
         if (this.arenas.containsKey(name)) {
             return null;
         }
         final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
+        arena.setMinPlayers(2);
+        arena.setCountdown(3);
         this.arenas.put(name, arena);
         this.save(arena);
         return arena;
     }
 
-    /**
-     * Deleta uma arena e seus arquivos.
-     *
-     * @param name nome da arena
-     * @return true se foi deletada
-     */
     public boolean delete(final String name) {
         final Arena arena = this.arenas.remove(name);
         if (arena == null) {
@@ -241,27 +309,111 @@ public class ArenaManager {
         return true;
     }
 
-    /**
-     * Retorna uma arena pelo nome.
-     *
-     * @param name nome da arena
-     * @return a arena ou null
-     */
     public Arena get(final String name) {
         return this.arenas.get(name);
     }
 
-    /**
-     * Retorna todas as arenas registradas.
-     *
-     * @return conjunto de nomes
-     */
     public Set<String> getNames() {
         return Collections.unmodifiableSet(this.arenas.keySet());
     }
 
     public Collection<Arena> getAll() {
         return Collections.unmodifiableCollection(this.arenas.values());
+    }
+
+    public File getMapsFolder() {
+        return this.mapsFolder;
+    }
+
+    private Arena loadArenaFromFile(final String name, final File file) {
+        final YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+        final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
+        arena.setEnabled(config.getBoolean("enabled", false));
+
+        if (config.contains("lobby")) {
+            arena.setLobby(this.parseLocation(config.getString("lobby")));
+        }
+        if (config.contains("world")) {
+            arena.setWorldName(config.getString("world"));
+        }
+        if (config.contains("paste")) {
+            final String[] parts = config.getString("paste").split(",");
+            arena.setPaste(
+                    Integer.parseInt(parts[0]),
+                    Integer.parseInt(parts[1]),
+                    Integer.parseInt(parts[2])
+            );
+        }
+        if (config.contains("schematic_size")) {
+            final String[] parts = config.getString("schematic_size").split(",");
+            arena.setSchematicSize(
+                    Integer.parseInt(parts[0]),
+                    Integer.parseInt(parts[1]),
+                    Integer.parseInt(parts[2])
+            );
+        }
+        if (config.contains("arena_spawn")) {
+            arena.setArenaSpawn(this.parseLocation(config.getString("arena_spawn")));
+        }
+        if (config.contains("spawn_block")) {
+            arena.setSpawnBlockData(config.getString("spawn_block"));
+        }
+        arena.setMinPlayers(config.getInt("min_players", 2));
+        arena.setCountdown(config.getInt("countdown", 3));
+        if (config.contains("teams")) {
+            for (final String key : config.getConfigurationSection("teams").getKeys(false)) {
+                final String path = "teams." + key;
+                final var team = new dev.sebastianjnuwu.bedwars.model.ArenaTeam(key, config.getString(path + ".color"));
+                if (config.contains(path + ".spawn")) {
+                    team.setSpawn(this.parseLocation(config.getString(path + ".spawn")));
+                }
+                if (config.contains(path + ".spawn_block")) {
+                    team.setSpawnBlockData(config.getString(path + ".spawn_block"));
+                }
+                if (config.contains(path + ".bed")) {
+                    team.setBed(this.parseLocation(config.getString(path + ".bed")));
+                }
+                if (config.contains(path + ".bed_facing")) {
+                    team.setBedFacing(config.getString(path + ".bed_facing"));
+                }
+                arena.addTeam(team);
+            }
+        }
+        if (config.contains("generators")) {
+            final java.util.Set<String> seenLocations = new java.util.HashSet<>();
+            for (final String key : config.getConfigurationSection("generators").getKeys(false)) {
+                final String path = "generators." + key;
+                final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(
+                        config.getString(path + ".type"),
+                        this.parseLocation(config.getString(path + ".location"))
+                );
+                if (config.contains(path + ".team")) {
+                    gen.setTeam(config.getString(path + ".team"));
+                }
+                if (config.contains(path + ".origin_block")) {
+                    gen.setOriginBlockData(config.getString(path + ".origin_block"));
+                }
+                if (config.contains(path + ".origin_block_above")) {
+                    gen.setOriginBlockDataAbove(config.getString(path + ".origin_block_above"));
+                }
+                if (gen.getLocation() == null) {
+                    continue;
+                }
+                // Deduplicate: skip forge generators that share the same team as one already loaded
+                if (gen.getType().equalsIgnoreCase("forge") && gen.getTeam() != null) {
+                    final String dedupeKey = "forge:" + gen.getTeam().toLowerCase();
+                    if (!seenLocations.add(dedupeKey)) {
+                        this.plugin.getLogger().warning(
+                                "Arena " + name + ": forge duplicado para o time '" + gen.getTeam() + "' ignorado ao carregar.");
+                        continue;
+                    }
+                }
+                arena.addGenerator(gen);
+            }
+        }
+
+        return arena;
     }
 
     private String serializeLocation(final Location loc) {
@@ -273,8 +425,14 @@ public class ArenaManager {
                 + "," + loc.getPitch();
     }
 
-    private Location parseLocation(final String str) {
+    private @Nullable Location parseLocation(final String str) {
+        if (str == null || str.isBlank()) {
+            return null;
+        }
         final String[] parts = str.split(",");
+        if (parts.length < 4) {
+            return null;
+        }
         final World world = Bukkit.getWorld(parts[0]);
         if (world == null) {
             return null;
@@ -284,8 +442,8 @@ public class ArenaManager {
                 Double.parseDouble(parts[1]),
                 Double.parseDouble(parts[2]),
                 Double.parseDouble(parts[3]),
-                Float.parseFloat(parts[4]),
-                Float.parseFloat(parts[5])
+                parts.length > 4 ? Float.parseFloat(parts[4]) : 0F,
+                parts.length > 5 ? Float.parseFloat(parts[5]) : 0F
         );
     }
 }

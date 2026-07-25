@@ -14,7 +14,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
@@ -132,30 +131,17 @@ public class EditCommand extends BaseCommand implements SubCommand {
             this.arenaManager.save(arena);
         }
 
-        this.showMarkerBlocks(arena);
+        this.arenaManager.showMarkerBlocks(arena);
         this.editorManager.startSession(player, name);
-        player.teleport(world.getSpawnLocation());
+        this.editorManager.startParticleTask(player, name, this.arenaManager);
+
+        // Teleport to the arena spawn if already set, otherwise fall back to world spawn
+        final Location destination = arena.getArenaSpawn() != null
+                ? arena.getArenaSpawn().clone()
+                : world.getSpawnLocation();
+        player.teleport(destination);
         player.setGameMode(GameMode.CREATIVE);
         sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "edit.teleported", name));
     }
 
-    private void showMarkerBlocks(final Arena arena) {
-        if (arena.getArenaSpawn() != null) {
-            final var b = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0);
-            if (arena.getSpawnBlockData() == null) {
-                arena.setSpawnBlockData(b.getBlockData().getAsString());
-            }
-            b.setType(Material.EMERALD_BLOCK, false);
-        }
-        for (final var team : arena.getTeams()) {
-            if (team.getSpawn() != null) {
-                final var b = team.getSpawn().getBlock().getRelative(0, -1, 0);
-                if (team.getSpawnBlockData() == null) {
-                    team.setSpawnBlockData(b.getBlockData().getAsString());
-                }
-                final Material wool = dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand.getWoolMaterial(team.getColor());
-                b.setType(wool, false);
-            }
-        }
-    }
 }

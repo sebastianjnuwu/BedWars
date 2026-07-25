@@ -12,6 +12,7 @@ public class ArenaGenerator implements dev.sebastianjnuwu.bedwars.api.model.Aren
 
     private final String type;
     private final Location location;
+    private String team;
     private String originBlockData;
     private String originBlockDataAbove;
 
@@ -26,6 +27,14 @@ public class ArenaGenerator implements dev.sebastianjnuwu.bedwars.api.model.Aren
 
     public Location getLocation() {
         return this.location;
+    }
+
+    public @Nullable String getTeam() {
+        return this.team;
+    }
+
+    public void setTeam(final @Nullable String team) {
+        this.team = team;
     }
 
     public @Nullable String getOriginBlockData() {

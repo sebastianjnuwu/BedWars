@@ -81,4 +81,18 @@ public interface ArenaGenerator {
      * @param originBlockDataAbove os dados do bloco a serem armazenados
      */
     void setOriginBlockDataAbove(String originBlockDataAbove);
+
+    /**
+     * Obtém o time vinculado ao gerador (apenas fornalha).
+     *
+     * @return nome do time ou null para geradores globais
+     */
+    @Nullable String getTeam();
+
+    /**
+     * Define o time vinculado ao gerador (apenas fornalha).
+     *
+     * @param team nome do time
+     */
+    void setTeam(@Nullable String team);
 }

@@ -23,6 +23,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -171,19 +172,42 @@ public class ArenaListener implements Listener {
     }
 
     private boolean tryRestoreBed(final Arena arena, final Block block, final BlockBreakEvent event) {
-        if (!(block.getBlockData() instanceof Bed)) return false;
+        if (!(block.getBlockData() instanceof final Bed bedData)) return false;
+
+        // Normalise to foot location regardless of which part was broken
+        final Location clickedLoc = block.getLocation();
+        final Location footLoc;
+        if (bedData.getPart() == Bed.Part.HEAD) {
+            final org.bukkit.block.BlockFace facing = bedData.getFacing();
+            footLoc = clickedLoc.clone().add(
+                    -facing.getModX(), -facing.getModY(), -facing.getModZ());
+        } else {
+            footLoc = clickedLoc;
+        }
+
         for (final ArenaTeam team : arena.getTeams()) {
             if (team.getBed() == null) continue;
-            if (!this.isSameBlock(team.getBed(), block.getLocation())) continue;
+            if (!this.isSameBlock(team.getBed(), footLoc)) continue;
+
             event.setCancelled(true);
             event.setDropItems(false);
-            block.setType(Material.AIR, false);
+            // Remove both bed blocks
+            footLoc.getBlock().setType(Material.AIR, false);
+            // Calculate head position from facing stored in team
+            if (team.getBedFacing() != null) {
+                try {
+                    final org.bukkit.block.BlockFace face = org.bukkit.block.BlockFace.valueOf(team.getBedFacing().toUpperCase());
+                    final Location headLoc = footLoc.clone().add(face.getModX(), face.getModY(), face.getModZ());
+                    headLoc.getBlock().setType(Material.AIR, false);
+                } catch (final IllegalArgumentException ignored) { }
+            }
             team.setBed(null);
             team.setBedFacing(null);
             this.arenaManager.save(arena);
             block.getWorld().getPlayers().stream()
                     .filter(p -> p.getWorld().equals(block.getWorld()))
-                    .forEach(p -> p.sendMessage(Component.text("Cama do time " + team.getName() + " removida!", NamedTextColor.YELLOW)));
+                    .forEach(p -> p.sendMessage(Component.text(
+                            "Cama do time " + team.getName() + " removida!", NamedTextColor.YELLOW)));
             return true;
         }
         return false;
@@ -347,6 +371,38 @@ public class ArenaListener implements Listener {
                 this.arenaManager.save(arena);
             }
         }
+    }
+
+    /**
+     * Ao reconectar, se o jogador estiver em um mundo de arena (bw_*) sem
+     * estar em partida nem em sessão de edição, teleporta para o lobby global
+     * ou para o spawn do mundo principal, evitando que fique preso.
+     */
+    @EventHandler
+    public void onPlayerJoin(final PlayerJoinEvent event) {
+        final Player player = event.getPlayer();
+        final String worldName = player.getWorld().getName();
+
+        if (!worldName.startsWith("bw_")) return;
+        if (this.gameManager.isInGame(player)) return;
+
+        final Arena arena = this.getArena(player);
+        if (arena != null && this.editorManager.isEditing(player, arena.getName())) return;
+
+        // Player reconnected into an arena world without being in a game — rescue them
+        final org.bukkit.Location lobby = this.gameManager.getConfigManager().getLobby();
+        final org.bukkit.Location destination = lobby != null
+                ? lobby
+                : org.bukkit.Bukkit.getWorlds().get(0).getSpawnLocation();
+
+        // Delay by 1 tick so the player is fully loaded before teleporting
+        org.bukkit.Bukkit.getScheduler().runTaskLater(
+                this.gameManager.getPlugin(), () -> {
+                    if (player.isOnline()) {
+                        player.teleport(destination);
+                        player.setGameMode(org.bukkit.GameMode.SURVIVAL);
+                    }
+                }, 1L);
     }
 
     /**

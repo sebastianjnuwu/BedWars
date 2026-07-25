@@ -58,11 +58,34 @@ public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
         team.setSpawn(loc);
         team.setSpawnBlockData(newSpawnBlock.getBlockData().getAsString());
 
-        final Material woolMaterial = this.getWoolMaterial(team.getColor());
-        newSpawnBlock.setType(woolMaterial, false);
+        final Material spawnMarker = getSpawnMarkerMaterial(team.getColor());
+        newSpawnBlock.setType(spawnMarker, false);
 
         this.arenaManager.save(arena);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.setspawn_success", colorName));
+    }
+
+    /**
+     * Returns the terracotta block used as a team-spawn marker below the player's feet.
+     * Terracotta is visually distinct and unlikely to appear naturally in BedWars maps.
+     */
+    public static Material getSpawnMarkerMaterial(final String dyeColor) {
+        if (dyeColor == null) return Material.TERRACOTTA;
+        return switch (dyeColor.toUpperCase()) {
+            case "RED", "VERMELHO"         -> Material.RED_TERRACOTTA;
+            case "BLUE", "AZUL"            -> Material.BLUE_TERRACOTTA;
+            case "GREEN", "VERDE"          -> Material.GREEN_TERRACOTTA;
+            case "YELLOW", "AMARELO"       -> Material.YELLOW_TERRACOTTA;
+            case "PURPLE", "ROXO"          -> Material.PURPLE_TERRACOTTA;
+            case "PINK", "ROSA"            -> Material.PINK_TERRACOTTA;
+            case "ORANGE", "LARANJA"       -> Material.ORANGE_TERRACOTTA;
+            case "CYAN", "CIANO"           -> Material.CYAN_TERRACOTTA;
+            case "LIME", "VERDE_LIMA"      -> Material.LIME_TERRACOTTA;
+            case "LIGHT_BLUE", "AZUL_CLARO"-> Material.LIGHT_BLUE_TERRACOTTA;
+            case "GRAY", "CINZA"           -> Material.GRAY_TERRACOTTA;
+            case "BLACK", "PRETO"          -> Material.BLACK_TERRACOTTA;
+            default                        -> Material.TERRACOTTA;
+        };
     }
 
     public static Material getWoolMaterial(final String dyeColor) {

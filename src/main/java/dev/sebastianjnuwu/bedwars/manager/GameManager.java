@@ -50,6 +50,10 @@ public class GameManager {
         return this.configManager;
     }
 
+    public ArenaManager getArenaManager() {
+        return this.arenaManager;
+    }
+
     public @Nullable Game getGame(final String arenaName) {
         return this.games.get(arenaName);
     }
@@ -77,11 +81,15 @@ public class GameManager {
             if (team.getBed() == null) {
                 missing.add(this.lang.raw("game.validate_team_bed", team.getName()));
             }
-        }
-        final boolean hasForge = arena.getGenerators().stream()
-                .anyMatch(generator -> generator.getType().equalsIgnoreCase("forge"));
-        if (!hasForge) {
-            missing.add(this.lang.raw("game.validate_forge"));
+            final long forgeCount = arena.getGenerators().stream()
+                    .filter(generator -> generator.getType().equalsIgnoreCase("forge"))
+                    .filter(generator -> team.getName().equalsIgnoreCase(generator.getTeam()))
+                    .count();
+            if (forgeCount == 0) {
+                missing.add(this.lang.raw("game.validate_team_forge", team.getName()));
+            } else if (forgeCount > 1) {
+                missing.add(this.lang.raw("game.validate_team_forge_duplicate", team.getName()));
+            }
         }
         return missing;
     }
@@ -101,7 +109,14 @@ public class GameManager {
             return;
         }
 
-        final List<String> missing = this.validateArena(arena);
+        if (!this.arenaManager.ensureArenaReady(arena)) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
+            return;
+        }
+
+        final Arena refreshedArena = this.arenaManager.get(arenaName);
+
+        final List<String> missing = this.validateArena(refreshedArena);
         if (!missing.isEmpty()) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
             for (final String msg : missing) {
@@ -112,7 +127,7 @@ public class GameManager {
 
         Game game = this.games.get(arenaName);
         if (game == null) {
-            game = new dev.sebastianjnuwu.bedwars.game.Game(this, arena);
+            game = new dev.sebastianjnuwu.bedwars.game.Game(this, refreshedArena);
             this.games.put(arenaName, game);
         }
 

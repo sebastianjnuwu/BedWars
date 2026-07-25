@@ -1,5 +1,6 @@
 package dev.sebastianjnuwu.bedwars.model;
 
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,6 +15,7 @@ public class ArenaTeam implements dev.sebastianjnuwu.bedwars.api.model.ArenaTeam
     private String spawnBlockData;
     private Location bed;
     private String bedFacing;
+    private ArenaGenerator forge;
 
     /**
      * Cria um time.
@@ -104,5 +106,21 @@ public class ArenaTeam implements dev.sebastianjnuwu.bedwars.api.model.ArenaTeam
      */
     public void setBedFacing(final String bedFacing) {
         this.bedFacing = bedFacing;
+    }
+
+    /**
+     * Retorna a fornalha do time.
+     */
+    public @Nullable ArenaGenerator getForge() {
+        return this.forge;
+    }
+
+    /**
+     * Define a fornalha do time.
+     *
+     * @param forge gerador do tipo forge, ou null para remover
+     */
+    public void setForge(final @Nullable ArenaGenerator forge) {
+        this.forge = forge;
     }
 }

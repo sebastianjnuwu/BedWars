@@ -130,17 +130,27 @@ public class GameListener implements Listener {
         if (game == null) return;
 
         final Block block = event.getBlock();
-        if (!(block.getBlockData() instanceof Bed)) return;
+        if (!(block.getBlockData() instanceof final Bed bedData)) return;
+
+        // Normalise to the foot block so we always compare against team.getBed()
+        // The HEAD part has its type=HEAD; we need to find the foot location.
+        final Location clickedLoc = block.getLocation();
+        final Location footLoc;
+        if (bedData.getPart() == Bed.Part.HEAD) {
+            // The foot is in the opposite direction of the facing
+            final org.bukkit.block.BlockFace facing = bedData.getFacing();
+            footLoc = clickedLoc.clone().add(
+                    -facing.getModX(), -facing.getModY(), -facing.getModZ());
+        } else {
+            footLoc = clickedLoc;
+        }
 
         for (final ArenaTeam team : game.getArena().getTeams()) {
             final Location bedLoc = team.getBed();
             if (bedLoc == null) continue;
+            if (!this.isSameBlock(bedLoc, footLoc)) continue;
 
-            if (!this.isSameBlock(bedLoc, block.getLocation())) {
-                final Location neighbor = this.getBedNeighbor(bedLoc, team.getBedFacing());
-                if (neighbor == null || !this.isSameBlock(neighbor, block.getLocation())) continue;
-            }
-
+            // Foot matched — check if the breaker is on this team
             final ArenaTeam playerTeam = game.getPlayerTeam(player);
             if (playerTeam != null && playerTeam.getName().equals(team.getName())) {
                 event.setCancelled(true);
@@ -196,16 +206,5 @@ public class GameListener implements Listener {
                 && a.getBlockX() == b.getBlockX()
                 && a.getBlockY() == b.getBlockY()
                 && a.getBlockZ() == b.getBlockZ();
-    }
-
-    private Location getBedNeighbor(final Location bed, final String facing) {
-        if (facing == null) return null;
-        return switch (facing.toUpperCase()) {
-            case "NORTH" -> bed.clone().add(0, 0, 1);
-            case "SOUTH" -> bed.clone().add(0, 0, -1);
-            case "EAST" -> bed.clone().add(-1, 0, 0);
-            case "WEST" -> bed.clone().add(1, 0, 0);
-            default -> null;
-        };
     }
 }

@@ -7,12 +7,11 @@ import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -46,31 +45,58 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
             case "ouro" -> "gold";
             case "diamante", "diamond" -> "diamond";
             case "esmeralda", "emerald" -> "emerald";
+            case "fornalha", "forja" -> "forge";
             default -> rawType;
         };
         if (!List.of("iron", "gold", "diamond", "emerald", "forge").contains(type)) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_invalid"));
             return;
         }
-        final Location loc = player.getLocation();
+
+        String teamName = null;
+        if (type.equals("forge")) {
+            if (args.length < 5) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_forge_usage"));
+                return;
+            }
+            teamName = args[4].toLowerCase();
+            final ArenaTeam team = arena.getTeam(teamName);
+            if (team == null) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_forge_team_notfound", teamName));
+                return;
+            }
+            final boolean alreadyHasForge = arena.getGenerators().stream()
+                    .anyMatch(generator -> generator.getType().equalsIgnoreCase("forge")
+                            && team.getName().equalsIgnoreCase(generator.getTeam()));
+            if (alreadyHasForge) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_forge_duplicate", team.getName()));
+                return;
+            }
+        }
+
+        final Location loc = player.getLocation().getBlock().getLocation();
         for (final var gen : arena.getGenerators()) {
-            if (gen.getLocation().equals(loc)) {
+            if (gen.getLocation() != null && gen.getLocation().equals(loc)) {
                 player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_duplicate"));
                 return;
             }
         }
+
         final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(type, loc);
+        if (teamName != null) {
+            gen.setTeam(teamName);
+        }
         final var below = loc.getBlock().getRelative(0, -1, 0);
         if (gen.getOriginBlockData() == null) {
             gen.setOriginBlockData(below.getBlockData().getAsString());
         }
-        // Marker block for generator in edit mode
         final Material marker = switch (type) {
-            case "diamond" -> Material.DIAMOND_BLOCK;
-            case "emerald" -> Material.EMERALD_BLOCK;
-            case "gold" -> Material.GOLD_BLOCK;
-            case "iron" -> Material.IRON_BLOCK;
-            default -> Material.SPONGE;
+            case "diamond" -> Material.DIAMOND_ORE;
+            case "emerald" -> Material.EMERALD_ORE;
+            case "gold"    -> Material.GOLD_ORE;
+            case "iron"    -> Material.IRON_ORE;
+            case "forge"   -> Material.BLAST_FURNACE;
+            default        -> Material.SPONGE;
         };
         below.setType(marker);
 

@@ -119,7 +119,20 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             }
             this.arenaManager.save(arena);
             this.editorManager.endSession(name);
-            sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "save.success", name));
+
+            // ── YML validation report ────────────────────────────────────
+            final java.util.List<String> missing = this.gameManager.validateArena(arena);
+            if (missing.isEmpty()) {
+                sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "save.success", name));
+                sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "save.validation_ok"));
+            } else {
+                sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "save.success_with_warnings", name));
+                sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "save.validation_warnings"));
+                for (final String warn : missing) {
+                    sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.missing_entry", warn));
+                }
+            }
+
             if (sender instanceof final Player player) {
                 player.setGameMode(org.bukkit.GameMode.SURVIVAL);
                 final Location lobby = this.configManager.getLobby();

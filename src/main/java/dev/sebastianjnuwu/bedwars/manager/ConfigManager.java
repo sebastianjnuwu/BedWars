@@ -14,6 +14,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Gerencia configurações globais do plugin (não por arena). Salva em config.yml
@@ -53,6 +54,9 @@ public class ConfigManager {
         }
         this.config = YamlConfiguration.loadConfiguration(this.file);
         if (this.addMissingForgeDefaults()) {
+            this.save();
+        }
+        if (this.addMissingGeneratorDefaults()) {
             this.save();
         }
     }
@@ -158,6 +162,24 @@ public class ConfigManager {
     }
 
     /**
+     * Returns the drop interval in ticks for a global generator type.
+     */
+    public long getGeneratorInterval(final String type) {
+        return this.config.getLong("generators." + type + ".interval", 0L);
+    }
+
+    /**
+     * Returns the material configured for a global generator type.
+     */
+    public @Nullable Material getGeneratorMaterial(final String type) {
+        final String materialName = this.config.getString("generators." + type + ".material");
+        if (materialName == null) {
+            return null;
+        }
+        return Material.matchMaterial(materialName);
+    }
+
+    /**
      * Adds new forge options to existing configuration files without
      * overwriting custom values.
      */
@@ -174,6 +196,15 @@ public class ConfigManager {
         changed |= this.setDefault("forge.levels.4.gold.interval", 30);
         changed |= this.setDefault("forge.levels.4.diamond.interval", 600);
         changed |= this.setDefault("forge.levels.4.emerald.interval", 1200);
+        return changed;
+    }
+
+    private boolean addMissingGeneratorDefaults() {
+        boolean changed = false;
+        changed |= this.setDefault("generators.iron.interval", 40);
+        changed |= this.setDefault("generators.gold.interval", 120);
+        changed |= this.setDefault("generators.diamond.interval", 600);
+        changed |= this.setDefault("generators.emerald.interval", 1200);
         return changed;
     }
 

@@ -147,7 +147,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 2) {
             final String first = args[0].toLowerCase();
             if (first.equals("admin")) {
-                completions.addAll(List.of("create", "delete", "list", "save", "load", "edit", "setlobby", "arena"));
+                completions.addAll(List.of("create", "delete", "list", "save", "load", "edit", "setlobby", "arena", "reload"));
             } else if (List.of("join", "start").contains(first)) {
                 completions.addAll(this.arenaManager.getNames());
             }
@@ -171,7 +171,18 @@ public class BWCommand implements CommandExecutor, TabCompleter {
             if (List.of("addteam", "removeteam", "setspawn", "setbed").contains(sub)) {
                 completions.addAll(List.of("azul", "vermelho", "verde", "amarelo", "roxo", "rosa", "laranja", "ciano"));
             } else if (sub.equals("addgenerator")) {
-                completions.addAll(List.of("bronze", "ferro", "ouro", "forge"));
+                completions.addAll(List.of("ferro", "ouro", "diamante", "esmeralda", "forge"));
+            }
+        } else if (args.length == 6 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
+            final String sub = args[3].toLowerCase();
+            final String arenaName = args[2];
+            if (sub.equals("addgenerator") && args[4].equalsIgnoreCase("forge")) {
+                final Arena forgeArena = this.arenaManager.get(arenaName);
+                if (forgeArena != null) {
+                    for (final ArenaTeam at : forgeArena.getTeams()) {
+                        completions.add(at.getName());
+                    }
+                }
             }
         }
         return completions;

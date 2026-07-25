@@ -4,6 +4,7 @@ import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.arena.LifecycleRouter;
 import dev.sebastianjnuwu.bedwars.command.admin.arena.SetLobbyCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.ReloadCommand;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
@@ -73,6 +74,7 @@ public class AdminCommand extends BaseCommand {
         this.register("save", lifecycle);
         this.register("load", lifecycle);
         this.register("edit", lifecycle);
+        this.register("reload", new ReloadCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
     }
 
     /**

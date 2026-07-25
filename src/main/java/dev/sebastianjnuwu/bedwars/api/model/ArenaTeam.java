@@ -1,5 +1,6 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
@@ -118,4 +119,16 @@ public interface ArenaTeam {
      * @param bedFacing a nova direção do berço
      */
     void setBedFacing(String bedFacing);
+
+    /**
+     * Retorna a fornalha (forge) deste time, ou null se não configurada.
+     */
+    @Nullable ArenaGenerator getForge();
+
+    /**
+     * Define a fornalha do time.
+     *
+     * @param forge o gerador de fornalha, ou null para remover
+     */
+    void setForge(@Nullable ArenaGenerator forge);
 }

@@ -28,15 +28,19 @@ arena:
 generators:
   iron:
     material: IRON_INGOT
+    interval: 40
 
   gold:
     material: GOLD_INGOT
+    interval: 120
 
   diamond:
     material: DIAMOND
+    interval: 600
 
   emerald:
     material: EMERALD
+    interval: 1200
 
 # ===================================================================
 # Fornalha (Forge)
