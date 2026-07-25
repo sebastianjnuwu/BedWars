@@ -326,4 +326,55 @@ public class ArenaListener implements Listener {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "commands_blocked"));
         }
     }
+
+    /**
+     * Manipula o evento de saída do jogador do servidor.
+     * <p>
+     * Se o jogador estiver no modo de edição de uma arena, encerra a sessão
+     * para não deixar a arena bloqueada enquanto o jogador está offline.
+     * </p>
+     *
+     * @param event o evento de saída (não nulo)
+     */
+    @EventHandler
+    public void onPlayerQuit(final org.bukkit.event.player.PlayerQuitEvent event) {
+        final Player player = event.getPlayer();
+        final String arenaName = this.editorManager.getPlayerArena(player);
+        if (arenaName != null) {
+            this.editorManager.endSession(player);
+            final Arena arena = this.arenaManager.get(arenaName);
+            if (arena != null) {
+                this.arenaManager.save(arena);
+            }
+        }
+    }
+
+    /**
+     * Cancela o jogador dormir em camas — tanto em modo edição quanto em partidas.
+     */
+    @EventHandler
+    public void onPlayerBedEnter(final org.bukkit.event.player.PlayerBedEnterEvent event) {
+        final Player player = event.getPlayer();
+        final String worldName = player.getWorld().getName();
+
+        // Bloqueia em mundos de edição (bw_*)
+        if (worldName.startsWith("bw_")) {
+            event.setCancelled(true);
+            return;
+        }
+
+        // Bloqueia em mundos de arena (jogadores em partida)
+        if (this.gameManager.getPlayerGame(player) != null) {
+            event.setCancelled(true);
+            return;
+        }
+
+        // Bloqueia em qualquer mundo de arena carregado
+        for (final Arena arena : this.arenaManager.getAll()) {
+            if (worldName.equals(arena.getWorldName())) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
 }

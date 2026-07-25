@@ -142,6 +142,47 @@ public class EditorManager {
     }
 
 
+    public void shutdown(final @Nullable dev.sebastianjnuwu.bedwars.manager.ConfigManager configManager,
+                         final @Nullable dev.sebastianjnuwu.bedwars.manager.ArenaManager arenaManager) {
+        org.bukkit.Location lobby = configManager != null ? configManager.getLobby() : null;
+        if (lobby == null && !Bukkit.getWorlds().isEmpty()) {
+            lobby = Bukkit.getWorlds().get(0).getSpawnLocation();
+        }
+
+        for (final Map.Entry<String, UUID> entry : new HashMap<>(this.arenaEditors).entrySet()) {
+            final String arenaName = entry.getKey();
+            final UUID uuid = entry.getValue();
+            final Player player = Bukkit.getPlayer(uuid);
+
+            if (player != null && player.isOnline()) {
+                if (lobby != null) {
+                    player.teleport(lobby);
+                }
+                player.sendMessage("§cSua sessão de edição na arena '" + arenaName + "' foi encerrada devido ao desligamento do servidor.");
+            }
+
+            if (arenaManager != null) {
+                final var arena = arenaManager.get(arenaName);
+                if (arena != null) {
+                    arenaManager.save(arena);
+                }
+            }
+        }
+
+        for (final org.bukkit.World world : Bukkit.getWorlds()) {
+            if (world.getName().startsWith("bw_")) {
+                for (final Player p : world.getPlayers()) {
+                    if (lobby != null) {
+                        p.teleport(lobby);
+                    }
+                }
+                Bukkit.unloadWorld(world, false);
+            }
+        }
+
+        this.clear();
+    }
+
     private void save() {
 
         this.config.set("sessions", null);
@@ -164,23 +205,27 @@ public class EditorManager {
 
     private void load() {
 
-        if (!this.config.contains("sessions")) {
+        if (!this.config.contains("sessions") || this.config.getConfigurationSection("sessions") == null) {
             return;
         }
 
-        for (String arena : this.config.getConfigurationSection("sessions").getKeys(false)) {
+        for (final String arena : this.config.getConfigurationSection("sessions").getKeys(false)) {
 
-            String uuid = this.config.getString("sessions." + arena);
+            final String uuidStr = this.config.getString("sessions." + arena);
+            if (uuidStr == null) continue;
 
             try {
 
-                UUID player = UUID.fromString(uuid);
-
-                this.arenaEditors.put(arena, player);
-                this.playerArenas.put(player, arena);
+                final UUID player = UUID.fromString(uuidStr);
+                final Player onlinePlayer = Bukkit.getPlayer(player);
+                if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                    this.arenaEditors.put(arena, player);
+                    this.playerArenas.put(player, arena);
+                }
 
             } catch (IllegalArgumentException ignored) {
             }
         }
+        this.save();
     }
 }

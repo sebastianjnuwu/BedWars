@@ -110,11 +110,18 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                     arena.getPasteY() + arena.getSchematicHeight() - 1,
                     arena.getPasteZ() + arena.getSchematicLength() - 1);
             final Schematic schematic = new Schematic(name, pos1, pos2);
-            schematic.save(new File(this.mapsFolder, name + ".bwmap"));
+            File mapFile = new File(this.mapsFolder, name + ".schem");
+            try {
+                schematic.save(mapFile);
+            } catch (final Exception e) {
+                mapFile = new File(this.mapsFolder, name + ".bwmap");
+                schematic.save(mapFile);
+            }
             this.arenaManager.save(arena);
             this.editorManager.endSession(name);
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "save.success", name));
             if (sender instanceof final Player player) {
+                player.setGameMode(org.bukkit.GameMode.SURVIVAL);
                 final Location lobby = this.configManager.getLobby();
                 if (lobby != null) {
                     player.teleport(lobby);

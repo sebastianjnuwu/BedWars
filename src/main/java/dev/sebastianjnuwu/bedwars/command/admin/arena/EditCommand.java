@@ -8,9 +8,15 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.world.Schematic;
+import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +28,8 @@ import java.io.File;
  * <p>
  * Teleporta o jogador para o mundo da arena e inicia uma sessão de edição
  * através do {@link EditorManager}. Impede que múltiplos jogadores editem
- * a mesma arena simultaneamente.
+ * a mesma arena simultaneamente. Se o mundo não estiver carregado, ele é
+ * carregado automaticamente.
  * </p>
  * <p>
  * Exemplo de uso: {@code /bwadmin arena edit <nome>}
@@ -57,10 +64,9 @@ public class EditCommand extends BaseCommand implements SubCommand {
     /**
      * Executa o comando de edição de arena.
      * <p>
-     * Verifica se o nome da arena foi informado, se a arena existe e se o
-     * mundo dela está carregado. Caso a arena já esteja sendo editada por
-     * outro jogador, a operação é bloqueada. Caso contrário, inicia a
-     * sessão de edição e teleporta o jogador para o mundo da arena.
+     * Verifica se o nome da arena foi informado e se a arena existe.
+     * Carrega automaticamente o mundo se ainda não estiver carregado,
+     * coloca o jogador em modo Criativo e inicia a sessão de edição.
      * </p>
      *
      * @param sender o remetente do comando (deve ser um {@link Player})
@@ -82,26 +88,74 @@ public class EditCommand extends BaseCommand implements SubCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.not_found", name));
             return;
         }
-        final String worldName = arena.getWorldName();
-        if (worldName == null) {
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.not_loaded", name));
-            return;
-        }
-        final World world = Bukkit.getWorld(worldName);
-        if (world == null) {
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.world_not_found"));
-            return;
-        }
-        if (this.editorManager.isBeingEdited(name)) {
+
+        if (this.editorManager.isBeingEdited(name) && !this.editorManager.isEditing(player, name)) {
             final String editorName = this.editorManager.getEditorName(name);
-            if (!this.editorManager.isEditing(player, name)) {
-                sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.already_editing", name, editorName));
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.already_editing", name, editorName));
+            return;
+        }
+
+        String worldName = arena.getWorldName();
+        if (worldName == null || worldName.isBlank()) {
+            worldName = "bw_" + name;
+        }
+
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            final WorldCreator wc = new WorldCreator(worldName);
+            wc.generator(new VoidGenerator());
+            world = wc.createWorld();
+            if (world == null) {
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.world_not_found"));
                 return;
             }
-        } else {
-            this.editorManager.startSession(player, name);
+            arena.setWorldName(worldName);
+
+            File file = new File(this.mapsFolder, name + ".schem");
+            if (!file.exists()) file = new File(this.mapsFolder, name + ".schematic");
+            if (!file.exists()) file = new File(this.mapsFolder, name + ".bwmap");
+            if (!file.exists()) file = new File(this.mapsFolder, name + ".nbt");
+            if (!file.exists()) file = new File(this.mapsFolder, name);
+            if (file.exists()) {
+                try {
+                    final Schematic schematic = Schematic.load(file);
+                    final Location pasteLocation;
+                    if (arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0) {
+                        pasteLocation = new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
+                    } else {
+                        pasteLocation = world.getSpawnLocation();
+                    }
+                    schematic.paste(pasteLocation);
+                } catch (final Exception ignored) {
+                }
+            }
+            this.arenaManager.save(arena);
         }
+
+        this.showMarkerBlocks(arena);
+        this.editorManager.startSession(player, name);
         player.teleport(world.getSpawnLocation());
+        player.setGameMode(GameMode.CREATIVE);
         sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "edit.teleported", name));
+    }
+
+    private void showMarkerBlocks(final Arena arena) {
+        if (arena.getArenaSpawn() != null) {
+            final var b = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0);
+            if (arena.getSpawnBlockData() == null) {
+                arena.setSpawnBlockData(b.getBlockData().getAsString());
+            }
+            b.setType(Material.EMERALD_BLOCK, false);
+        }
+        for (final var team : arena.getTeams()) {
+            if (team.getSpawn() != null) {
+                final var b = team.getSpawn().getBlock().getRelative(0, -1, 0);
+                if (team.getSpawnBlockData() == null) {
+                    team.setSpawnBlockData(b.getBlockData().getAsString());
+                }
+                final Material wool = dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand.getWoolMaterial(team.getColor());
+                b.setType(wool, false);
+            }
+        }
     }
 }

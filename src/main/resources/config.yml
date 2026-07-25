@@ -9,12 +9,12 @@ lang: pt_BR
 # Configurações das arenas
 arena:
   limits:
-    # Largura máxima da arena no eixo X
-    max-width: 100
-    # Altura máxima da arena no eixo Y
-    max-height: 50
-    # Comprimento máximo da arena no eixo Z
-    max-length: 100
+    # Largura máxima da arena no eixo X (defina 0 para ilimitado)
+    max-width: 1000
+    # Altura máxima da arena no eixo Y (defina 0 para ilimitado)
+    max-height: 384
+    # Comprimento máximo da arena no eixo Z (defina 0 para ilimitado)
+    max-length: 1000
 
 # ===================================================================
 # Geradores Globais

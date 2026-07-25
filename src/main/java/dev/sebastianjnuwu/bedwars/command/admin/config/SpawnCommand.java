@@ -34,12 +34,19 @@ public class SpawnCommand extends BaseCommand implements ArenaSubCommand {
     public void execute(final CommandSender sender, final @NotNull Arena arena, final @NotNull String @NotNull [] args) {
         final Player player = (Player) sender;
         final Location loc = player.getLocation();
-        arena.setArenaSpawn(loc);
-        final var spawnBlock = loc.getBlock().getRelative(0, -1, 0);
-        if (arena.getSpawnBlockData() == null) {
-            arena.setSpawnBlockData(spawnBlock.getBlockData().getAsString());
+        final var newSpawnBlock = loc.getBlock().getRelative(0, -1, 0);
+
+        if (arena.getArenaSpawn() != null && arena.getSpawnBlockData() != null) {
+            try {
+                final var oldBlock = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0);
+                oldBlock.setBlockData(org.bukkit.Bukkit.createBlockData(arena.getSpawnBlockData()), false);
+            } catch (final Exception ignored) {
+            }
         }
-        spawnBlock.setType(Material.EMERALD_BLOCK);
+
+        arena.setArenaSpawn(loc);
+        arena.setSpawnBlockData(newSpawnBlock.getBlockData().getAsString());
+        newSpawnBlock.setType(Material.EMERALD_BLOCK, false);
         this.arenaManager.save(arena);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.spawn_success",
                 arena.getName(),

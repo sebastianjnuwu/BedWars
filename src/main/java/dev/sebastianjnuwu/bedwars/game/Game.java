@@ -297,7 +297,18 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             tasks.add(Bukkit.getScheduler().runTaskTimer(this.gameManager.getPlugin(), () -> {
                 if (this.state != GameState.PLAYING) return;
                 final Location dropLocation = forge.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
-                dropLocation.getWorld().dropItemNaturally(dropLocation, new ItemStack(material));
+
+                // Cap: don't spawn if there are already 32+ of this material nearby
+                final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
+                        .filter(e -> e instanceof org.bukkit.entity.Item)
+                        .filter(e -> ((org.bukkit.entity.Item) e).getItemStack().getType() == material)
+                        .count();
+                if (nearbyCount >= 32) return;
+
+                dropLocation.getWorld().dropItem(dropLocation, new ItemStack(material), item -> {
+                    item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+                    item.setPickupDelay(0);
+                });
             }, interval, interval));
         }
         this.forgeTasks.put(forge, tasks);

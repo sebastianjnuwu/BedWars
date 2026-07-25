@@ -3,6 +3,7 @@ package dev.sebastianjnuwu.bedwars.lang;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -55,12 +56,25 @@ public class LangManager {
      * @param args argumentos para formatação
      * @return texto traduzido
      */
-    public String raw(final @NotNull String key, final Object @NotNull ... args) {
-        final String text = this.messages.getString(key, "§c[missing: " + key + "]");
-        if (args.length == 0) {
+    public String raw(final @NotNull String key, final Object... args) {
+        String text = this.messages.getString(key, "§c[missing: " + key + "]");
+        text = text.replace('&', '§');
+        if (args == null || args.length == 0) {
             return text;
         }
-        return MessageFormat.format(text, args);
+
+        final Object[] actualArgs;
+        if (args.length == 1 && args[0] instanceof final Object[] arr) {
+            actualArgs = arr;
+        } else {
+            actualArgs = args;
+        }
+
+        for (int i = 0; i < actualArgs.length; i++) {
+            final String val = actualArgs[i] != null ? String.valueOf(actualArgs[i]) : "";
+            text = text.replace("{" + i + "}", val);
+        }
+        return text;
     }
 
     /**
@@ -68,10 +82,10 @@ public class LangManager {
      *
      * @param key  chave no arquivo yml
      * @param args argumentos para formatação
-     * @rum Component colorido com branco
+     * @return Component colorido com suporte a códigos legado e adventure
      */
     public Component text(final @NotNull String key, final Object @NotNull ... args) {
-        return Component.text(this.raw(key, args), NamedTextColor.WHITE);
+        return LegacyComponentSerializer.legacySection().deserialize(this.raw(key, args));
     }
 
     /**
@@ -83,6 +97,7 @@ public class LangManager {
      * @return Component colorido
      */
     public Component text(final @NotNull TextColor color, final @NotNull String key, final Object @NotNull ... args) {
-        return Component.text(this.raw(key, args), color);
+        final Component legacyComp = LegacyComponentSerializer.legacySection().deserialize(this.raw(key, args));
+        return Component.empty().color(color).append(legacyComp);
     }
 }

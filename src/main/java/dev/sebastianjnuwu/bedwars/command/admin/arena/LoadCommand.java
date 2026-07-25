@@ -3,6 +3,7 @@ package dev.sebastianjnuwu.bedwars.command.admin.arena;
 import java.io.File;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
@@ -87,7 +88,19 @@ public class LoadCommand extends BaseCommand implements SubCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.not_found", name));
             return;
         }
-        final File file = new File(this.mapsFolder, name + ".bwmap");
+        File file = new File(this.mapsFolder, name + ".schem");
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name + ".schematic");
+        }
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name + ".bwmap");
+        }
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name + ".nbt");
+        }
+        if (!file.exists()) {
+            file = new File(this.mapsFolder, name);
+        }
         if (!file.exists()) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.file_not_found"));
             return;
@@ -112,14 +125,42 @@ public class LoadCommand extends BaseCommand implements SubCommand {
         }
         try {
             final Schematic schematic = Schematic.load(file);
-            schematic.paste(world.getSpawnLocation());
+            final Location pasteLocation;
+            if (arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0) {
+                pasteLocation = new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
+            } else {
+                pasteLocation = world.getSpawnLocation();
+            }
+            schematic.paste(pasteLocation);
             arena.setWorldName(worldName);
+            this.showMarkerBlocks(arena);
             this.editorManager.startSession(player, name);
             this.arenaManager.save(arena);
-            player.teleport(world.getSpawnLocation());
+            player.teleport(pasteLocation);
+            player.setGameMode(org.bukkit.GameMode.CREATIVE);
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "load.success"));
         } catch (final Exception e) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.error", e.getMessage()));
+        }
+    }
+
+    private void showMarkerBlocks(final Arena arena) {
+        if (arena.getArenaSpawn() != null) {
+            final var b = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0);
+            if (arena.getSpawnBlockData() == null) {
+                arena.setSpawnBlockData(b.getBlockData().getAsString());
+            }
+            b.setType(org.bukkit.Material.EMERALD_BLOCK, false);
+        }
+        for (final var team : arena.getTeams()) {
+            if (team.getSpawn() != null) {
+                final var b = team.getSpawn().getBlock().getRelative(0, -1, 0);
+                if (team.getSpawnBlockData() == null) {
+                    team.setSpawnBlockData(b.getBlockData().getAsString());
+                }
+                final org.bukkit.Material wool = dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand.getWoolMaterial(team.getColor());
+                b.setType(wool, false);
+            }
         }
     }
 }

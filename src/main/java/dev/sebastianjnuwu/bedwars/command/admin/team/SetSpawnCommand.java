@@ -45,28 +45,42 @@ public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
             return;
         }
         final Location loc = player.getLocation();
-        team.setSpawn(loc);
-        final var spawnBlock = loc.getBlock().getRelative(0, -1, 0);
-        if (team.getSpawnBlockData() == null) {
-            team.setSpawnBlockData(spawnBlock.getBlockData().getAsString());
+        final org.bukkit.block.Block newSpawnBlock = loc.getBlock().getRelative(0, -1, 0);
+
+        if (team.getSpawn() != null && team.getSpawnBlockData() != null) {
+            try {
+                final org.bukkit.block.Block oldBlock = team.getSpawn().getBlock().getRelative(0, -1, 0);
+                oldBlock.setBlockData(org.bukkit.Bukkit.createBlockData(team.getSpawnBlockData()), false);
+            } catch (final Exception ignored) {
+            }
         }
+
+        team.setSpawn(loc);
+        team.setSpawnBlockData(newSpawnBlock.getBlockData().getAsString());
+
         final Material woolMaterial = this.getWoolMaterial(team.getColor());
-        spawnBlock.setType(woolMaterial);
+        newSpawnBlock.setType(woolMaterial, false);
+
         this.arenaManager.save(arena);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.setspawn_success", colorName));
     }
 
-    private Material getWoolMaterial(final String dyeColor) {
+    public static Material getWoolMaterial(final String dyeColor) {
         if (dyeColor == null) return Material.WHITE_WOOL;
         return switch (dyeColor.toUpperCase()) {
-            case "RED" -> Material.RED_WOOL;
-            case "BLUE" -> Material.BLUE_WOOL;
-            case "GREEN" -> Material.GREEN_WOOL;
-            case "YELLOW" -> Material.YELLOW_WOOL;
-            case "PURPLE" -> Material.PURPLE_WOOL;
-            case "PINK" -> Material.PINK_WOOL;
-            case "ORANGE" -> Material.ORANGE_WOOL;
-            case "CYAN" -> Material.CYAN_WOOL;
+            case "RED", "VERMELHO" -> Material.RED_WOOL;
+            case "BLUE", "AZUL" -> Material.BLUE_WOOL;
+            case "GREEN", "VERDE" -> Material.GREEN_WOOL;
+            case "YELLOW", "AMARELO" -> Material.YELLOW_WOOL;
+            case "PURPLE", "ROXO" -> Material.PURPLE_WOOL;
+            case "PINK", "ROSA" -> Material.PINK_WOOL;
+            case "ORANGE", "LARANJA" -> Material.ORANGE_WOOL;
+            case "CYAN", "CIANO" -> Material.CYAN_WOOL;
+            case "LIME", "VERDE_LIMA" -> Material.LIME_WOOL;
+            case "LIGHT_BLUE", "AZUL_CLARO" -> Material.LIGHT_BLUE_WOOL;
+            case "GRAY", "CINZA" -> Material.GRAY_WOOL;
+            case "BLACK", "PRETO" -> Material.BLACK_WOOL;
+            case "WHITE", "BRANCO" -> Material.WHITE_WOOL;
             default -> Material.WHITE_WOOL;
         };
     }

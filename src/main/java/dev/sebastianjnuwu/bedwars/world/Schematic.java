@@ -6,8 +6,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +24,26 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
 
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
+import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
+import com.sk89q.worldedit.function.operation.Operation;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.session.ClipboardHolder;
+
 /**
  * Representa um schematic (cópia de uma região de blocos).
- * Pode ser salvo em arquivo e carregado para colar em qualquer mundo.
+ * Suporta formatos de WorldEdit (.schem, .schematic, .nbt) e formato interno (.bwmap).
  */
 public class Schematic {
 
@@ -33,6 +53,7 @@ public class Schematic {
     private final int length;
     private final List<BlockData> blocks;
     private final List<int[]> positions;
+    private Clipboard clipboard;
 
     /**
      * Cria um schematic a partir de uma região do mundo.
@@ -59,17 +80,37 @@ public class Schematic {
         this.blocks = new ArrayList<>();
         this.positions = new ArrayList<>();
 
-        for (int y = minY; y <= maxY; y++) {
-            for (int x = minX; x <= maxX; x++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    final Block block = world.getBlockAt(x, y, z);
-                    if (!block.getType().isAir()) {
-                        this.blocks.add(block.getBlockData());
-                        this.positions.add(new int[]{
-                                x - minX,
-                                y - minY,
-                                z - minZ
-                        });
+        if (world != null && Bukkit.getPluginManager().isPluginEnabled("WorldEdit")) {
+            try {
+                final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
+                final CuboidRegion region = new CuboidRegion(weWorld,
+                        BlockVector3.at(minX, minY, minZ),
+                        BlockVector3.at(maxX, maxY, maxZ));
+                final BlockArrayClipboard cb = new BlockArrayClipboard(region);
+                cb.setOrigin(BlockVector3.at(minX, minY, minZ));
+
+                try (final EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
+                    final ForwardExtentCopy copy = new ForwardExtentCopy(editSession, region, cb, region.getMinimumPoint());
+                    Operations.complete(copy);
+                }
+                this.clipboard = cb;
+            } catch (final Throwable ignored) {
+            }
+        }
+
+        if (world != null) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int x = minX; x <= maxX; x++) {
+                    for (int z = minZ; z <= maxZ; z++) {
+                        final Block block = world.getBlockAt(x, y, z);
+                        if (!block.getType().isAir()) {
+                            this.blocks.add(block.getBlockData());
+                            this.positions.add(new int[]{
+                                    x - minX,
+                                    y - minY,
+                                    z - minZ
+                            });
+                        }
                     }
                 }
             }
@@ -97,12 +138,35 @@ public class Schematic {
 
     /**
      * Cola o schematic no mundo a partir da posição base.
-     * Otimizado: agrupa blocos por chunk e pré-carrega os chunks.
+     * Tenta usar o WorldEdit EditSession para alta performance e conservação de NBT/BlockData.
+     * Caso contrário, usa agrupamento de blocos por chunk.
      *
      * @param base localização base (canto mínimo)
      */
     public void paste(final @NotNull Location base) {
         final World world = base.getWorld();
+        if (world == null) {
+            return;
+        }
+
+        if (this.clipboard != null && Bukkit.getPluginManager().isPluginEnabled("WorldEdit")) {
+            try {
+                final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
+                try (final EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
+                    final BlockVector3 to = BlockVector3.at(base.getBlockX(), base.getBlockY(), base.getBlockZ());
+                    final Operation operation = new ClipboardHolder(this.clipboard)
+                            .createPaste(editSession)
+                            .to(to)
+                            .ignoreAirBlocks(false)
+                            .build();
+                    Operations.complete(operation);
+                    return;
+                }
+            } catch (final Throwable ignored) {
+            }
+        }
+
+        // Colagem otimizada interna por agrupamento de chunks
         final int baseX = base.getBlockX();
         final int baseY = base.getBlockY();
         final int baseZ = base.getBlockZ();
@@ -112,7 +176,7 @@ public class Schematic {
             final int[] pos = this.positions.get(i);
             final int cx = (baseX + pos[0]) >> 4;
             final int cz = (baseZ + pos[2]) >> 4;
-            final long key = (long) cx << 32 | (cz & 0xFFFFFFFFL);
+            final long key = ((long) cx << 32) | (cz & 0xFFFFFFFFL);
             chunkMap.computeIfAbsent(key, k -> new ArrayList<>()).add(i);
         }
 
@@ -121,6 +185,9 @@ public class Schematic {
             final int cz = (int) key;
             world.getChunkAt(cx, cz);
         }
+
+        final int minH = world.getMinHeight();
+        final int maxH = world.getMaxHeight();
 
         for (final var entry : chunkMap.entrySet()) {
             final long key = entry.getKey();
@@ -131,20 +198,35 @@ public class Schematic {
             for (final int i : entry.getValue()) {
                 final int[] pos = this.positions.get(i);
                 final int wx = baseX + pos[0];
+                final int wy = baseY + pos[1];
                 final int wz = baseZ + pos[2];
-                chunk.getBlock(wx & 0xF, baseY + pos[1], wz & 0xF)
-                        .setBlockData(this.blocks.get(i), false);
+                if (wy >= minH && wy < maxH) {
+                    chunk.getBlock(wx & 0xF, wy, wz & 0xF)
+                            .setBlockData(this.blocks.get(i), false);
+                }
             }
         }
     }
 
     /**
      * Salva o schematic em um arquivo.
+     * Se o WorldEdit estiver ativo e o nome do arquivo terminar em .schem ou .schematic, salva no formato WorldEdit Sponge.
      *
      * @param file arquivo de destino
      * @throws IOException se houver erro de escrita
      */
     public void save(final @NotNull File file) throws IOException {
+        if (Bukkit.getPluginManager().isPluginEnabled("WorldEdit") && this.clipboard != null
+                && (file.getName().endsWith(".schem") || file.getName().endsWith(".schematic"))) {
+            try (final OutputStream os = new FileOutputStream(file);
+                 final ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(os)) {
+                writer.write(this.clipboard);
+                return;
+            } catch (final Throwable ignored) {
+            }
+        }
+
+        // Formato legado/customizado .bwmap
         try (final DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
             out.writeUTF(this.name);
             out.writeInt(this.width);
@@ -163,13 +245,64 @@ public class Schematic {
     }
 
     /**
-     * Carrega um schematic de um arquivo.
+     * Carrega um schematic de um arquivo. Suporta WorldEdit (.schem, .schematic, .nbt) e formato interno (.bwmap).
      *
      * @param file arquivo de origem
      * @return schematic carregado
      * @throws IOException se houver erro de leitura
      */
     public static Schematic load(final @NotNull File file) throws IOException {
+        if (!file.exists()) {
+            throw new FileNotFoundException("Arquivo de mapa não encontrado: " + file.getName());
+        }
+
+        if (Bukkit.getPluginManager().isPluginEnabled("WorldEdit")) {
+            try {
+                final ClipboardFormat format = ClipboardFormats.findByFile(file);
+                if (format != null) {
+                    try (final InputStream is = new FileInputStream(file);
+                         final ClipboardReader reader = format.getReader(is)) {
+                        final Clipboard clipboard = reader.read();
+                        return fromWorldEditClipboard(file.getName(), clipboard);
+                    }
+                }
+            } catch (final Throwable ignored) {
+            }
+        }
+
+        return loadCustomBwmap(file);
+    }
+
+    private static Schematic fromWorldEditClipboard(final String name, final Clipboard clipboard) {
+        final var region = clipboard.getRegion();
+        final BlockVector3 min = region.getMinimumPoint();
+
+        final int width = clipboard.getDimensions().x();
+        final int height = clipboard.getDimensions().y();
+        final int length = clipboard.getDimensions().z();
+
+        final List<BlockData> blocks = new ArrayList<>();
+        final List<int[]> positions = new ArrayList<>();
+
+        for (final BlockVector3 pt : region) {
+            final var state = clipboard.getBlock(pt);
+            final BlockData data = BukkitAdapter.adapt(state);
+            if (!data.getMaterial().isAir()) {
+                blocks.add(data);
+                positions.add(new int[]{
+                        pt.x() - min.x(),
+                        pt.y() - min.y(),
+                        pt.z() - min.z()
+                });
+            }
+        }
+
+        final Schematic schematic = new Schematic(name, width, height, length, blocks, positions);
+        schematic.clipboard = clipboard;
+        return schematic;
+    }
+
+    private static Schematic loadCustomBwmap(final File file) throws IOException {
         try (final DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
             final String name = in.readUTF();
             final int width = in.readInt();
@@ -220,3 +353,4 @@ public class Schematic {
         return this.length;
     }
 }
+
