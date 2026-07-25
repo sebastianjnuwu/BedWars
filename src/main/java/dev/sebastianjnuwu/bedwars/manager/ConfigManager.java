@@ -1,0 +1,173 @@
+package dev.sebastianjnuwu.bedwars.manager;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Gerencia configurações globais do plugin (não por arena).
+ * Salva em config.yml na pasta do plugin.
+ */
+public class ConfigManager {
+
+    private static final Set<Material> FORGE_MATERIALS = Set.of(
+            Material.IRON_INGOT, Material.GOLD_INGOT, Material.DIAMOND, Material.EMERALD
+    );
+
+    private final JavaPlugin plugin;
+    private final File file;
+    private YamlConfiguration config;
+
+    /**
+     * Cria o gerenciador de configuração global.
+     *
+     * @param plugin instância do plugin
+     */
+    public ConfigManager(final JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), "config.yml");
+        this.load();
+    }
+
+    /**
+     * Carrega ou cria o config.yml.
+     */
+    public void load() {
+        if (!this.file.exists()) {
+            this.plugin.saveResource("config.yml", false);
+        }
+        this.config = YamlConfiguration.loadConfiguration(this.file);
+        if (this.addMissingForgeDefaults()) {
+            this.save();
+        }
+    }
+
+    /**
+     * Salva as alterações no disco.
+     */
+    public void save() {
+        try {
+            this.config.save(this.file);
+        } catch (final IOException e) {
+            this.plugin.getLogger().severe("Erro ao salvar config.yml: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Define o lobby global do BedWars.
+     *
+     * @param location local do lobby
+     */
+    public void setLobby(final Location location) {
+        this.config.set("lobby.world", location.getWorld().getName());
+        this.config.set("lobby.x", location.getBlockX());
+        this.config.set("lobby.y", location.getBlockY());
+        this.config.set("lobby.z", location.getBlockZ());
+        this.config.set("lobby.yaw", (double) location.getYaw());
+        this.config.set("lobby.pitch", (double) location.getPitch());
+        this.save();
+    }
+
+    /**
+     * Retorna o lobby global do BedWars.
+     *
+     * @return local do lobby ou null se não definido
+     */
+    public Location getLobby() {
+        if (!this.config.contains("lobby")) {
+            return null;
+        }
+        final String worldName = this.config.getString("lobby.world");
+        if (worldName == null) {
+            return null;
+        }
+        final World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            return null;
+        }
+        return new Location(
+                world,
+                this.config.getDouble("lobby.x"),
+                this.config.getDouble("lobby.y"),
+                this.config.getDouble("lobby.z"),
+                (float) this.config.getDouble("lobby.yaw"),
+                (float) this.config.getDouble("lobby.pitch")
+        );
+    }
+
+    /**
+     * Verifica se o lobby global está configurado.
+     *
+     * @return true se configurado
+     */
+    public boolean hasLobby() {
+        return this.config.contains("lobby");
+    }
+
+    /**
+     * Retorna o idioma configurado.
+     *
+     * @return código do idioma (ex: "pt_BR")
+     */
+    public String getLang() {
+        return this.config.getString("lang", "pt_BR");
+    }
+
+    /** Returns the configured maximum forge level, with a safe minimum of one. */
+    public int getForgeMaxLevel() {
+        return Math.max(1, this.config.getInt("forge.max-level", 1));
+    }
+
+    /**
+     * Returns the item intervals, in ticks, for a forge level. Invalid entries are ignored.
+     */
+    public Map<Material, Long> getForgeIntervals(final int level) {
+        final Map<Material, Long> intervals = new EnumMap<>(Material.class);
+        final ConfigurationSection section = this.config.getConfigurationSection("forge.levels." + level);
+        if (section == null) return intervals;
+
+        for (final String itemName : section.getKeys(false)) {
+            final Material material = Material.matchMaterial(itemName + "_INGOT");
+            final Material resolved = material != null ? material : Material.matchMaterial(itemName);
+            final long interval = section.getLong(itemName + ".interval", 0L);
+            if (resolved != null && FORGE_MATERIALS.contains(resolved) && interval > 0L) {
+                intervals.put(resolved, interval);
+            }
+        }
+        return intervals;
+    }
+
+    /** Adds new forge options to existing configuration files without overwriting custom values. */
+    private boolean addMissingForgeDefaults() {
+        boolean changed = false;
+        changed |= this.setDefault("forge.max-level", 4);
+        changed |= this.setDefault("forge.levels.1.iron.interval", 20);
+        changed |= this.setDefault("forge.levels.1.gold.interval", 80);
+        changed |= this.setDefault("forge.levels.2.iron.interval", 15);
+        changed |= this.setDefault("forge.levels.2.gold.interval", 60);
+        changed |= this.setDefault("forge.levels.3.iron.interval", 10);
+        changed |= this.setDefault("forge.levels.3.gold.interval", 40);
+        changed |= this.setDefault("forge.levels.4.iron.interval", 5);
+        changed |= this.setDefault("forge.levels.4.gold.interval", 30);
+        changed |= this.setDefault("forge.levels.4.diamond.interval", 600);
+        changed |= this.setDefault("forge.levels.4.emerald.interval", 1200);
+        return changed;
+    }
+
+    private boolean setDefault(final String path, final Object value) {
+        if (this.config.contains(path)) return false;
+        this.config.set(path, value);
+        return true;
+    }
+
+}

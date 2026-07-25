@@ -1,0 +1,161 @@
+package dev.sebastianjnuwu.bedwars.manager;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.model.GameState;
+import dev.sebastianjnuwu.bedwars.game.Game;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Manages all active BedWars games and player-to-game mappings.
+ * Handles game creation, joining, leaving, and cleanup.
+ */
+public class GameManager {
+
+    private final JavaPlugin plugin;
+    private final ArenaManager arenaManager;
+    private final ConfigManager configManager;
+    private final LangManager lang;
+    private final Map<String, Game> games;
+    private final Map<UUID, Game> playerGames;
+
+    public GameManager(final JavaPlugin plugin, final ArenaManager arenaManager, final ConfigManager configManager, final LangManager lang) {
+        this.plugin = plugin;
+        this.arenaManager = arenaManager;
+        this.configManager = configManager;
+        this.lang = lang;
+        this.games = new HashMap<>();
+        this.playerGames = new HashMap<>();
+    }
+
+    public JavaPlugin getPlugin() {
+        return this.plugin;
+    }
+
+    public LangManager getLang() {
+        return this.lang;
+    }
+
+    public ConfigManager getConfigManager() {
+        return this.configManager;
+    }
+
+    public @Nullable Game getGame(final String arenaName) {
+        return this.games.get(arenaName);
+    }
+
+    public @Nullable Game getPlayerGame(final Player player) {
+        return this.playerGames.get(player.getUniqueId());
+    }
+
+    public boolean isInGame(final Player player) {
+        return this.playerGames.containsKey(player.getUniqueId());
+    }
+
+    public List<String> validateArena(final Arena arena) {
+        final List<String> missing = new ArrayList<>();
+        if (arena.getArenaSpawn() == null) {
+            missing.add(this.lang.raw("game.validate_spawn", arena.getName()));
+        }
+        if (arena.getTeams().size() < 2) {
+            missing.add(this.lang.raw("game.validate_teams", arena.getName()));
+        }
+        for (final ArenaTeam team : arena.getTeams()) {
+            if (team.getSpawn() == null) {
+                missing.add(this.lang.raw("game.validate_team_spawn", team.getName()));
+            }
+            if (team.getBed() == null) {
+                missing.add(this.lang.raw("game.validate_team_bed", team.getName()));
+            }
+        }
+        final boolean hasForge = arena.getGenerators().stream()
+                .anyMatch(generator -> generator.getType().equalsIgnoreCase("forge"));
+        if (!hasForge) {
+            missing.add(this.lang.raw("game.validate_forge"));
+        }
+        return missing;
+    }
+
+    public void joinGame(final Player player, final String arenaName) {
+        this.joinGame(player, arenaName, null);
+    }
+
+    public void joinGame(final Player player, final String arenaName, final @Nullable String teamName) {
+        if (this.isInGame(player)) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_game"));
+            return;
+        }
+        final Arena arena = this.arenaManager.get(arenaName);
+        if (arena == null) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.arena_not_found", arenaName));
+            return;
+        }
+
+        final List<String> missing = this.validateArena(arena);
+        if (!missing.isEmpty()) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
+            for (final String msg : missing) {
+                player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.missing_entry", msg));
+            }
+            return;
+        }
+
+        Game game = this.games.get(arenaName);
+        if (game == null) {
+            game = new dev.sebastianjnuwu.bedwars.game.Game(this, arena);
+            this.games.put(arenaName, game);
+        }
+
+        if (game.getState() != GameState.WAITING && game.getState() != GameState.STARTING) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.in_progress"));
+            return;
+        }
+
+        game.join(player, teamName);
+        this.playerGames.put(player.getUniqueId(), game);
+    }
+
+    public void leaveGame(final Player player) {
+        final Game game = this.playerGames.remove(player.getUniqueId());
+        if (game != null) {
+            game.leave(player);
+            if (game.getPlayerCount() == 0) {
+                this.games.remove(game.getArena().getName());
+            }
+        }
+    }
+
+    public void startGame(final String arenaName) {
+        final Game game = this.games.get(arenaName);
+        if (game == null) {
+            return;
+        }
+        final Arena arena = game.getArena();
+        final List<String> missing = this.validateArena(arena);
+        if (!missing.isEmpty()) {
+            return;
+        }
+        game.start();
+    }
+
+    public void removePlayerMapping(final Player player) {
+        this.playerGames.remove(player.getUniqueId());
+    }
+
+    public void removeGame(final String arenaName) {
+        final Game game = this.games.remove(arenaName);
+        if (game != null) {
+            this.playerGames.values().removeIf(g -> g == game);
+        }
+    }
+}

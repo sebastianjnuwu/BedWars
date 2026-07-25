@@ -1,0 +1,104 @@
+# ─────────────────────────────────────
+# Configuração global do BedWars
+# ─────────────────────────────────────
+
+# Idioma do plugin.
+# O arquivo deve existir em: plugins/BedWars/lang/<idioma>.yml
+lang: pt_BR
+
+# Geradores disponíveis no plugin.
+# O material deve ser um Material válido da API do Bukkit/Paper.
+generators:
+  # Gerador de ferro.
+  iron:
+    material: IRON_INGOT
+
+  # Gerador de ouro.
+  gold:
+    material: GOLD_INGOT
+
+  # Gerador de diamante.
+  diamond:
+    material: DIAMOND
+
+  # Gerador de esmeralda.
+  emerald:
+    material: EMERALD
+
+# Configuração da fornalha (Forge).
+# Cada melhoria aumenta a velocidade dos geradores da base.
+forge:
+  max-level: 10
+  levels:
+    1:
+      iron:
+        interval: 20
+    2:
+      iron:
+        interval: 18
+      gold:
+        interval: 100
+    3:
+      iron:
+        interval: 16
+      gold:
+        interval: 90
+    4:
+      iron:
+        interval: 14
+      gold:
+        interval: 80
+      diamond:
+        interval: 1200
+    5:
+      iron:
+        interval: 12
+      gold:
+        interval: 70
+      diamond:
+        interval: 1000
+    6:
+      iron:
+        interval: 10
+      gold:
+        interval: 60
+      diamond:
+        interval: 800
+      emerald:
+        interval: 2400
+    7:
+      iron:
+        interval: 8
+      gold:
+        interval: 50
+      diamond:
+        interval: 700
+      emerald:
+        interval: 2000
+    8:
+      iron:
+        interval: 6
+      gold:
+        interval: 40
+      diamond:
+        interval: 600
+      emerald:
+        interval: 1600
+    9:
+      iron:
+        interval: 5
+      gold:
+        interval: 30
+      diamond:
+        interval: 500
+      emerald:
+        interval: 1400
+    10:
+      iron:
+        interval: 4
+      gold:
+        interval: 20
+      diamond:
+        interval: 400
+      emerald:
+        interval: 1200

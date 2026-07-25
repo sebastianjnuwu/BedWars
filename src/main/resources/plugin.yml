@@ -1,0 +1,21 @@
+name: ${project.name}
+version: ${project.version}
+main: dev.sebastianjnuwu.bedwars.BedWarsPlugin
+api-version: 1.21
+author: sebastianjnuwu
+softdepend: [WorldEdit]
+description: Plugin de BedWars para Paper 1.21.4
+website: https://github.com/sebastianjnuwu
+
+commands:
+  bw:
+    description: Comando principal do BedWars
+    aliases: [bedwars]
+
+permissions:
+  bedwars.admin:
+    description: Permissão para comandos de admin
+    default: op
+  bedwars.play:
+    description: Permissão para jogar BedWars
+    default: true

@@ -1,0 +1,146 @@
+# ─────────────────────────────────────
+# Idioma: portugues brasileiro (pt_BR)
+# Plugin: BedWars
+# ─────────────────────────────────────
+
+# ── Comandos ──────────────────────────
+usage: "Use /bw admin <subcomando>"
+unknown_subcommand: "Subcomando desconhecido: {0}."
+commands_blocked: "Comandos bloqueados enquanto estiver no spawn da arena."
+
+# ── create ────────────────────────────
+create:
+  only_player: "Apenas jogadores podem criar arenas."
+  usage: "Uso: /bw create <nome>"
+  already_exists: "Arena {0} ja existe."
+  success: "Arena {0} criada com {1} blocos!"
+  no_selection: "Selecao incompleta! Use //pos1 e //pos2 do WorldEdit."
+  error: "Erro: {0}"
+
+# ── delete ────────────────────────────
+delete:
+  usage: "Uso: /bw delete <nome>"
+  not_found: "Arena {0} nao encontrada."
+  file_error: "Arena deletada, mas nao foi possivel remover o arquivo do mapa."
+  success: "Arena {0} deletada."
+
+# ── list ──────────────────────────────
+list:
+  empty: "Nenhuma arena cadastrada."
+  header: "Arenas ({0}):"
+  entry: " - {0} {1}"
+  status_ok: "[mapa OK]"
+  status_missing: "[sem mapa]"
+
+# ── save ──────────────────────────────
+save:
+  usage: "Uso: /bw save <nome>"
+  not_found: "Arena {0} nao existe. Use /bw create primeiro."
+  not_loaded: "Arena nao esta carregada para edicao. Use /bw load {0} primeiro."
+  world_not_found: "Mundo da arena nao encontrado."
+  not_editing: "Voce nao pode salvar esta arena. Apenas {0} esta editando ela."
+  success: "Mapa {0} salvo com sucesso!"
+  error: "Erro ao salvar: {0}"
+
+# ── load ──────────────────────────────
+load:
+  usage: "Uso: /bw load <nome>"
+  only_player: "Apenas jogadores podem carregar arenas."
+  not_found: "Arena {0} nao encontrada."
+  file_not_found: "Arquivo do mapa nao encontrado."
+  already_loaded: "Arena ja carregada! Use /bw edit {0} para editar."
+  already_being_edited: "A arena {0} ja esta sendo editada por {1}."
+  success: "Arena {0} carregada!"
+
+# ── geral ─────────────────────────────
+no_lobby: "O lobby global nao foi definido. Use /bw admin setlobby primeiro."
+
+# ── admin ─────────────────────────────
+admin:
+  usage: "Uso: /bw admin <create|delete|list|save|load|edit|setlobby|arena>"
+  unknown: "Subcomando admin desconhecido: {0}"
+  setlobby:
+    usage: "Uso: /bw admin setlobby"
+    only_player: "Apenas jogadores podem definir o lobby."
+    success: "Lobby global definido em {0}, {1}, {2}!"
+  arena:
+    usage: "Uso: /bw admin arena <arena> <spawn|addteam|removeteam|setspawn|setbed|addgenerator|teams|status>"
+    unknown: "Subcomando arena desconhecido: {0}"
+    spawn_success: "Spawn da arena {0} definido em {1}, {2}, {3}!"
+    not_in_world: "Voce precisa estar na arena {0} para usar este comando."
+    addteam_usage: "Uso: /bw admin arena <arena> addteam <cor>"
+    addteam_colors: "Cores: {0}"
+    addteam_invalid: "Cor invalida. Use: {0}"
+    addteam_exists: "Time {0} ja existe nesta arena."
+    addteam_success: "Time {0} adicionado a arena!"
+    removeteam_usage: "Uso: /bw admin arena <arena> removeteam <cor>"
+    removeteam_notfound: "Time {0} nao encontrado."
+    removeteam_success: "Time {0} removido da arena!"
+    setspawn_usage: "Uso: /bw admin arena <arena> setspawn <cor>"
+    setspawn_notfound: "Time {0} nao encontrado. Use addteam primeiro."
+    setspawn_success: "Spawn do time {0} definido!"
+    setbed_usage: "Uso: /bw admin arena <arena> setbed <cor>"
+    setbed_notfound: "Time {0} nao encontrado. Use addteam primeiro."
+    setbed_success: "Cama do time {0} definida virada para {1}!"
+    addgen_usage: "Uso: /bw admin arena <arena> addgenerator <bronze|ferro|ouro|forge>"
+    addgen_invalid: "Tipo invalido. Use bronze, ferro, ouro ou forge."
+    addgen_success: "Gerador de {0} adicionado!"
+    teams_none: "Nenhum time configurado."
+    teams_header: "Times da arena {0}:"
+    teams_entry: " - {0} [{1}] [{2}]"
+    teams_spawn_ok: "spawn OK"
+    teams_spawn_missing: "sem spawn"
+    teams_bed_ok: "cama OK"
+    teams_bed_missing: "sem cama"
+    status_header: "Status da arena {0}:"
+    status_ready: "Pronta para jogar!"
+    status_missing_header: "Faltando configurar:"
+    status_entry: " - {0}"
+    setminplayers_usage: "Uso: /bw admin arena <arena> setminplayers <numero>"
+    setminplayers_invalid: "Numero invalido. Use um numero maior que 0."
+    setminplayers_success: "Minimo de jogadores definido para {0}!"
+    setcountdown_usage: "Uso: /bw admin arena <arena> setcountdown <segundos>"
+    setcountdown_invalid: "Numero invalido. Use pelo menos 3 segundos."
+    setcountdown_success: "Tempo de contagem definido para {0} segundos!"
+
+# ── game ──────────────────────────────
+game:
+  validate_forge: "adicione pelo menos uma forja"
+  join_usage: "Uso: /bw join <arena> [time]"
+  already_in_game: "Voce ja esta em uma partida."
+  already_in_this_game: "Voce ja esta nesta partida."
+  arena_not_found: "Arena {0} nao encontrada."
+  not_ready: "A arena {0} nao esta pronta. Faltando:"
+  missing_entry: " - {0}"
+  in_progress: "A partida ja esta em andamento."
+  no_teams_available: "Nao ha times disponiveis nesta arena."
+  team_not_found: "Time \"{0}\" nao encontrado."
+  team_full: "Este time ja esta cheio."
+  join_broadcast: "{0} entrou na partida ({1}/{2})"
+  leave_broadcast: "{0} saiu da partida."
+  leave_success: "Voce saiu da partida."
+  start_usage: "Uso: /bw start <arena>"
+  countdown_cancelled: "Contagem cancelada. Jogadores insuficientes."
+  started: "PARTIDA INICIADA!"
+  bed_broken: "CAMA DO TIME {0} FOI DESTRUIDA!"
+  team_eliminated: "TIME {0} FOI ELIMINADO!"
+  you_eliminated: "Seu time foi eliminado!"
+  team_wins: "TIME {0} VENCEU A PARTIDA!"
+  cant_break_own_bed: "Voce nao pode quebrar a cama do seu proprio time!"
+  bed_destroyed: "§c{0} §7destruiu a cama do time §c{1}§7!"
+  respawned: "§aVoce reviveu!"
+  no_bed: "Sua cama foi destruida! Aguarde o fim da partida."
+  validate_spawn: "Spawn da arena (use /bw admin arena {0} spawn)"
+  validate_teams: "Pelo menos 2 times (use /bw admin arena {0} addteam <cor>)"
+  validate_team_spawn: "Spawn do time {0} (use setspawn)"
+  validate_team_bed: "Cama do time {0} (use setbed)"
+
+# ── edit ──────────────────────────────
+edit:
+  usage: "Uso: /bw edit <nome>"
+  only_player: "Apenas jogadores podem editar arenas."
+  not_found: "Arena {0} nao encontrada."
+  not_loaded: "Arena nao esta carregada. Use /bw load {0} primeiro."
+  world_not_found: "Mundo da arena nao encontrado. Use /bw load {0} novamente."
+  already_editing: "A arena {0} ja esta sendo editada por {1}."
+  teleported: "Teleportado para a arena {0}."

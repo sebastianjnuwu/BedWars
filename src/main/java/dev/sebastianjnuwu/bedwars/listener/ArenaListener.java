@@ -1,0 +1,377 @@
+package dev.sebastianjnuwu.bedwars.listener;
+
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.block.data.type.Bed;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+
+/**
+ * Listener responsável por proteger arenas durante o modo edição e fora de partidas.
+ * <p>
+ * Garante que jogadores que não estão em uma partida ativa não possam interagir com o mundo
+ * da arena (quebrar blocos, colocar blocos, sofrer dano, perder fome ou executar comandos).
+ * Durante o modo edição ({@link EditorManager}), jogadores podem modificar livremente a arena.
+ * </p>
+ *
+ * @see EditorManager
+ * @see ArenaManager
+ */
+public class ArenaListener implements Listener {
+
+    private final ArenaManager arenaManager;
+    private final GameManager gameManager;
+    private final EditorManager editorManager;
+    private final LangManager lang;
+
+    /**
+     * Constrói um novo {@code ArenaListener}.
+     *
+     * @param arenaManager  gerenciador de arenas (não nulo)
+     * @param gameManager   gerenciador de partidas (não nulo)
+     * @param editorManager gerenciador do modo edição (não nulo)
+     */
+    public ArenaListener(final ArenaManager arenaManager, final GameManager gameManager, final EditorManager editorManager) {
+        this.arenaManager = arenaManager;
+        this.gameManager = gameManager;
+        this.editorManager = editorManager;
+        this.lang = gameManager.getLang();
+    }
+
+    /**
+     * Verifica se um jogador deve ser protegido de interagir com o mundo da arena.
+     * <p>
+     * Um jogador <b>não</b> é protegido se:
+     * <ul>
+     *   <li>Estiver em uma partida ativa ({@link GameManager#isInGame(Player)})</li>
+     *   <li>Não estiver em um mundo de arena (nome do mundo não começa com "bw_")</li>
+     *   <li>Estiver no modo edição da arena atual</li>
+     * </ul>
+     * </p>
+     *
+     * @param player o jogador a ser verificado (não nulo)
+     * @return {@code true} se o jogador deve ser protegido, {@code false} caso contrário
+     */
+    private boolean shouldProtect(final Player player) {
+        if (this.gameManager.isInGame(player)) {
+            return false;
+        }
+        final Arena arena = this.getArena(player);
+        if (arena == null) {
+            return false;
+        }
+        if (this.editorManager.isEditing(player, arena.getName())) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Obtém a arena associada ao mundo em que o jogador se encontra.
+     * <p>
+     * O nome do mundo deve começar com o prefixo "bw_". O restante do nome é usado
+     * como identificador da arena.
+     * </p>
+     *
+     * @param player o jogador (não nulo)
+     * @return a arena correspondente ao mundo do jogador, ou {@code null} se o mundo
+     *         não for um mundo de arena ou a arena não estiver registrada
+     */
+    private @Nullable Arena getArena(final Player player) {
+        final String worldName = player.getWorld().getName();
+        if (!worldName.startsWith("bw_")) {
+            return null;
+        }
+        final String arenaName = worldName.substring(3);
+        return this.arenaManager.get(arenaName);
+    }
+
+    /**
+     * Manipula o evento de quebra de bloco.
+     * <p>
+     * Se o jogador estiver protegido, o evento é cancelado.
+     * Se o jogador estiver no modo edição, tenta restaurar o spawn da arena,
+     * o spawn do time, a cama ou o gerador correspondente ao bloco quebrado.
+     * </p>
+     *
+     * @param event o evento de quebra de bloco (não nulo)
+     */
+    @EventHandler
+    public void onBlockBreak(final BlockBreakEvent event) {
+        final Player player = event.getPlayer();
+        if (this.shouldProtect(player)) {
+            event.setCancelled(true);
+            return;
+        }
+        final Arena arena = this.getArena(player);
+        if (arena == null) return;
+        if (!this.editorManager.isEditing(player, arena.getName())) return;
+
+        final Block block = event.getBlock();
+        if (this.tryRestoreArenaSpawn(arena, block)) return;
+        if (this.tryRestoreTeamSpawn(arena, block)) return;
+        if (this.tryRestoreBed(arena, block)) return;
+        this.tryRestoreGenerator(arena, block);
+    }
+
+    /**
+     * Tenta restaurar o bloco de spawn da arena quando ele é quebrado no modo edição.
+     * <p>
+     * Se o bloco quebrado estiver localizado abaixo do marcador de spawn da arena,
+     * o bloco original é restaurado e o spawn da arena é removido.
+     * </p>
+     *
+     * @param arena a arena sendo editada (não nula)
+     * @param block o bloco quebrado (não nulo)
+     * @return {@code true} se o spawn da arena foi restaurado, {@code false} caso contrário
+     */
+    private boolean tryRestoreArenaSpawn(final Arena arena, final Block block) {
+        if (arena.getArenaSpawn() == null || arena.getSpawnBlockData() == null) return false;
+        final Location spawnBlock = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0).getLocation();
+        if (!this.isSameBlock(spawnBlock, block.getLocation())) return false;
+        block.setBlockData(org.bukkit.Bukkit.createBlockData(arena.getSpawnBlockData()), false);
+        arena.setArenaSpawn(null);
+        arena.setSpawnBlockData(null);
+        this.arenaManager.save(arena);
+        block.getWorld().getPlayers().stream()
+                .filter(p -> p.getWorld().equals(block.getWorld()))
+                .forEach(p -> p.sendMessage(Component.text("Spawn da arena removido!", NamedTextColor.YELLOW)));
+        return true;
+    }
+
+    /**
+     * Tenta restaurar o bloco de spawn de um time quando ele é quebrado no modo edição.
+     * <p>
+     * Itera sobre todos os times da arena. Se o bloco quebrado estiver abaixo do
+     * marcador de spawn de algum time, o bloco original é restaurado e o spawn do time é removido.
+     * </p>
+     *
+     * @param arena a arena sendo editada (não nula)
+     * @param block o bloco quebrado (não nulo)
+     * @return {@code true} se o spawn de algum time foi restaurado, {@code false} caso contrário
+     */
+    private boolean tryRestoreTeamSpawn(final Arena arena, final Block block) {
+        for (final ArenaTeam team : arena.getTeams()) {
+            if (team.getSpawn() == null || team.getSpawnBlockData() == null) continue;
+            final Location markerLoc = team.getSpawn().getBlock().getRelative(0, -1, 0).getLocation();
+            if (!this.isSameBlock(markerLoc, block.getLocation())) continue;
+            block.setBlockData(org.bukkit.Bukkit.createBlockData(team.getSpawnBlockData()), false);
+            team.setSpawn(null);
+            team.setSpawnBlockData(null);
+            this.arenaManager.save(arena);
+            block.getWorld().getPlayers().stream()
+                    .filter(p -> p.getWorld().equals(block.getWorld()))
+                    .forEach(p -> p.sendMessage(Component.text("Spawn do time " + team.getName() + " removido!", NamedTextColor.YELLOW)));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Tenta restaurar a cama de um time quando ela é quebrada no modo edição.
+     * <p>
+     * Se o bloco quebrado for uma cama e pertencer a algum time da arena,
+     * a cama é removida e o bloco é substituído por ar.
+     * </p>
+     *
+     * @param arena a arena sendo editada (não nula)
+     * @param block o bloco quebrado (não nulo)
+     * @return {@code true} se a cama de algum time foi removida, {@code false} caso contrário
+     */
+    private boolean tryRestoreBed(final Arena arena, final Block block) {
+        if (!(block.getBlockData() instanceof Bed)) return false;
+        for (final ArenaTeam team : arena.getTeams()) {
+            if (team.getBed() == null) continue;
+            if (!this.isSameBlock(team.getBed(), block.getLocation())) continue;
+            block.setType(Material.AIR, false);
+            team.setBed(null);
+            team.setBedFacing(null);
+            this.arenaManager.save(arena);
+            block.getWorld().getPlayers().stream()
+                    .filter(p -> p.getWorld().equals(block.getWorld()))
+                    .forEach(p -> p.sendMessage(Component.text("Cama do time " + team.getName() + " removida!", NamedTextColor.YELLOW)));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Tenta restaurar o gerador quando ele é quebrado no modo edição.
+     * <p>
+     * Itera sobre a lista de geradores da arena. Se o bloco quebrado corresponder
+     * à localização do gerador ou ao bloco acima dele, o bloco original é restaurado
+     * e o gerador é removido da lista.
+     * </p>
+     *
+     * @param arena a arena sendo editada (não nula)
+     * @param block o bloco quebrado (não nulo)
+     */
+    private void tryRestoreGenerator(final Arena arena, final Block block) {
+        final List<ArenaGenerator> gens = arena.getGenerators();
+        for (int i = 0; i < gens.size(); i++) {
+            final ArenaGenerator gen = gens.get(i);
+            final Location loc = gen.getLocation();
+            if (this.isSameBlock(loc, block.getLocation())) {
+                if (gen.getOriginBlockData() != null) {
+                    block.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
+                }
+                this.removeForgeHologram(gen);
+                arena.getGenerators().remove(i);
+                this.arenaManager.save(arena);
+                block.getWorld().getPlayers().stream()
+                        .filter(p -> p.getWorld().equals(block.getWorld()))
+                        .forEach(p -> p.sendMessage(Component.text("Gerador de " + gen.getType() + " removido!", NamedTextColor.YELLOW)));
+                return;
+            }
+            final Location above = loc.clone().add(0, 1, 0);
+            if (this.isSameBlock(above, block.getLocation())) {
+                if (gen.getOriginBlockDataAbove() != null) {
+                    block.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockDataAbove()), false);
+                }
+                this.removeForgeHologram(gen);
+                arena.getGenerators().remove(i);
+                this.arenaManager.save(arena);
+                block.getWorld().getPlayers().stream()
+                        .filter(p -> p.getWorld().equals(block.getWorld()))
+                        .forEach(p -> p.sendMessage(Component.text("Gerador de " + gen.getType() + " removido!", NamedTextColor.YELLOW)));
+                return;
+            }
+        }
+    }
+
+    private void removeForgeHologram(final ArenaGenerator generator) {
+        if (!generator.getType().equalsIgnoreCase("forge")) return;
+        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
+        location.getWorld().getNearbyEntitiesByType(ArmorStand.class, location, 1.0)
+                .stream()
+                .filter(stand -> stand.getScoreboardTags().contains("bedwars_forge_hologram"))
+                .forEach(ArmorStand::remove);
+    }
+
+    /**
+     * Verifica se duas localizações referem-se ao mesmo bloco (mesmo mundo e coordenadas).
+     *
+     * @param a primeira localização (não nula)
+     * @param b segunda localização (não nula)
+     * @return {@code true} se ambas as localizações apontam para o mesmo bloco
+     */
+    private boolean isSameBlock(final Location a, final Location b) {
+        return a.getWorld().equals(b.getWorld())
+                && a.getBlockX() == b.getBlockX()
+                && a.getBlockY() == b.getBlockY()
+                && a.getBlockZ() == b.getBlockZ();
+    }
+
+    /**
+     * Manipula o evento de colocação de bloco.
+     * <p>
+     * Se o jogador estiver protegido, o evento é cancelado.
+     * </p>
+     *
+     * @param event o evento de colocação de bloco (não nulo)
+     */
+    @EventHandler
+    public void onBlockPlace(final BlockPlaceEvent event) {
+        final Player player = event.getPlayer();
+        if (this.shouldProtect(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Manipula o evento de dano a entidades.
+     * <p>
+     * Se a entidade atingida for um jogador protegido, o dano é cancelado.
+     * </p>
+     *
+     * @param event o evento de dano (não nulo)
+     */
+    @EventHandler
+    public void onEntityDamage(final EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof final Player player)) {
+            return;
+        }
+        if (this.shouldProtect(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Manipula o evento de dano causado por uma entidade a outra.
+     * <p>
+     * Se a entidade atingida for um jogador protegido, o dano é cancelado.
+     * </p>
+     *
+     * @param event o evento de dano por entidade (não nulo)
+     */
+    @EventHandler
+    public void onEntityDamageByEntity(final EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof final Player player)) {
+            return;
+        }
+        if (this.shouldProtect(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Manipula o evento de alteração do nível de fome.
+     * <p>
+     * Se a entidade for um jogador protegido, a alteração da fome é cancelada.
+     * </p>
+     *
+     * @param event o evento de alteração de fome (não nulo)
+     */
+    @EventHandler
+    public void onFoodLevelChange(final FoodLevelChangeEvent event) {
+        if (!(event.getEntity() instanceof final Player player)) {
+            return;
+        }
+        if (this.shouldProtect(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Manipula o evento de execução de comando por um jogador.
+     * <p>
+     * Comandos que iniciam com "/bw " são permitidos. Todos os outros comandos
+     * são bloqueados para jogadores protegidos, e uma mensagem de erro é exibida.
+     * </p>
+     *
+     * @param event o evento de comando (não nulo)
+     */
+    @EventHandler
+    public void onPlayerCommand(final PlayerCommandPreprocessEvent event) {
+        final Player player = event.getPlayer();
+        final String cmd = event.getMessage().toLowerCase();
+        if (cmd.startsWith("/bw ")) {
+            return;
+        }
+        if (this.shouldProtect(player)) {
+            event.setCancelled(true);
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "commands_blocked"));
+        }
+    }
+}
