@@ -23,6 +23,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
@@ -619,10 +620,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                             if (player == null) continue;
                             player.getInventory().clear();
                             final Location lobby = this.gameManager.getConfigManager().getLobby();
-                            if (lobby != null) {
+                            if (lobby != null && lobby.getWorld() != null) {
                                 player.teleport(lobby);
                             } else {
-                                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+                                final World defaultWorld = Bukkit.getWorlds().get(0);
+                                if (defaultWorld != null) {
+                                    player.teleport(defaultWorld.getSpawnLocation());
+                                }
                             }
                             player.setGameMode(GameMode.SURVIVAL);
                             player.clearTitle();

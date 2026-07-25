@@ -74,7 +74,8 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
             }
         }
 
-        final Location loc = player.getLocation().getBlock().getLocation();
+        // Gerador fica no bloco embaixo do player, marcador também fica lá
+        final Location loc = player.getLocation().getBlock().getRelative(0, -1, 0).getLocation();
         for (final var gen : arena.getGenerators()) {
             if (gen.getLocation() != null && gen.getLocation().equals(loc)) {
                 player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_duplicate"));
@@ -86,9 +87,9 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
         if (teamName != null) {
             gen.setTeam(teamName);
         }
-        final var below = loc.getBlock().getRelative(0, -1, 0);
+        final var markerBlock = loc.getBlock();
         if (gen.getOriginBlockData() == null) {
-            gen.setOriginBlockData(below.getBlockData().getAsString());
+            gen.setOriginBlockData(markerBlock.getBlockData().getAsString());
         }
         final Material marker = switch (type) {
             case "diamond" -> Material.DIAMOND_ORE;
@@ -98,10 +99,43 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
             case "forge"   -> Material.BLAST_FURNACE;
             default        -> Material.SPONGE;
         };
-        below.setType(marker);
+        markerBlock.setType(marker);
 
         arena.addGenerator(gen);
         this.arenaManager.save(arena);
+        
+        // Criar holograma do gerador
+        this.createGeneratorHologram(gen);
+        
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.addgen_success", type));
+    }
+
+    private void createGeneratorHologram(final dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator generator) {
+        if (generator.getLocation() == null) return;
+        
+        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
+        final org.bukkit.entity.ArmorStand hologram = (org.bukkit.entity.ArmorStand) location.getWorld().spawnEntity(location, org.bukkit.entity.EntityType.ARMOR_STAND);
+        
+        hologram.setInvisible(true);
+        hologram.setMarker(true);
+        hologram.setGravity(false);
+        hologram.addScoreboardTag("bedwars_generator_hologram");
+        
+        String displayName = switch (generator.getType().toLowerCase()) {
+            case "iron" -> "§7Ferro";
+            case "gold" -> "§6Ouro";
+            case "diamond" -> "§bDiamante";
+            case "emerald" -> "§aEsmeralda";
+            case "forge" -> {
+                if (generator.getTeam() != null) {
+                    yield "§eForja §7(" + generator.getTeam() + ")";
+                }
+                yield "§eForja";
+            }
+            default -> generator.getType();
+        };
+        
+        hologram.setCustomName(displayName);
+        hologram.setCustomNameVisible(true);
     }
 }

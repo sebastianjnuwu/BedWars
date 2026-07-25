@@ -131,6 +131,12 @@ public class GameManager {
             this.games.put(arenaName, game);
         }
 
+        // Allow creating a new game if the current one is ending
+        if (game.getState() == GameState.ENDING) {
+            game = new dev.sebastianjnuwu.bedwars.game.Game(this, refreshedArena);
+            this.games.put(arenaName, game);
+        }
+
         if (game.getState() != GameState.WAITING && game.getState() != GameState.STARTING) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.in_progress"));
             return;

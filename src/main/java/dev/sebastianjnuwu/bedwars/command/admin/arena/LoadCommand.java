@@ -133,7 +133,7 @@ public class LoadCommand extends BaseCommand implements SubCommand {
             }
             schematic.paste(pasteLocation);
             arena.setWorldName(worldName);
-            this.showMarkerBlocks(arena);
+            this.arenaManager.showMarkerBlocks(arena);
             this.editorManager.startSession(player, name);
             this.arenaManager.save(arena);
             player.teleport(pasteLocation);
@@ -141,26 +141,6 @@ public class LoadCommand extends BaseCommand implements SubCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "load.success"));
         } catch (final Exception e) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.error", e.getMessage()));
-        }
-    }
-
-    private void showMarkerBlocks(final Arena arena) {
-        if (arena.getArenaSpawn() != null) {
-            final var b = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0);
-            if (arena.getSpawnBlockData() == null) {
-                arena.setSpawnBlockData(b.getBlockData().getAsString());
-            }
-            b.setType(org.bukkit.Material.EMERALD_BLOCK, false);
-        }
-        for (final var team : arena.getTeams()) {
-            if (team.getSpawn() != null) {
-                final var b = team.getSpawn().getBlock().getRelative(0, -1, 0);
-                if (team.getSpawnBlockData() == null) {
-                    team.setSpawnBlockData(b.getBlockData().getAsString());
-                }
-                final org.bukkit.Material wool = dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand.getWoolMaterial(team.getColor());
-                b.setType(wool, false);
-            }
         }
     }
 }

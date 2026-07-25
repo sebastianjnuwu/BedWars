@@ -81,7 +81,9 @@ public class ArenaManager {
         }
         this.reload(arena.getName());
         final Arena refreshed = this.get(arena.getName());
-        return refreshed != null && refreshed.getArenaSpawn() != null;
+        // Se o mundo acabou de ser criado, o arena_spawn pode ser null temporariamente
+        // Mas o mundo está pronto, então consideramos a arena pronta
+        return refreshed != null;
     }
 
     /**
@@ -184,7 +186,7 @@ public class ArenaManager {
                 if (team.getSpawnBlockData() == null) {
                     team.setSpawnBlockData(block.getBlockData().getAsString());
                 }
-                block.setType(SetSpawnCommand.getSpawnMarkerMaterial(team.getColor()), false);
+                block.setType(getTeamConcreteMaterial(team.getColor()), false);
             }
         }
         for (final ArenaGenerator generator : arena.getGenerators()) {
@@ -197,7 +199,58 @@ public class ArenaManager {
             }
             final Material marker = this.getGeneratorMarker(generator.getType());
             below.setType(marker, false);
+            
+            // Criar holograma do gerador
+            this.createGeneratorHologram(generator);
         }
+    }
+
+    private void createGeneratorHologram(final ArenaGenerator generator) {
+        if (generator.getLocation() == null) return;
+        
+        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
+        final org.bukkit.entity.ArmorStand hologram = (org.bukkit.entity.ArmorStand) location.getWorld().spawnEntity(location, org.bukkit.entity.EntityType.ARMOR_STAND);
+        
+        hologram.setInvisible(true);
+        hologram.setMarker(true);
+        hologram.setGravity(false);
+        hologram.addScoreboardTag("bedwars_generator_hologram");
+        
+        String displayName = switch (generator.getType().toLowerCase()) {
+            case "iron" -> "§7Ferro";
+            case "gold" -> "§6Ouro";
+            case "diamond" -> "§bDiamante";
+            case "emerald" -> "§aEsmeralda";
+            case "forge" -> {
+                if (generator.getTeam() != null) {
+                    yield "§eForja §7(" + generator.getTeam() + ")";
+                }
+                yield "§eForja";
+            }
+            default -> generator.getType();
+        };
+        
+        hologram.setCustomName(displayName);
+        hologram.setCustomNameVisible(true);
+    }
+
+    private Material getTeamConcreteMaterial(final String dyeColor) {
+        if (dyeColor == null) return Material.WHITE_CONCRETE;
+        return switch (dyeColor.toUpperCase()) {
+            case "RED", "VERMELHO"         -> Material.RED_CONCRETE;
+            case "BLUE", "AZUL"            -> Material.BLUE_CONCRETE;
+            case "GREEN", "VERDE"          -> Material.GREEN_CONCRETE;
+            case "YELLOW", "AMARELO"       -> Material.YELLOW_CONCRETE;
+            case "PURPLE", "ROXO"          -> Material.PURPLE_CONCRETE;
+            case "PINK", "ROSA"            -> Material.PINK_CONCRETE;
+            case "ORANGE", "LARANJA"       -> Material.ORANGE_CONCRETE;
+            case "CYAN", "CIANO"           -> Material.CYAN_CONCRETE;
+            case "LIME", "VERDE_LIMA"      -> Material.LIME_CONCRETE;
+            case "LIGHT_BLUE", "AZUL_CLARO"-> Material.LIGHT_BLUE_CONCRETE;
+            case "GRAY", "CINZA"           -> Material.GRAY_CONCRETE;
+            case "BLACK", "PRETO"          -> Material.BLACK_CONCRETE;
+            default                        -> Material.WHITE_CONCRETE;
+        };
     }
 
     private Material getGeneratorMarker(final String type) {
@@ -213,7 +266,14 @@ public class ArenaManager {
 
     public void save(final Arena arena) {
         final File file = new File(this.arenasFolder, arena.getName() + ".yml");
-        final YamlConfiguration config = new YamlConfiguration();
+        
+        // Carregar o arquivo existente para preservar dados que não estão na memória
+        YamlConfiguration config;
+        if (file.exists()) {
+            config = YamlConfiguration.loadConfiguration(file);
+        } else {
+            config = new YamlConfiguration();
+        }
 
         config.set("enabled", arena.isEnabled());
 
@@ -259,7 +319,9 @@ public class ArenaManager {
             final ArenaGenerator gen = generators.get(i);
             final String path = "generators." + i;
             config.set(path + ".type", gen.getType());
-            config.set(path + ".location", this.serializeLocation(gen.getLocation()));
+            if (gen.getLocation() != null) {
+                config.set(path + ".location", this.serializeLocation(gen.getLocation()));
+            }
             if (gen.getTeam() != null) {
                 config.set(path + ".team", gen.getTeam());
             }
@@ -435,6 +497,8 @@ public class ArenaManager {
         }
         final World world = Bukkit.getWorld(parts[0]);
         if (world == null) {
+            // Se o mundo não está carregado, retorna null temporariamente
+            // Será recarregado quando o mundo estiver disponível
             return null;
         }
         return new Location(

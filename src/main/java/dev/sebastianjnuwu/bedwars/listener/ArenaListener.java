@@ -1,32 +1,35 @@
 package dev.sebastianjnuwu.bedwars.listener;
 
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import java.util.List;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.block.data.type.Bed;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Listener responsável por proteger arenas durante o modo edição e fora de partidas.
@@ -213,6 +216,44 @@ public class ArenaListener implements Listener {
         return false;
     }
 
+    /**
+     * Impede que jogadores em modo edição cliquem com botão direito em camas configuradas.
+     * Isso evita que jogadores tentem dormir nas camas durante a edição.
+     */
+    @EventHandler
+    public void onPlayerInteract(final PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        final Block block = event.getClickedBlock();
+        if (block == null || !(block.getBlockData() instanceof Bed)) return;
+        
+        final Player player = event.getPlayer();
+        final Arena arena = this.getArena(player);
+        if (arena == null) return;
+        
+        // Se estiver em modo edição e a cama pertence a algum time da arena, cancela
+        if (this.editorManager.isEditing(player, arena.getName())) {
+            for (final ArenaTeam team : arena.getTeams()) {
+                if (team.getBed() == null) continue;
+                final Location footLoc = this.getBedFootLocation(block);
+                if (footLoc != null && this.isSameBlock(team.getBed(), footLoc)) {
+                    event.setCancelled(true);
+                    player.sendMessage(Component.text("Use /bw admin arena setbed para configurar esta cama!", NamedTextColor.YELLOW));
+                    return;
+                }
+            }
+        }
+    }
+
+    private Location getBedFootLocation(final Block bedBlock) {
+        if (!(bedBlock.getBlockData() instanceof final Bed bedData)) return null;
+        final Location clickedLoc = bedBlock.getLocation();
+        if (bedData.getPart() == Bed.Part.HEAD) {
+            final org.bukkit.block.BlockFace facing = bedData.getFacing();
+            return clickedLoc.clone().add(-facing.getModX(), -facing.getModY(), -facing.getModZ());
+        }
+        return clickedLoc;
+    }
+
     private void tryRestoreGenerator(final Arena arena, final Block block, final BlockBreakEvent event) {
         final List<ArenaGenerator> gens = arena.getGenerators();
         for (int i = 0; i < gens.size(); i++) {
@@ -225,7 +266,7 @@ public class ArenaListener implements Listener {
                 if (gen.getOriginBlockData() != null) {
                     below.getBlock().setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
                 }
-                this.removeForgeHologram(gen);
+                this.removeGeneratorHologram(gen);
                 arena.getGenerators().remove(i);
                 this.arenaManager.save(arena);
                 block.getWorld().getPlayers().stream()
@@ -236,6 +277,15 @@ public class ArenaListener implements Listener {
         }
     }
 
+    private void removeGeneratorHologram(final ArenaGenerator generator) {
+        if (generator.getLocation() == null) return;
+        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
+        location.getWorld().getNearbyEntitiesByType(ArmorStand.class, location, 1.0)
+                .stream()
+                .filter(stand -> stand.getScoreboardTags().contains("bedwars_generator_hologram"))
+                .forEach(ArmorStand::remove);
+    }
+
     private void removeForgeHologram(final ArenaGenerator generator) {
         if (!generator.getType().equalsIgnoreCase("forge")) return;
         final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
@@ -243,6 +293,35 @@ public class ArenaListener implements Listener {
                 .stream()
                 .filter(stand -> stand.getScoreboardTags().contains("bedwars_forge_hologram"))
                 .forEach(ArmorStand::remove);
+    }
+
+    private void createGeneratorHologram(final ArenaGenerator generator) {
+        if (generator.getLocation() == null) return;
+        
+        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
+        final ArmorStand hologram = (ArmorStand) location.getWorld().spawnEntity(location, org.bukkit.entity.EntityType.ARMOR_STAND);
+        
+        hologram.setInvisible(true);
+        hologram.setMarker(true);
+        hologram.setGravity(false);
+        hologram.addScoreboardTag("bedwars_generator_hologram");
+        
+        String displayName = switch (generator.getType().toLowerCase()) {
+            case "iron" -> "§7Ferro";
+            case "gold" -> "§6Ouro";
+            case "diamond" -> "§bDiamante";
+            case "emerald" -> "§aEsmeralda";
+            case "forge" -> {
+                if (generator.getTeam() != null) {
+                    yield "§eForja §7(" + generator.getTeam() + ")";
+                }
+                yield "§eForja";
+            }
+            default -> generator.getType();
+        };
+        
+        hologram.setCustomName(displayName);
+        hologram.setCustomNameVisible(true);
     }
 
     /**
