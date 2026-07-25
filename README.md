@@ -24,6 +24,7 @@ Um plugin moderno de **BedWars** para **Paper 1.21.4**, desenvolvido com foco em
 
 ### 🗺️ Arenas
 
+- [x] Definir o lobby (`/bw admin setlobby`)
 - [x] Seleção de regiões utilizando WorldEdit (`//pos1` e `//pos2`)
 - [x] Criar arenas (`/bw admin create <nome_da_arena>`)
 - [x] Carregamento da arena (`/bw admin load <nome_da_arena>`)
@@ -33,9 +34,6 @@ Um plugin moderno de **BedWars** para **Paper 1.21.4**, desenvolvido com foco em
 
 ## 🚧 Em Desenvolvimento
 
-### ⚙️ Configuração
-
-- [ ] Lobby global
 - [ ] Spawn da arena
 - [ ] Sistema de equipes
 - [ ] Spawn das equipes

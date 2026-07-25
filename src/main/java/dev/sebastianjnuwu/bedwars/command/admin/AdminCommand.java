@@ -3,7 +3,7 @@ package dev.sebastianjnuwu.bedwars.command.admin;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.arena.LifecycleRouter;
-import dev.sebastianjnuwu.bedwars.command.admin.config.SetLobbyCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.arena.SetLobbyCommand;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;

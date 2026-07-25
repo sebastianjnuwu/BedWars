@@ -1,22 +1,23 @@
 package dev.sebastianjnuwu.bedwars.manager;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
+
 /**
- * Gerencia configurações globais do plugin (não por arena).
- * Salva em config.yml na pasta do plugin.
+ * Gerencia configurações globais do plugin (não por arena). Salva em config.yml
+ * na pasta do plugin.
  */
 public class ConfigManager {
 
@@ -37,6 +38,10 @@ public class ConfigManager {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "config.yml");
         this.load();
+    }
+
+    public FileConfiguration getConfig() {
+        return this.config;
     }
 
     /**
@@ -123,18 +128,23 @@ public class ConfigManager {
         return this.config.getString("lang", "pt_BR");
     }
 
-    /** Returns the configured maximum forge level, with a safe minimum of one. */
+    /**
+     * Returns the configured maximum forge level, with a safe minimum of one.
+     */
     public int getForgeMaxLevel() {
         return Math.max(1, this.config.getInt("forge.max-level", 1));
     }
 
     /**
-     * Returns the item intervals, in ticks, for a forge level. Invalid entries are ignored.
+     * Returns the item intervals, in ticks, for a forge level. Invalid entries
+     * are ignored.
      */
     public Map<Material, Long> getForgeIntervals(final int level) {
         final Map<Material, Long> intervals = new EnumMap<>(Material.class);
         final ConfigurationSection section = this.config.getConfigurationSection("forge.levels." + level);
-        if (section == null) return intervals;
+        if (section == null) {
+            return intervals;
+        }
 
         for (final String itemName : section.getKeys(false)) {
             final Material material = Material.matchMaterial(itemName + "_INGOT");
@@ -147,7 +157,10 @@ public class ConfigManager {
         return intervals;
     }
 
-    /** Adds new forge options to existing configuration files without overwriting custom values. */
+    /**
+     * Adds new forge options to existing configuration files without
+     * overwriting custom values.
+     */
     private boolean addMissingForgeDefaults() {
         boolean changed = false;
         changed |= this.setDefault("forge.max-level", 4);
@@ -165,7 +178,9 @@ public class ConfigManager {
     }
 
     private boolean setDefault(final String path, final Object value) {
-        if (this.config.contains(path)) return false;
+        if (this.config.contains(path)) {
+            return false;
+        }
         this.config.set(path, value);
         return true;
     }

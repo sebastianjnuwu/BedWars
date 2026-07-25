@@ -15,6 +15,7 @@ create:
   already_exists: "Arena {0} ja existe."
   success: "Arena {0} criada com {1} blocos!"
   no_selection: "Selecao incompleta! Use //pos1 e //pos2 do WorldEdit."
+  too_large: "A arena é muito grande! Tamanho máximo permitido: &f{0}"
   error: "Erro: {0}"
 
 # ── delete ────────────────────────────

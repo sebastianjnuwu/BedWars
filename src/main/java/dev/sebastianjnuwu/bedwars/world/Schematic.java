@@ -1,4 +1,17 @@
-package dev.sebastianjnuwu.bedwars.schematic;
+package dev.sebastianjnuwu.bedwars.world;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -7,12 +20,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Representa um schematic (cópia de uma região de blocos).

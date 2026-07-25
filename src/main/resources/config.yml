@@ -6,6 +6,16 @@
 # O arquivo deve existir em: plugins/BedWars/lang/<idioma>.yml
 lang: pt_BR
 
+# Configurações das arenas
+arena:
+  limits:
+    # Largura máxima da arena no eixo X
+    max-width: 100
+    # Altura máxima da arena no eixo Y
+    max-height: 50
+    # Comprimento máximo da arena no eixo Z
+    max-length: 100
+
 # ===================================================================
 # Geradores Globais
 # ===================================================================

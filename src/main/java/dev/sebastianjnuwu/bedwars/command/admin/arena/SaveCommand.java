@@ -1,15 +1,7 @@
 package dev.sebastianjnuwu.bedwars.command.admin.arena;
 
-import dev.sebastianjnuwu.bedwars.command.BaseCommand;
-import dev.sebastianjnuwu.bedwars.command.SubCommand;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.schematic.Schematic;
-import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
+import java.io.File;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -17,7 +9,16 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.command.BaseCommand;
+import dev.sebastianjnuwu.bedwars.command.SubCommand;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.world.Schematic;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Comando para salvar as alterações de uma arena.
