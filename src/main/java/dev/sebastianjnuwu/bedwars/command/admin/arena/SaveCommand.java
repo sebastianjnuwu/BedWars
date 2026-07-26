@@ -112,7 +112,17 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             final Schematic schematic = new Schematic(name, pos1, pos2);
             File mapFile = new File(this.mapsFolder, name + ".schem");
             try {
-                schematic.save(mapFile);
+                // Salvar clipboard do FAWE como .bd
+                if (sender instanceof final Player player) {
+                    File clipboardDir = new File("plugins/FastAsyncWorldEdit/clipboard/" + player.getUniqueId().toString());
+                    if (clipboardDir.exists()) {
+                        File[] clipboardFiles = clipboardDir.listFiles();
+                        if (clipboardFiles != null && clipboardFiles.length > 0) {
+                            File clipboardFile = clipboardFiles[0];
+                            java.nio.file.Files.copy(clipboardFile.toPath(), mapFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                }
             } catch (final Exception e) {
                 mapFile = new File(this.mapsFolder, name + ".bwmap");
                 schematic.save(mapFile);

@@ -1,30 +1,37 @@
 package dev.sebastianjnuwu.bedwars.command.admin.arena;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-
-import com.sk89q.worldedit.IncompleteRegionException;
-import com.sk89q.worldedit.LocalSession;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.math.BlockVector3;
-
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
+import dev.sebastianjnuwu.bedwars.editor.ArenaCreator;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
+import dev.sebastianjnuwu.bedwars.template.TemplateManager;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+
+/**
+ * Comando /bw admin create <nome>
+ * <p>
+ * Cria uma nova arena com mundo void para edição.
+ * O administrador entra no mundo e constrói usando FAWE.
+ * Após a construção, o template é salvo com /bw admin save.
+ * </p>
+ */
 public class CreateCommand extends BaseCommand implements SubCommand {
+
+    private final SlimeManager slimeManager;
+    private final TemplateManager templateManager;
+    private final ArenaCreator arenaCreator;
 
     public CreateCommand(
             final ArenaManager arenaManager,
@@ -35,6 +42,12 @@ public class CreateCommand extends BaseCommand implements SubCommand {
             final File mapsFolder
     ) {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
+        
+        // Inicializa SlimeManager
+        final var plugin = org.bukkit.Bukkit.getPluginManager().getPlugin("BedWars");
+        this.slimeManager = new SlimeManager(plugin);
+        this.templateManager = new TemplateManager(this.slimeManager.getTemplatesFolder(), this.slimeManager);
+        this.arenaCreator = new ArenaCreator(this.slimeManager, plugin.getDataFolder(), mapsFolder, this.slimeManager.getTemplatesFolder());
     }
 
     @Override
@@ -57,120 +70,41 @@ public class CreateCommand extends BaseCommand implements SubCommand {
             return;
         }
 
-        if (!this.configManager.hasLobby()) {
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "no_lobby"));
+        // Verifica se o template já existe
+        if (this.templateManager.templateExists(name)) {
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "create.template_exists", name));
             return;
         }
 
-        final WorldEditPlugin worldEdit
-                = (WorldEditPlugin) Bukkit.getPluginManager().getPlugin("WorldEdit");
-
-        if (worldEdit == null) {
-            sender.sendMessage(this.lang.text(
-                    NamedTextColor.RED,
-                    "create.error",
-                    "WorldEdit nao encontrado."
-            ));
+        // Cria o mundo de edição void
+        final String worldName = this.arenaCreator.createEditWorld(name, player);
+        if (worldName == null) {
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "create.error", "Falha ao criar mundo de edição"));
             return;
         }
 
-        try {
-            final LocalSession session = worldEdit.getSession(player);
-
-            final var selection
-                    = session.getSelection(BukkitAdapter.adapt(player.getWorld()));
-
-            final BlockVector3 min = selection.getMinimumPoint();
-            final BlockVector3 max = selection.getMaximumPoint();
-
-            final int width = max.x() - min.x() + 1;
-            final int height = max.y() - min.y() + 1;
-            final int length = max.z() - min.z() + 1;
-
-            final int maxWidth
-                    = this.configManager.getConfig().getInt("arena.limits.max-width");
-
-            final int maxHeight
-                    = this.configManager.getConfig().getInt("arena.limits.max-height");
-
-            final int maxLength
-                    = this.configManager.getConfig().getInt("arena.limits.max-length");
-
-            if ((maxWidth > 0 && width > maxWidth)
-                    || (maxHeight > 0 && height > maxHeight)
-                    || (maxLength > 0 && length > maxLength)) {
-
-                sender.sendMessage(this.lang.text(
-                        NamedTextColor.RED,
-                        "create.too_large",
-                        width + "x" + height + "x" + length
-                ));
-                return;
-            }
-
-            final Arena arena = this.arenaManager.create(name);
-
-            if (arena == null) {
-                sender.sendMessage(this.lang.text(
-                        NamedTextColor.RED,
-                        "create.already_exists",
-                        name
-                ));
-                return;
-            }
-
-            arena.setPaste(
-                    min.x(),
-                    min.y(),
-                    min.z()
-            );
-
-            arena.setSchematicSize(
-                    width,
-                    height,
-                    length
-            );
-
-            arena.setWorldName(
-                    player.getWorld().getName()
-            );
-
-            arena.setEnabled(true);
-
-            final org.bukkit.Location pos1 = new org.bukkit.Location(
-                    player.getWorld(), min.x(), min.y(), min.z());
-            final org.bukkit.Location pos2 = new org.bukkit.Location(
-                    player.getWorld(), max.x(), max.y(), max.z());
-            final dev.sebastianjnuwu.bedwars.world.Schematic schematic =
-                    new dev.sebastianjnuwu.bedwars.world.Schematic(name, pos1, pos2);
-
-            try {
-                schematic.save(new File(this.mapsFolder, name + ".schem"));
-            } catch (final Exception e) {
-                try {
-                    schematic.save(new File(this.mapsFolder, name + ".bwmap"));
-                } catch (final Exception ignored) {
-                }
-            }
-
-            this.arenaManager.save(arena);
-            this.arenaManager.flush(arena.getName());
-
-            sender.sendMessage(this.lang.text(
-                    NamedTextColor.GREEN,
-                    "create.success",
-                    name,
-                    String.valueOf(width * height * length)
-            ));
-
-        } catch (final IncompleteRegionException e) {
-
-            sender.sendMessage(
-                    this.lang.text(
-                            NamedTextColor.RED,
-                            "create.no_selection"
-                    )
-            );
+        // Cria a arena no gerenciador
+        final Arena arena = this.arenaManager.create(name);
+        if (arena == null) {
+            this.arenaCreator.deleteEditWorld(worldName);
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "create.already_exists", name));
+            return;
         }
+
+        arena.setWorldName(worldName);
+        arena.setEnabled(false); // Arena só é habilitada após salvar o template
+        arena.setMinPlayers(2);
+        arena.setCountdown(3);
+
+        // Salva a arena
+        this.arenaManager.save(arena);
+
+        sender.sendMessage(this.lang.text(
+                NamedTextColor.GREEN,
+                "create.success_void",
+                name,
+                worldName
+        ));
+        sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "create.instructions"));
     }
 }

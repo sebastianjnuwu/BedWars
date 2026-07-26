@@ -43,6 +43,19 @@ public final class LocationUtil {
         player.teleport(target);
     }
 
+    /**
+     * Teleporta o jogador de forma assíncrona usando teleportAsync para evitar travamento.
+     * Deve ser usado apenas após o mundo estar completamente carregado.
+     */
+    public static void safeTeleportAsync(final @NotNull Player player, final @Nullable Location location) {
+        if (location == null || location.getWorld() == null) {
+            return;
+        }
+        final Location target = location.clone();
+        ensureSolidBelow(target);
+        player.teleportAsync(target);
+    }
+
     private static void ensureSolidBelow(final @NotNull Location location) {
         final Block below = location.getBlock().getRelative(0, -1, 0);
         if (!below.getType().isSolid()) {

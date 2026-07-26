@@ -138,10 +138,10 @@ public class ArenaManager {
             return false;
         }
         try {
-            final Schematic schematic = Schematic.load(mapFile);
+            final Schematic schematic = Schematic.load(name, mapFile);
             final Location pasteLocation = new Location(
                     world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
-            schematic.paste(pasteLocation);
+            schematic.paste(world, pasteLocation, mapFile);
             world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
             this.applyWorldSettings(world, arena);
             this.reload(name);
@@ -202,12 +202,13 @@ public class ArenaManager {
     }
 
     public @Nullable File getMapFile(final String name) {
-        File file = new File(this.mapsFolder, name + ".schem");
+        // Priorizar formato interno .bwmap
+        File file = new File(this.mapsFolder, name + ".bwmap");
         if (!file.exists()) {
-            file = new File(this.mapsFolder, name + ".schematic");
+            file = new File(this.mapsFolder, name + ".schem");
         }
         if (!file.exists()) {
-            file = new File(this.mapsFolder, name + ".bwmap");
+            file = new File(this.mapsFolder, name + ".schematic");
         }
         if (!file.exists()) {
             file = new File(this.mapsFolder, name + ".nbt");
@@ -239,10 +240,10 @@ public class ArenaManager {
             return null;
         }
         try {
-            final Schematic schematic = Schematic.load(mapFile);
+            final Schematic schematic = Schematic.load(arena.getName(), mapFile);
             final Location pasteLocation = new Location(
                     world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
-            schematic.paste(pasteLocation);
+            schematic.paste(world, pasteLocation, mapFile);
             world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
             this.applyWorldSettings(world, arena);
             this.reload(arena.getName());

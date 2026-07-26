@@ -111,11 +111,11 @@ public class EditCommand extends BaseCommand implements SubCommand {
             final File file = this.arenaManager.getMapFile(name);
             if (file != null) {
                 try {
-                    final Schematic schematic = Schematic.load(file);
+                    final Schematic schematic = Schematic.load(name, file);
                     final Location pasteLoc = arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0
                             ? new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ())
                             : world.getSpawnLocation();
-                    schematic.paste(pasteLoc);
+                    schematic.paste(world, pasteLoc, file);
                 } catch (final Exception ignored) {
                 }
             }

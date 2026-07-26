@@ -114,11 +114,11 @@ public class LoadCommand extends BaseCommand implements SubCommand {
                         "Nao foi possivel criar o mundo."));
                 return;
             }
-            final Schematic schematic = Schematic.load(file);
+            final Schematic schematic = Schematic.load(arena.getName(), file);
             final Location pasteLoc = arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0
                     ? new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ())
                     : world.getSpawnLocation();
-            schematic.paste(pasteLoc);
+            schematic.paste(world, pasteLoc, file);
             this.arenaManager.applyWorldSettings(world, arena);
             this.arenaManager.reload(arena.getName());
             final Arena refreshed = this.arenaManager.get(arena.getName());

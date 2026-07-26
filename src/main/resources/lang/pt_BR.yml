@@ -14,7 +14,7 @@ create:
   usage: "Uso: /bw create <nome>"
   already_exists: "Arena {0} ja existe."
   success: "Arena {0} criada com {1} blocos!"
-  no_selection: "Selecao incompleta! Use //pos1 e //pos2 do WorldEdit."
+  no_selection: "Selecao incompleta! Use //pos1 e //pos2 do FAWE."
   too_large: "A arena é muito grande! Tamanho máximo permitido: &f{0}"
   error: "Erro: {0}"
 
@@ -187,3 +187,14 @@ ui:
     yes_exit_desc: "Clique para sair da partida"
     no_cancel: "NÃO - CANCELAR"
     no_cancel_desc: "Clique para cancelar"
+# ── saveslime ─────────────────────────
+saveslime:
+  usage: "Uso: /bw admin arena saveslime <nome>"
+  not_found: "Arena {0} não encontrada."
+  not_loaded: "Arena {0} não está carregada. Use /bw load {0} primeiro."
+  world_not_found: "Mundo da arena {0} não encontrado."
+  slime_not_available: "SlimeWorldManager não está disponível. Instale o plugin AdvancedSlimePaper."
+  saving: "Salvando {0} como template Slime..."
+  success: "Template {0} salvo com sucesso!"
+  now_use_slime: "Agora você pode usar SlimeWorld para criar instâncias."
+  error: "Erro ao salvar template: {0}"

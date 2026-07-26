@@ -20,7 +20,11 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <id>enginehub</id>
+            <id>infernalsuite</id>
+            <url>https://repo.infernalsuite.com/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>enginehub-maven</id>
             <url>https://maven.enginehub.org/repo/</url>
         </repository>
     </repositories>
@@ -33,9 +37,27 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.sk89q.worldedit</groupId>
-            <artifactId>worldedit-bukkit</artifactId>
-            <version>7.3.9</version>
+            <groupId>com.fastasyncworldedit</groupId>
+            <artifactId>FastAsyncWorldEdit-Core</artifactId>
+            <version>2.11.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fastasyncworldedit</groupId>
+            <artifactId>FastAsyncWorldEdit-Bukkit</artifactId>
+            <version>2.11.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.infernalsuite.asp</groupId>
+            <artifactId>api</artifactId>
+            <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.infernalsuite.asp</groupId>
+            <artifactId>file-loader</artifactId>
+            <version>4.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

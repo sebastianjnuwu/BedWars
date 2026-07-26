@@ -17,6 +17,33 @@ arena:
     max-length: 1000
 
 # ===================================================================
+# Sistema SlimeWorld (AdvancedSlimePaper)
+# ===================================================================
+slimeworld:
+  enabled: true
+  templates-folder: templates
+  max-loaded-instances: 5
+  unload-timeout: 10m
+
+# ===================================================================
+# Configurações de Edição
+# ===================================================================
+edit:
+  # Altura do mundo de edição (deve ser 0 para void)
+  edit-world-height: 0
+  # Tamanho da plataforma inicial de vidro (lado do quadrado)
+  edit-platform-size: 10
+  # Material da plataforma inicial
+  edit-platform-block: GLASS
+
+# ===================================================================
+# Lobby Global
+# ===================================================================
+# Local onde os jogadores são teleportados ao sair de partidas.
+# Configure usando o comando /bw admin setlobby
+lobby: null
+
+# ===================================================================
 # Geradores Globais
 # ===================================================================
 # Estes são os geradores espalhados pelo mapa (Ilhas de Diamante,
