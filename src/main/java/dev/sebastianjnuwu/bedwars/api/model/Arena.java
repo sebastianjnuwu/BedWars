@@ -84,4 +84,32 @@ public interface Arena {
     int getCountdown();
 
     void setCountdown(int countdown);
+
+    @Nullable String getDifficulty();
+
+    void setDifficulty(@Nullable String difficulty);
+
+    @Nullable String getTime();
+
+    void setTime(@Nullable String time);
+
+    @Nullable String getWeather();
+
+    void setWeather(@Nullable String weather);
+
+    boolean isCycleDay();
+
+    void setCycleDay(boolean cycleDay);
+
+    boolean isCycleWeather();
+
+    void setCycleWeather(boolean cycleWeather);
+
+    boolean isSpawnMobs();
+
+    void setSpawnMobs(boolean spawnMobs);
+
+    boolean isSpawnAnimals();
+
+    void setSpawnAnimals(boolean spawnAnimals);
 }

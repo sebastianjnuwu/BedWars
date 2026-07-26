@@ -118,7 +118,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                 schematic.save(mapFile);
             }
             this.arenaManager.save(arena);
-            this.arenaManager.removeAllGeneratorHolograms(arena);
+            this.arenaManager.flush(arena.getName());
             this.editorManager.endSession(name);
 
             // ── YML validation report ────────────────────────────────────

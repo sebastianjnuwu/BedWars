@@ -19,7 +19,7 @@ public final class LocationUtil {
 
     public static @NotNull Location getPasteLocation(final @NotNull Arena arena, final @NotNull World world) {
         if (arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0) {
-            return new Location(world, arena.getPasteX() + 0.5, arena.getPasteY() + 1.0, arena.getPasteZ() + 0.5);
+            return new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
         }
         return world.getSpawnLocation();
     }

@@ -9,7 +9,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.text.MessageFormat;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Gerenciador de mensagens traduzidas (lang).
@@ -49,6 +50,8 @@ public class LangManager {
         this.plugin.getLogger().info("Idioma carregado: " + this.language);
     }
 
+    private static final Pattern VAR_PATTERN = Pattern.compile("\\{(\\d+)\\}");
+
     /**
      * Retorna uma mensagem traduzida sem formatação.
      *
@@ -70,11 +73,17 @@ public class LangManager {
             actualArgs = args;
         }
 
-        for (int i = 0; i < actualArgs.length; i++) {
-            final String val = actualArgs[i] != null ? String.valueOf(actualArgs[i]) : "";
-            text = text.replace("{" + i + "}", val);
+        final Matcher matcher = VAR_PATTERN.matcher(text);
+        final StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            final int idx = Integer.parseInt(matcher.group(1));
+            final String val = idx < actualArgs.length && actualArgs[idx] != null
+                    ? String.valueOf(actualArgs[idx])
+                    : matcher.group(0);
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(val));
         }
-        return text;
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     /**

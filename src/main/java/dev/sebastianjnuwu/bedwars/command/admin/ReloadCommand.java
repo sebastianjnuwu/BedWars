@@ -35,6 +35,8 @@ public class ReloadCommand extends BaseCommand implements SubCommand {
 
     @Override
     public void execute(final CommandSender sender, final @NotNull String @NotNull [] args) {
+        // Flush pending changes before reloading from disk
+        this.arenaManager.flush();
         // Reload all arena YMLs
         this.arenaManager.load();
 

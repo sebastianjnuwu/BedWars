@@ -48,6 +48,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Map<UUID, GamePlayer> players;
     private final Set<ArenaTeam> eliminatedTeams;
     private final Set<ArenaTeam> bedlessTeams;
+    private final Set<UUID> spectators;
     private final Map<UUID, BukkitTask> respawnTasks;
     private final Map<ArenaGenerator, Integer> forgeLevels;
     private final Map<ArenaGenerator, List<BukkitTask>> forgeTasks;
@@ -75,6 +76,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.players = new HashMap<>();
         this.eliminatedTeams = new HashSet<>();
         this.bedlessTeams = new HashSet<>();
+        this.spectators = new HashSet<>();
         this.respawnTasks = new HashMap<>();
         this.forgeLevels = new HashMap<>();
         this.forgeTasks = new HashMap<>();
@@ -96,6 +98,28 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public GameState getState() {
         return this.state;
+    }
+
+    public boolean isSpectator(final Player player) {
+        return this.spectators.contains(player.getUniqueId());
+    }
+
+    public void joinAsSpectator(final Player player) {
+        if (this.players.containsKey(player.getUniqueId())) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_this_game"));
+            return;
+        }
+        if (this.spectators.contains(player.getUniqueId())) {
+            return;
+        }
+        this.spectators.add(player.getUniqueId());
+        player.getInventory().clear();
+        final Location spawn = this.arena.getArenaSpawn();
+        if (spawn != null) {
+            LocationUtil.safeTeleport(player, spawn);
+        }
+        player.setGameMode(GameMode.SPECTATOR);
+        player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.spectating"));
     }
 
     public boolean isBedless(final ArenaTeam team) {
@@ -181,8 +205,19 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     public void leave(final Player player) {
-        // Durante ENDING o cleanup já foi feito pelo endGame() — ignora
         if (this.state == GameState.ENDING) return;
+
+        final boolean wasSpectator = this.spectators.remove(player.getUniqueId());
+        if (wasSpectator) {
+            final Location lobby = this.gameManager.getConfigManager().getLobby();
+            if (lobby != null) {
+                player.teleport(lobby);
+            } else if (!Bukkit.getWorlds().isEmpty()) {
+                player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
+            }
+            player.setGameMode(GameMode.SURVIVAL);
+            return;
+        }
 
         final BukkitTask task = this.respawnTasks.remove(player.getUniqueId());
         if (task != null) {
@@ -199,8 +234,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final Location lobby = this.gameManager.getConfigManager().getLobby();
         if (lobby != null) {
             player.teleport(lobby);
-        } else {
-            player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+        } else if (!Bukkit.getWorlds().isEmpty()) {
+            player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
         }
         player.setGameMode(GameMode.SURVIVAL);
 
@@ -614,19 +649,31 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getScheduler().runTaskLater(
                 this.gameManager.getPlugin(),
                 () -> {
+                    final Location lobby = this.gameManager.getConfigManager().getLobby();
+                    final Location fallback = !Bukkit.getWorlds().isEmpty()
+                            ? Bukkit.getWorlds().getFirst().getSpawnLocation() : null;
+                    for (final UUID uuid : this.spectators) {
+                        final Player player = Bukkit.getPlayer(uuid);
+                        if (player == null) continue;
+                        if (lobby != null && lobby.getWorld() != null) {
+                            player.teleport(lobby);
+                        } else if (fallback != null) {
+                            player.teleport(fallback);
+                        }
+                        player.setGameMode(GameMode.SURVIVAL);
+                        player.clearTitle();
+                        this.gameManager.removePlayerMapping(player);
+                    }
+                    this.spectators.clear();
                     for (final var entry : this.teams.entrySet()) {
                         for (final UUID uuid : entry.getValue()) {
                             final Player player = Bukkit.getPlayer(uuid);
                             if (player == null) continue;
                             player.getInventory().clear();
-                            final Location lobby = this.gameManager.getConfigManager().getLobby();
                             if (lobby != null && lobby.getWorld() != null) {
                                 player.teleport(lobby);
-                            } else {
-                                final World defaultWorld = Bukkit.getWorlds().get(0);
-                                if (defaultWorld != null) {
-                                    player.teleport(defaultWorld.getSpawnLocation());
-                                }
+                            } else if (fallback != null) {
+                                player.teleport(fallback);
                             }
                             player.setGameMode(GameMode.SURVIVAL);
                             player.clearTitle();
@@ -637,8 +684,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                     this.teams.values().forEach(List::clear);
                     this.eliminatedTeams.clear();
                     this.bedlessTeams.clear();
-                    this.gameManager.removeGame(this.arena.getName());
-                    this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
+                    if (this.gameManager.getGame(this.arena.getName()) == this) {
+                        this.gameManager.removeGame(this.arena.getName());
+                        this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
+                    }
                 },
                 200L
         );
@@ -691,23 +740,43 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             this.endGame(winner);
         } else {
             this.state = GameState.ENDING;
+            for (final BukkitTask task : this.respawnTasks.values()) {
+                task.cancel();
+            }
+            this.respawnTasks.clear();
             for (final var entry : this.teams.entrySet()) {
                 for (final UUID uuid : entry.getValue()) {
                     final Player player = Bukkit.getPlayer(uuid);
                     if (player == null) continue;
                     player.getInventory().clear();
                     final Location lobby = this.gameManager.getConfigManager().getLobby();
-                    if (lobby != null) {
+                    if (lobby != null && lobby.getWorld() != null) {
                         player.teleport(lobby);
-                    } else {
-                        player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+                    } else if (!Bukkit.getWorlds().isEmpty()) {
+                        player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
                     }
                     player.setGameMode(GameMode.SURVIVAL);
+                    player.clearTitle();
                     this.gameManager.removePlayerMapping(player);
                 }
             }
+            final Location lobby = this.gameManager.getConfigManager().getLobby();
+            for (final UUID uuid : this.spectators) {
+                final Player player = Bukkit.getPlayer(uuid);
+                if (player == null) continue;
+                if (lobby != null && lobby.getWorld() != null) {
+                    player.teleport(lobby);
+                } else if (!Bukkit.getWorlds().isEmpty()) {
+                    player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
+                }
+                player.setGameMode(GameMode.SURVIVAL);
+                this.gameManager.removePlayerMapping(player);
+            }
+            this.spectators.clear();
             this.players.clear();
             this.teams.values().forEach(List::clear);
+            this.eliminatedTeams.clear();
+            this.bedlessTeams.clear();
             this.gameManager.removeGame(this.arena.getName());
             this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
         }

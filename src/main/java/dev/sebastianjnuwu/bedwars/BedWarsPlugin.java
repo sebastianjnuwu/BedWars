@@ -21,6 +21,7 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.world.WorldManager;
 
 public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
@@ -36,11 +37,13 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.editorManager = new EditorManager(this);
         this.lang = new LangManager(this, this.configManager.getLang());
 
+        final WorldManager worldManager = new WorldManager(this);
         final File mapsFolder = new File(this.getDataFolder(), "maps");
         mapsFolder.mkdirs();
 
-        this.arenaManager = new ArenaManager(this, mapsFolder);
+        this.arenaManager = new ArenaManager(this, worldManager, mapsFolder);
         this.arenaManager.load();
+        this.arenaManager.startSaveTask();
 
         this.gameManager = new GameManager(this, this.arenaManager, this.configManager, this.lang);
 
@@ -69,6 +72,11 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
         if (this.editorManager != null) {
             this.editorManager.shutdown(this.configManager, this.arenaManager);
+        }
+
+        if (this.arenaManager != null) {
+            this.arenaManager.stopSaveTask();
+            this.arenaManager.flush();
         }
 
         this.getLogger().info("BedWars desativado!");

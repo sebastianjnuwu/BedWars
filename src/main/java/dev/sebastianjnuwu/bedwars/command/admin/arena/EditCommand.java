@@ -8,8 +8,8 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
-import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -102,36 +102,29 @@ public class EditCommand extends BaseCommand implements SubCommand {
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
             final WorldCreator wc = new WorldCreator(worldName);
-            wc.generator(new VoidGenerator());
+            wc.generator(new dev.sebastianjnuwu.bedwars.world.VoidGenerator());
             world = wc.createWorld();
             if (world == null) {
                 sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.world_not_found"));
                 return;
             }
-            arena.setWorldName(worldName);
-
-            File file = new File(this.mapsFolder, name + ".schem");
-            if (!file.exists()) file = new File(this.mapsFolder, name + ".schematic");
-            if (!file.exists()) file = new File(this.mapsFolder, name + ".bwmap");
-            if (!file.exists()) file = new File(this.mapsFolder, name + ".nbt");
-            if (!file.exists()) file = new File(this.mapsFolder, name);
-            if (file.exists()) {
+            final File file = this.arenaManager.getMapFile(name);
+            if (file != null) {
                 try {
                     final Schematic schematic = Schematic.load(file);
-                    final Location pasteLocation;
-                    if (arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0) {
-                        pasteLocation = new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
-                    } else {
-                        pasteLocation = world.getSpawnLocation();
-                    }
-                    schematic.paste(pasteLocation);
+                    final Location pasteLoc = arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0
+                            ? new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ())
+                            : world.getSpawnLocation();
+                    schematic.paste(pasteLoc);
                 } catch (final Exception ignored) {
                 }
             }
+            this.arenaManager.applyWorldSettings(world, arena);
+            arena.setWorldName(worldName);
             this.arenaManager.save(arena);
+            this.arenaManager.flush(arena.getName());
         }
 
-        this.arenaManager.removeAllGeneratorHolograms(arena);
         this.arenaManager.showMarkerBlocks(arena);
         this.editorManager.startSession(player, name);
         this.editorManager.startParticleTask(player, name, this.arenaManager);
@@ -140,7 +133,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
         final Location destination = arena.getArenaSpawn() != null
                 ? arena.getArenaSpawn().clone()
                 : world.getSpawnLocation();
-        player.teleport(destination);
+        LocationUtil.safeTeleport(player, destination);
         player.setGameMode(GameMode.CREATIVE);
         sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "edit.teleported", name));
     }

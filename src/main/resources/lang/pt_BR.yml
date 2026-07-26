@@ -129,6 +129,7 @@ game:
   team_full: "Este time ja esta cheio."
   join_broadcast: "{0} entrou na partida ({1}/{2})"
   leave_broadcast: "{0} saiu da partida."
+  not_in_game: "Voce nao esta em nenhuma partida."
   leave_success: "Voce saiu da partida."
   start_usage: "Uso: /bw start <arena>"
   countdown_cancelled: "Contagem cancelada. Jogadores insuficientes."
@@ -149,6 +150,7 @@ game:
   validate_team_bed: "Cama do time {0} (use setbed)"
   validate_team_forge: "Time {0} sem fornalha (use addgenerator forge {0})"
   validate_team_forge_duplicate: "Time {0} tem mais de uma fornalha (use removegenerator forge {0})"
+  spectating: "Voce entrou como espectador. Aguarde o fim da partida."
   world_not_ready: "O mundo da arena {0} nao esta pronto. Tente novamente em alguns instantes."
 
 # ── edit ──────────────────────────────

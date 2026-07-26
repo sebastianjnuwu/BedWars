@@ -1,6 +1,7 @@
 package dev.sebastianjnuwu.bedwars.command.admin.arena;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -143,18 +144,17 @@ public class CreateCommand extends BaseCommand implements SubCommand {
             final dev.sebastianjnuwu.bedwars.world.Schematic schematic =
                     new dev.sebastianjnuwu.bedwars.world.Schematic(name, pos1, pos2);
 
-            File schematicFile = new File(this.mapsFolder, name + ".schem");
             try {
-                schematic.save(schematicFile);
+                schematic.save(new File(this.mapsFolder, name + ".schem"));
             } catch (final Exception e) {
-                schematicFile = new File(this.mapsFolder, name + ".bwmap");
                 try {
-                    schematic.save(schematicFile);
+                    schematic.save(new File(this.mapsFolder, name + ".bwmap"));
                 } catch (final Exception ignored) {
                 }
             }
 
             this.arenaManager.save(arena);
+            this.arenaManager.flush(arena.getName());
 
             sender.sendMessage(this.lang.text(
                     NamedTextColor.GREEN,

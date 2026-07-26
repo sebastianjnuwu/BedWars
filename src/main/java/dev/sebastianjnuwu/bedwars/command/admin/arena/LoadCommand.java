@@ -18,8 +18,8 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
-import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
@@ -88,23 +88,6 @@ public class LoadCommand extends BaseCommand implements SubCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.not_found", name));
             return;
         }
-        File file = new File(this.mapsFolder, name + ".schem");
-        if (!file.exists()) {
-            file = new File(this.mapsFolder, name + ".schematic");
-        }
-        if (!file.exists()) {
-            file = new File(this.mapsFolder, name + ".bwmap");
-        }
-        if (!file.exists()) {
-            file = new File(this.mapsFolder, name + ".nbt");
-        }
-        if (!file.exists()) {
-            file = new File(this.mapsFolder, name);
-        }
-        if (!file.exists()) {
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.file_not_found"));
-            return;
-        }
         final String worldName = "bw_" + name;
         if (Bukkit.getWorld(worldName) != null) {
             if (this.editorManager.isBeingEdited(name)) {
@@ -115,28 +98,34 @@ public class LoadCommand extends BaseCommand implements SubCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.already_loaded", name));
             return;
         }
-        final WorldCreator wc = new WorldCreator(worldName);
-        wc.generator(new VoidGenerator());
-        final World world = wc.createWorld();
-        if (world == null) {
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.error",
-                    "Nao foi possivel criar o mundo."));
+
+        final File file = this.arenaManager.getMapFile(name);
+        if (file == null) {
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.file_not_found"));
             return;
         }
+
         try {
-            final Schematic schematic = Schematic.load(file);
-            final Location pasteLocation;
-            if (arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0) {
-                pasteLocation = new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
-            } else {
-                pasteLocation = world.getSpawnLocation();
+            final WorldCreator wc = new WorldCreator(worldName);
+            wc.generator(new dev.sebastianjnuwu.bedwars.world.VoidGenerator());
+            final World world = wc.createWorld();
+            if (world == null) {
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.error",
+                        "Nao foi possivel criar o mundo."));
+                return;
             }
-            schematic.paste(pasteLocation);
+            final Schematic schematic = Schematic.load(file);
+            final Location pasteLoc = arena.getPasteX() != 0 || arena.getPasteY() != 0 || arena.getPasteZ() != 0
+                    ? new Location(world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ())
+                    : world.getSpawnLocation();
+            schematic.paste(pasteLoc);
+            this.arenaManager.applyWorldSettings(world, arena);
             arena.setWorldName(worldName);
             this.arenaManager.showMarkerBlocks(arena);
             this.editorManager.startSession(player, name);
             this.arenaManager.save(arena);
-            player.teleport(pasteLocation);
+            this.arenaManager.flush(arena.getName());
+            LocationUtil.safeTeleport(player, pasteLoc);
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "load.success"));
         } catch (final Exception e) {

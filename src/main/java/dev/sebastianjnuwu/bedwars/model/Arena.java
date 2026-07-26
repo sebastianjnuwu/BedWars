@@ -29,6 +29,13 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private String spawnBlockData;
     private int minPlayers;
     private int countdown;
+    private String difficulty;
+    private String time;
+    private String weather;
+    private boolean cycleDay;
+    private boolean cycleWeather;
+    private boolean spawnMobs;
+    private boolean spawnAnimals;
     private final List<ArenaTeam> teams;
     private final List<ArenaGenerator> generators;
 
@@ -281,6 +288,27 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     public void setCountdown(final int countdown) {
         this.countdown = countdown;
     }
+
+    public @Nullable String getDifficulty() { return this.difficulty; }
+    public void setDifficulty(final @Nullable String difficulty) { this.difficulty = difficulty; }
+
+    public @Nullable String getTime() { return this.time; }
+    public void setTime(final @Nullable String time) { this.time = time; }
+
+    public @Nullable String getWeather() { return this.weather; }
+    public void setWeather(final @Nullable String weather) { this.weather = weather; }
+
+    public boolean isCycleDay() { return this.cycleDay; }
+    public void setCycleDay(final boolean cycleDay) { this.cycleDay = cycleDay; }
+
+    public boolean isCycleWeather() { return this.cycleWeather; }
+    public void setCycleWeather(final boolean cycleWeather) { this.cycleWeather = cycleWeather; }
+
+    public boolean isSpawnMobs() { return this.spawnMobs; }
+    public void setSpawnMobs(final boolean spawnMobs) { this.spawnMobs = spawnMobs; }
+
+    public boolean isSpawnAnimals() { return this.spawnAnimals; }
+    public void setSpawnAnimals(final boolean spawnAnimals) { this.spawnAnimals = spawnAnimals; }
 
     /**
      * Retorna o BlockData original do bloco abaixo do spawn (antes de virar esmeralda).

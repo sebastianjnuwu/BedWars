@@ -3,18 +3,18 @@ package dev.sebastianjnuwu.bedwars.manager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand;
-import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
 import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
+import dev.sebastianjnuwu.bedwars.world.WorldManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Difficulty;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.inventory.ItemStack;
+
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,9 +23,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Gerencia todas as arenas do servidor.
@@ -37,13 +40,41 @@ public class ArenaManager {
     private final Map<String, Arena> arenas;
     private final File arenasFolder;
     private final File mapsFolder;
+    private final Set<String> dirty;
+    private final WorldManager worldManager;
 
-    public ArenaManager(final JavaPlugin plugin, final File mapsFolder) {
+    private BukkitTask saveTask;
+
+    private static final long FLUSH_INTERVAL = 600L; // 30 seconds in ticks
+
+    public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder) {
         this.plugin = plugin;
         this.arenas = new HashMap<>();
+        this.dirty = new HashSet<>();
+        this.worldManager = worldManager;
         this.mapsFolder = mapsFolder;
         this.arenasFolder = new File(plugin.getDataFolder(), "arenas");
         this.arenasFolder.mkdirs();
+    }
+
+    public WorldManager getWorldManager() {
+        return this.worldManager;
+    }
+
+    public void startSaveTask() {
+        this.saveTask = org.bukkit.Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (!this.dirty.isEmpty()) {
+                this.plugin.getLogger().fine("Salvando " + this.dirty.size() + " arena(s) sujas...");
+                this.flush();
+            }
+        }, FLUSH_INTERVAL, FLUSH_INTERVAL);
+    }
+
+    public void stopSaveTask() {
+        if (this.saveTask != null) {
+            this.saveTask.cancel();
+            this.saveTask = null;
+        }
     }
 
     public void load() {
@@ -88,9 +119,6 @@ public class ArenaManager {
         return refreshed != null;
     }
 
-    /**
-     * Repasta o schematic e recarrega a configuração da arena após uma partida.
-     */
     public boolean resetArenaMap(final String name) {
         final Arena arena = this.get(name);
         if (arena == null) {
@@ -100,20 +128,29 @@ public class ArenaManager {
         if (mapFile == null) {
             return false;
         }
-        final World world = this.ensureWorldLoaded(arena);
+        final String worldName = "bw_" + name;
+        this.worldManager.unloadWorld(worldName);
+        this.worldManager.deleteWorld(worldName);
+        final WorldCreator wc = new WorldCreator(worldName);
+        wc.generator(new VoidGenerator());
+        final World world = wc.createWorld();
         if (world == null) {
             return false;
         }
         try {
-            this.removeAllGeneratorHolograms(arena);
             final Schematic schematic = Schematic.load(mapFile);
-            final Location pasteLocation = LocationUtil.getPasteLocation(arena, world);
+            final Location pasteLocation = new Location(
+                    world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
             schematic.paste(pasteLocation);
-            // Reload first so showMarkerBlocks uses fresh data from disk
+            world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
+            this.applyWorldSettings(world, arena);
             this.reload(name);
+            final Arena refreshed = this.get(name);
+            if (refreshed != null) {
+                refreshed.setWorldName(worldName);
+            }
+            this.flush(name);
             this.showMarkerBlocks(this.get(name));
-            // Do NOT save here — the file already has correct generator data;
-            // saving would risk overwriting it with a partially-populated in-memory object.
             return true;
         } catch (final IOException e) {
             this.plugin.getLogger().severe("Erro ao resetar arena " + name + ": " + e.getMessage());
@@ -121,14 +158,47 @@ public class ArenaManager {
         }
     }
 
-    public void removeAllGeneratorHolograms(final Arena arena) {
-        final String worldName = arena.getWorldName();
-        if (worldName == null) return;
-        final World world = Bukkit.getWorld(worldName);
-        if (world == null) return;
-        world.getEntitiesByClass(ArmorStand.class).stream()
-                .filter(stand -> stand.getScoreboardTags().contains("bedwars_generator_hologram"))
-                .forEach(ArmorStand::remove);
+    public void applyWorldSettings(final World world, final Arena arena) {
+        if (arena.getDifficulty() != null) {
+            try {
+                world.setDifficulty(Difficulty.valueOf(arena.getDifficulty().toUpperCase()));
+            } catch (final IllegalArgumentException ignored) {
+            }
+        }
+        if (arena.getTime() != null) {
+            switch (arena.getTime().toUpperCase()) {
+                case "DAY" -> world.setTime(1000);
+                case "NOON" -> world.setTime(6000);
+                case "SUNSET" -> world.setTime(12000);
+                case "NIGHT" -> world.setTime(13000);
+                case "MIDNIGHT" -> world.setTime(18000);
+                default -> {
+                    try { world.setTime(Long.parseLong(arena.getTime())); }
+                    catch (final NumberFormatException ignored) {}
+                }
+            }
+        }
+        if (arena.getWeather() != null) {
+            switch (arena.getWeather().toUpperCase()) {
+                case "CLEAR" -> {
+                    world.setStorm(false);
+                    world.setThundering(false);
+                }
+                case "RAIN" -> {
+                    world.setStorm(true);
+                    world.setThundering(false);
+                }
+                case "THUNDER" -> {
+                    world.setStorm(true);
+                    world.setThundering(true);
+                }
+            }
+        }
+        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, arena.isCycleDay());
+        world.setGameRule(GameRule.DO_WEATHER_CYCLE, arena.isCycleWeather());
+        world.setGameRule(GameRule.DO_MOB_SPAWNING, arena.isSpawnMobs());
+        world.setAnimalSpawnLimit(arena.isSpawnAnimals() ? -1 : 0);
+        world.setMonsterSpawnLimit(arena.isSpawnMobs() ? -1 : 0);
     }
 
     public @Nullable File getMapFile(final String name) {
@@ -155,6 +225,7 @@ public class ArenaManager {
         }
         World world = Bukkit.getWorld(worldName);
         if (world != null) {
+            this.applyWorldSettings(world, arena);
             return world;
         }
         final File mapFile = this.getMapFile(arena.getName());
@@ -169,12 +240,17 @@ public class ArenaManager {
         }
         try {
             final Schematic schematic = Schematic.load(mapFile);
-            final Location pasteLocation = LocationUtil.getPasteLocation(arena, world);
+            final Location pasteLocation = new Location(
+                    world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
             schematic.paste(pasteLocation);
             world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
-            arena.setWorldName(worldName);
-            this.save(arena);
+            this.applyWorldSettings(world, arena);
             this.reload(arena.getName());
+            final Arena refreshed = this.get(arena.getName());
+            if (refreshed != null) {
+                refreshed.setWorldName(worldName);
+            }
+            this.flush(arena.getName());
             return world;
         } catch (final IOException e) {
             this.plugin.getLogger().severe("Erro ao carregar mundo da arena " + arena.getName() + ": " + e.getMessage());
@@ -212,35 +288,7 @@ public class ArenaManager {
             }
             final Material marker = this.getGeneratorMarker(generator.getType());
             below.setType(marker, false);
-            
-            // Criar holograma do gerador
-            this.createGeneratorHologram(generator);
         }
-    }
-
-    private void createGeneratorHologram(final ArenaGenerator generator) {
-        if (generator.getLocation() == null) return;
-        
-        final Location location = generator.getLocation().clone().add(0.5, 2.0, 0.5);
-        final org.bukkit.entity.ArmorStand hologram = (org.bukkit.entity.ArmorStand) location.getWorld().spawnEntity(location, org.bukkit.entity.EntityType.ARMOR_STAND);
-        
-        hologram.setInvisible(true);
-        hologram.setMarker(true);
-        hologram.setGravity(false);
-        hologram.setCustomNameVisible(false);
-        hologram.addScoreboardTag("bedwars_generator_hologram");
-        hologram.getEquipment().setHelmet(new ItemStack(this.getHologramItemMaterial(generator.getType())));
-    }
-
-    private Material getHologramItemMaterial(final String type) {
-        return switch (type.toLowerCase()) {
-            case "iron" -> Material.IRON_INGOT;
-            case "gold" -> Material.GOLD_INGOT;
-            case "diamond" -> Material.DIAMOND;
-            case "emerald" -> Material.EMERALD;
-            case "forge" -> Material.FURNACE;
-            default -> Material.STONE;
-        };
     }
 
     private Material getTeamConcreteMaterial(final String dyeColor) {
@@ -274,9 +322,31 @@ public class ArenaManager {
     }
 
     public void save(final Arena arena) {
+        this.dirty.add(arena.getName());
+    }
+
+    public void flush() {
+        final String[] names = this.dirty.toArray(new String[0]);
+        this.dirty.clear();
+        for (final String name : names) {
+            final Arena arena = this.arenas.get(name);
+            if (arena != null) {
+                this.flushArena(arena);
+            }
+        }
+    }
+
+    public void flush(final String name) {
+        this.dirty.remove(name);
+        final Arena arena = this.arenas.get(name);
+        if (arena != null) {
+            this.flushArena(arena);
+        }
+    }
+
+    private void flushArena(final Arena arena) {
         final File file = new File(this.arenasFolder, arena.getName() + ".yml");
-        
-        // Load existing file to preserve data not in memory (e.g. locations when world is unloaded)
+
         final YamlConfiguration config = file.exists()
                 ? YamlConfiguration.loadConfiguration(file)
                 : new YamlConfiguration();
@@ -292,6 +362,14 @@ public class ArenaManager {
         setIfNotNull(config, "spawn_block", arena.getSpawnBlockData());
         config.set("min_players", arena.getMinPlayers());
         config.set("countdown", arena.getCountdown());
+
+        setIfNotNull(config, "difficulty", arena.getDifficulty());
+        setIfNotNull(config, "time", arena.getTime());
+        setIfNotNull(config, "weather", arena.getWeather());
+        config.set("cycle_day", arena.isCycleDay());
+        config.set("cycle_weather", arena.isCycleWeather());
+        config.set("spawn_mobs", arena.isSpawnMobs());
+        config.set("spawn_animals", arena.isSpawnAnimals());
 
         // Replace entire teams section
         config.set("teams", null);
@@ -358,7 +436,30 @@ public class ArenaManager {
             mapFile.delete();
         }
 
+        this.worldManager.deleteWorld("bw_" + name);
+        this.worldManager.deleteWorld("bw_" + name + "_edit");
+
+        final File template = this.worldManager.getTemplateFolder(name);
+        if (template.exists()) {
+            deleteDirectory(template);
+        }
+
         return true;
+    }
+
+    private void deleteDirectory(final File path) {
+        if (!path.exists()) return;
+        final File[] files = path.listFiles();
+        if (files != null) {
+            for (final File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        path.delete();
     }
 
     public Arena get(final String name) {
@@ -413,6 +514,13 @@ public class ArenaManager {
         }
         arena.setMinPlayers(config.getInt("min_players", 2));
         arena.setCountdown(config.getInt("countdown", 3));
+        if (config.contains("difficulty")) arena.setDifficulty(config.getString("difficulty"));
+        if (config.contains("time")) arena.setTime(config.getString("time"));
+        if (config.contains("weather")) arena.setWeather(config.getString("weather"));
+        arena.setCycleDay(config.getBoolean("cycle_day", true));
+        arena.setCycleWeather(config.getBoolean("cycle_weather", true));
+        arena.setSpawnMobs(config.getBoolean("spawn_mobs", true));
+        arena.setSpawnAnimals(config.getBoolean("spawn_animals", true));
         if (config.contains("teams")) {
             for (final String key : config.getConfigurationSection("teams").getKeys(false)) {
                 final String path = "teams." + key;

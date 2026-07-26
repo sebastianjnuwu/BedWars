@@ -59,6 +59,10 @@ public class LeaveCommand extends BaseCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "create.only_player"));
             return;
         }
+        if (!this.gameManager.isInGame(player)) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_in_game"));
+            return;
+        }
         this.gameManager.leaveGame(player);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.leave_success"));
     }

@@ -14,7 +14,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -105,34 +104,6 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
         arena.addGenerator(gen);
         this.arenaManager.save(arena);
         
-        // Criar holograma do gerador
-        this.createGeneratorHologram(gen);
-        
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.addgen_success", type));
-    }
-
-    private void createGeneratorHologram(final dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator generator) {
-        if (generator.getLocation() == null) return;
-        
-        final Location location = generator.getLocation().clone().add(0.5, 2.0, 0.5);
-        final org.bukkit.entity.ArmorStand hologram = (org.bukkit.entity.ArmorStand) location.getWorld().spawnEntity(location, org.bukkit.entity.EntityType.ARMOR_STAND);
-        
-        hologram.setInvisible(true);
-        hologram.setMarker(true);
-        hologram.setGravity(false);
-        hologram.setCustomNameVisible(false);
-        hologram.addScoreboardTag("bedwars_generator_hologram");
-        hologram.getEquipment().setHelmet(new ItemStack(this.getHologramItemMaterial(generator.getType())));
-    }
-
-    private Material getHologramItemMaterial(final String type) {
-        return switch (type.toLowerCase()) {
-            case "iron" -> Material.IRON_INGOT;
-            case "gold" -> Material.GOLD_INGOT;
-            case "diamond" -> Material.DIAMOND;
-            case "emerald" -> Material.EMERALD;
-            case "forge" -> Material.FURNACE;
-            default -> Material.STONE;
-        };
     }
 }
