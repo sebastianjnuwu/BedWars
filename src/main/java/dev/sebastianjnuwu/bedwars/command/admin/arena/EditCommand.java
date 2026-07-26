@@ -131,6 +131,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
             this.arenaManager.save(arena);
         }
 
+        this.arenaManager.removeAllGeneratorHolograms(arena);
         this.arenaManager.showMarkerBlocks(arena);
         this.editorManager.startSession(player, name);
         this.editorManager.startParticleTask(player, name, this.arenaManager);

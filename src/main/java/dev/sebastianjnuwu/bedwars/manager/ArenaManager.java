@@ -13,6 +13,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -103,6 +105,7 @@ public class ArenaManager {
             return false;
         }
         try {
+            this.removeAllGeneratorHolograms(arena);
             final Schematic schematic = Schematic.load(mapFile);
             final Location pasteLocation = LocationUtil.getPasteLocation(arena, world);
             schematic.paste(pasteLocation);
@@ -116,6 +119,16 @@ public class ArenaManager {
             this.plugin.getLogger().severe("Erro ao resetar arena " + name + ": " + e.getMessage());
             return false;
         }
+    }
+
+    public void removeAllGeneratorHolograms(final Arena arena) {
+        final String worldName = arena.getWorldName();
+        if (worldName == null) return;
+        final World world = Bukkit.getWorld(worldName);
+        if (world == null) return;
+        world.getEntitiesByClass(ArmorStand.class).stream()
+                .filter(stand -> stand.getScoreboardTags().contains("bedwars_generator_hologram"))
+                .forEach(ArmorStand::remove);
     }
 
     public @Nullable File getMapFile(final String name) {
@@ -208,30 +221,26 @@ public class ArenaManager {
     private void createGeneratorHologram(final ArenaGenerator generator) {
         if (generator.getLocation() == null) return;
         
-        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
+        final Location location = generator.getLocation().clone().add(0.5, 2.0, 0.5);
         final org.bukkit.entity.ArmorStand hologram = (org.bukkit.entity.ArmorStand) location.getWorld().spawnEntity(location, org.bukkit.entity.EntityType.ARMOR_STAND);
         
         hologram.setInvisible(true);
         hologram.setMarker(true);
         hologram.setGravity(false);
+        hologram.setCustomNameVisible(false);
         hologram.addScoreboardTag("bedwars_generator_hologram");
-        
-        String displayName = switch (generator.getType().toLowerCase()) {
-            case "iron" -> "§7Ferro";
-            case "gold" -> "§6Ouro";
-            case "diamond" -> "§bDiamante";
-            case "emerald" -> "§aEsmeralda";
-            case "forge" -> {
-                if (generator.getTeam() != null) {
-                    yield "§eForja §7(" + generator.getTeam() + ")";
-                }
-                yield "§eForja";
-            }
-            default -> generator.getType();
+        hologram.getEquipment().setHelmet(new ItemStack(this.getHologramItemMaterial(generator.getType())));
+    }
+
+    private Material getHologramItemMaterial(final String type) {
+        return switch (type.toLowerCase()) {
+            case "iron" -> Material.IRON_INGOT;
+            case "gold" -> Material.GOLD_INGOT;
+            case "diamond" -> Material.DIAMOND;
+            case "emerald" -> Material.EMERALD;
+            case "forge" -> Material.FURNACE;
+            default -> Material.STONE;
         };
-        
-        hologram.setCustomName(displayName);
-        hologram.setCustomNameVisible(true);
     }
 
     private Material getTeamConcreteMaterial(final String dyeColor) {
@@ -267,76 +276,57 @@ public class ArenaManager {
     public void save(final Arena arena) {
         final File file = new File(this.arenasFolder, arena.getName() + ".yml");
         
-        // Carregar o arquivo existente para preservar dados que não estão na memória
-        YamlConfiguration config;
-        if (file.exists()) {
-            config = YamlConfiguration.loadConfiguration(file);
-        } else {
-            config = new YamlConfiguration();
-        }
+        // Load existing file to preserve data not in memory (e.g. locations when world is unloaded)
+        final YamlConfiguration config = file.exists()
+                ? YamlConfiguration.loadConfiguration(file)
+                : new YamlConfiguration();
 
         config.set("enabled", arena.isEnabled());
 
-        if (arena.getLobby() != null) {
-            config.set("lobby", this.serializeLocation(arena.getLobby()));
-        }
-        if (arena.getWorldName() != null) {
-            config.set("world", arena.getWorldName());
-        }
+        setIfNotNull(config, "lobby", arena.getLobby() != null ? this.serializeLocation(arena.getLobby()) : null);
+        setIfNotNull(config, "world", arena.getWorldName());
         config.set("paste", arena.getPasteX() + "," + arena.getPasteY() + "," + arena.getPasteZ());
         config.set("schematic_size",
                 arena.getSchematicWidth() + "," + arena.getSchematicHeight() + "," + arena.getSchematicLength());
-        if (arena.getArenaSpawn() != null) {
-            config.set("arena_spawn", this.serializeLocation(arena.getArenaSpawn()));
-        }
-        if (arena.getSpawnBlockData() != null) {
-            config.set("spawn_block", arena.getSpawnBlockData());
-        }
+        setIfNotNull(config, "arena_spawn", arena.getArenaSpawn() != null ? this.serializeLocation(arena.getArenaSpawn()) : null);
+        setIfNotNull(config, "spawn_block", arena.getSpawnBlockData());
         config.set("min_players", arena.getMinPlayers());
         config.set("countdown", arena.getCountdown());
 
-        final List<ArenaTeam> teams = arena.getTeams();
-        for (int i = 0; i < teams.size(); i++) {
-            final ArenaTeam team = teams.get(i);
+        // Replace entire teams section
+        config.set("teams", null);
+        for (final ArenaTeam team : arena.getTeams()) {
             final String path = "teams." + team.getName();
             config.set(path + ".color", team.getColor());
-            if (team.getSpawn() != null) {
-                config.set(path + ".spawn", this.serializeLocation(team.getSpawn()));
-            }
-            if (team.getSpawnBlockData() != null) {
-                config.set(path + ".spawn_block", team.getSpawnBlockData());
-            }
-            if (team.getBed() != null) {
-                config.set(path + ".bed", this.serializeLocation(team.getBed()));
-            }
-            if (team.getBedFacing() != null) {
-                config.set(path + ".bed_facing", team.getBedFacing());
-            }
+            setIfNotNull(config, path + ".spawn", team.getSpawn() != null ? this.serializeLocation(team.getSpawn()) : null);
+            setIfNotNull(config, path + ".spawn_block", team.getSpawnBlockData());
+            setIfNotNull(config, path + ".bed", team.getBed() != null ? this.serializeLocation(team.getBed()) : null);
+            setIfNotNull(config, path + ".bed_facing", team.getBedFacing());
         }
 
+        // Replace entire generators section
+        config.set("generators", null);
         final List<ArenaGenerator> generators = arena.getGenerators();
         for (int i = 0; i < generators.size(); i++) {
             final ArenaGenerator gen = generators.get(i);
             final String path = "generators." + i;
             config.set(path + ".type", gen.getType());
-            if (gen.getLocation() != null) {
-                config.set(path + ".location", this.serializeLocation(gen.getLocation()));
-            }
-            if (gen.getTeam() != null) {
-                config.set(path + ".team", gen.getTeam());
-            }
-            if (gen.getOriginBlockData() != null) {
-                config.set(path + ".origin_block", gen.getOriginBlockData());
-            }
-            if (gen.getOriginBlockDataAbove() != null) {
-                config.set(path + ".origin_block_above", gen.getOriginBlockDataAbove());
-            }
+            setIfNotNull(config, path + ".location", gen.getLocation() != null ? this.serializeLocation(gen.getLocation()) : null);
+            setIfNotNull(config, path + ".team", gen.getTeam());
+            setIfNotNull(config, path + ".origin_block", gen.getOriginBlockData());
+            setIfNotNull(config, path + ".origin_block_above", gen.getOriginBlockDataAbove());
         }
 
         try {
             config.save(file);
         } catch (final IOException e) {
             this.plugin.getLogger().severe("Erro ao salvar arena " + arena.getName() + ": " + e.getMessage());
+        }
+    }
+
+    private void setIfNotNull(final YamlConfiguration config, final String path, final Object value) {
+        if (value != null) {
+            config.set(path, value);
         }
     }
 

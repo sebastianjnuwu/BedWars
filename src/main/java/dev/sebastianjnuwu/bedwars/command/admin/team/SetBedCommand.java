@@ -49,31 +49,26 @@ public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
             return;
         }
 
-        final Location playerLoc = player.getLocation();
         final BlockFace facing = this.yawToFace(player.getYaw());
         final Material bedMaterial = this.getBedMaterial(team.getColor());
 
-        // Search for an existing bed within 5 blocks
-        final Block existingBed = this.findNearbyBed(playerLoc, 5);
+        Block targetBlock = player.getTargetBlockExact(5);
 
-        if (existingBed != null) {
-            // Found an existing bed, recolor it to the team color
-            this.recolorBed(existingBed, bedMaterial);
-            final Location bedLoc = existingBed.getLocation();
+        if (targetBlock == null || !(targetBlock.getBlockData() instanceof Bed)) {
+            targetBlock = this.findNearbyBed(player.getLocation(), 5);
+        }
+
+        if (targetBlock != null && targetBlock.getBlockData() instanceof Bed) {
+            this.recolorBed(targetBlock, bedMaterial);
+            final Location bedLoc = this.getBedFootLocation(targetBlock);
             team.setBed(bedLoc);
-            final BlockFace bedFacing = this.getBedFacing(existingBed);
+            final BlockFace bedFacing = this.getBedFacing(targetBlock);
             team.setBedFacing(bedFacing != null ? bedFacing.name() : facing.name());
             this.arenaManager.save(arena);
             player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.setbed_success",
                     colorName, team.getBedFacing()));
         } else {
-            // No existing bed found, place a new one
-            this.placeNewBed(playerLoc, facing, bedMaterial);
-            team.setBed(playerLoc.clone());
-            team.setBedFacing(facing.name());
-            this.arenaManager.save(arena);
-            player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.setbed_success",
-                    colorName, facing.name()));
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.setbed_stand_on_bed"));
         }
     }
 
@@ -147,31 +142,10 @@ public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
         return null;
     }
 
-    /**
-     * Places a new two-block bed at the specified location.
-     * Foot at playerLoc, head at playerLoc + facing direction.
-     */
-    private void placeNewBed(final Location playerLoc, final BlockFace facing, final Material bedMaterial) {
-        final Block footBlock = playerLoc.getBlock();
-        final Block headBlock = footBlock.getRelative(facing);
-
-        // Clear both blocks first
-        footBlock.setType(Material.AIR, false);
-        headBlock.setType(Material.AIR, false);
-
-        // Place foot
-        footBlock.setType(bedMaterial, false);
-        final Bed footData = (Bed) Bukkit.createBlockData(bedMaterial);
-        footData.setFacing(facing);
-        footData.setPart(Bed.Part.FOOT);
-        footBlock.setBlockData(footData, false);
-
-        // Place head
-        headBlock.setType(bedMaterial, false);
-        final Bed headData = (Bed) Bukkit.createBlockData(bedMaterial);
-        headData.setFacing(facing);
-        headData.setPart(Bed.Part.HEAD);
-        headBlock.setBlockData(headData, false);
+    private Location getBedFootLocation(final Block bedBlock) {
+        if (!(bedBlock.getBlockData() instanceof final Bed bed)) return bedBlock.getLocation();
+        if (bed.getPart() == Bed.Part.FOOT) return bedBlock.getLocation();
+        return bedBlock.getRelative(bed.getFacing().getOppositeFace()).getLocation();
     }
 
     private Material getBedMaterial(final String dyeColor) {

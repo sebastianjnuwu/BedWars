@@ -169,6 +169,12 @@ public class EditorManager {
             }
         }
 
+        if (arenaManager != null) {
+            for (final var arena : arenaManager.getAll()) {
+                arenaManager.removeAllGeneratorHolograms(arena);
+            }
+        }
+
         for (final org.bukkit.World world : Bukkit.getWorlds()) {
             if (world.getName().startsWith("bw_")) {
                 for (final Player p : world.getPlayers()) {

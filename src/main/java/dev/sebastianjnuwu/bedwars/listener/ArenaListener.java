@@ -8,6 +8,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -279,49 +280,36 @@ public class ArenaListener implements Listener {
 
     private void removeGeneratorHologram(final ArenaGenerator generator) {
         if (generator.getLocation() == null) return;
-        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
-        location.getWorld().getNearbyEntitiesByType(ArmorStand.class, location, 1.0)
+        final Location location = generator.getLocation().clone().add(0.5, 2.0, 0.5);
+        location.getWorld().getNearbyEntitiesByType(ArmorStand.class, location, 0.5)
                 .stream()
                 .filter(stand -> stand.getScoreboardTags().contains("bedwars_generator_hologram"))
-                .forEach(ArmorStand::remove);
-    }
-
-    private void removeForgeHologram(final ArenaGenerator generator) {
-        if (!generator.getType().equalsIgnoreCase("forge")) return;
-        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
-        location.getWorld().getNearbyEntitiesByType(ArmorStand.class, location, 1.0)
-                .stream()
-                .filter(stand -> stand.getScoreboardTags().contains("bedwars_forge_hologram"))
                 .forEach(ArmorStand::remove);
     }
 
     private void createGeneratorHologram(final ArenaGenerator generator) {
         if (generator.getLocation() == null) return;
         
-        final Location location = generator.getLocation().clone().add(0.5, 2.2, 0.5);
+        final Location location = generator.getLocation().clone().add(0.5, 2.0, 0.5);
         final ArmorStand hologram = (ArmorStand) location.getWorld().spawnEntity(location, org.bukkit.entity.EntityType.ARMOR_STAND);
         
         hologram.setInvisible(true);
         hologram.setMarker(true);
         hologram.setGravity(false);
+        hologram.setCustomNameVisible(false);
         hologram.addScoreboardTag("bedwars_generator_hologram");
-        
-        String displayName = switch (generator.getType().toLowerCase()) {
-            case "iron" -> "§7Ferro";
-            case "gold" -> "§6Ouro";
-            case "diamond" -> "§bDiamante";
-            case "emerald" -> "§aEsmeralda";
-            case "forge" -> {
-                if (generator.getTeam() != null) {
-                    yield "§eForja §7(" + generator.getTeam() + ")";
-                }
-                yield "§eForja";
-            }
-            default -> generator.getType();
+        hologram.getEquipment().setHelmet(new ItemStack(this.getHologramItemMaterial(generator.getType())));
+    }
+
+    private Material getHologramItemMaterial(final String type) {
+        return switch (type.toLowerCase()) {
+            case "iron" -> Material.IRON_INGOT;
+            case "gold" -> Material.GOLD_INGOT;
+            case "diamond" -> Material.DIAMOND;
+            case "emerald" -> Material.EMERALD;
+            case "forge" -> Material.FURNACE;
+            default -> Material.STONE;
         };
-        
-        hologram.setCustomName(displayName);
-        hologram.setCustomNameVisible(true);
     }
 
     /**
