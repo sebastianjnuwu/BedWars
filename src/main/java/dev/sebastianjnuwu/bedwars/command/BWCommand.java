@@ -165,15 +165,13 @@ public class BWCommand implements CommandExecutor, TabCompleter {
                 case "arena" -> completions.addAll(this.arenaManager.getNames());
             }
         } else if (args.length == 4 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
-            completions.addAll(List.of("spawn", "addteam", "removeteam", "setspawn", "setbed", "addgenerator", "teams", "status", "setminplayers", "setcountdown", "setshop", "removeshop"));
+            completions.addAll(List.of("spawn", "addteam", "removeteam", "setspawn", "setbed", "addgenerator", "teams", "status", "setminplayers", "setcountdown"));
         } else if (args.length == 5 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
             final String sub = args[3].toLowerCase();
             if (List.of("addteam", "removeteam", "setspawn", "setbed").contains(sub)) {
                 completions.addAll(List.of("azul", "vermelho", "verde", "amarelo", "roxo", "rosa", "laranja", "ciano"));
             } else if (sub.equals("addgenerator")) {
                 completions.addAll(List.of("ferro", "ouro", "diamante", "esmeralda", "forge"));
-            } else if (List.of("setshop", "removeshop").contains(sub)) {
-                completions.addAll(List.of("items", "upgrades"));
             }
         } else if (args.length == 6 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
             final String sub = args[3].toLowerCase();

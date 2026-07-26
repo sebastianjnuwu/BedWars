@@ -3,7 +3,6 @@ package dev.sebastianjnuwu.bedwars.manager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.npc.ArenaNpc;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
 import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
@@ -396,16 +395,6 @@ public class ArenaManager {
             setIfNotNull(config, path + ".origin_block_above", gen.getOriginBlockDataAbove());
         }
 
-        // Replace entire npcs section
-        config.set("npcs", null);
-        for (final ArenaNpc npc : arena.getNpcs()) {
-            final String path = "npcs." + npc.getId();
-            setIfNotNull(config, path + ".type", npc.getType());
-            setIfNotNull(config, path + ".skin", npc.getSkin());
-            setIfNotNull(config, path + ".display_name", npc.getDisplayName());
-            setIfNotNull(config, path + ".location", npc.getLocation() != null ? this.serializeLocation(npc.getLocation()) : null);
-        }
-
         try {
             config.save(file);
         } catch (final IOException e) {
@@ -581,18 +570,6 @@ public class ArenaManager {
                     }
                 }
                 arena.addGenerator(gen);
-            }
-        }
-
-        if (config.contains("npcs")) {
-            for (final String key : config.getConfigurationSection("npcs").getKeys(false)) {
-                final String path = "npcs." + key;
-                final ArenaNpc npc = new ArenaNpc(key);
-                if (config.contains(path + ".type")) npc.setType(config.getString(path + ".type"));
-                if (config.contains(path + ".skin")) npc.setSkin(config.getString(path + ".skin"));
-                if (config.contains(path + ".display_name")) npc.setDisplayName(config.getString(path + ".display_name"));
-                if (config.contains(path + ".location")) npc.setLocation(this.parseLocation(config.getString(path + ".location")));
-                arena.getNpcs().add(npc);
             }
         }
 

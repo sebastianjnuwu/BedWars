@@ -17,6 +17,7 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -26,6 +27,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,6 +40,8 @@ import java.util.*;
  * win condition, and auto-start countdown.
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
+
+    private static final MiniMessage MM = MiniMessage.miniMessage();
 
     private static final int RESPAWN_DELAY = 40;
 
@@ -114,6 +118,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
         this.spectators.add(player.getUniqueId());
         player.getInventory().clear();
+        player.getInventory().setItem(8, createExitDoorItem());
         final Location spawn = this.arena.getArenaSpawn();
         if (spawn != null) {
             LocationUtil.safeTeleport(player, spawn);
@@ -191,6 +196,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.setGameMode(GameMode.ADVENTURE);
         player.setHealth(20);
         player.setFoodLevel(20);
+        player.getInventory().setItem(8, createExitDoorItem());
 
         final int count = this.players.size();
         final int max = this.arena.getTeams().size();
@@ -732,6 +738,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.players.values();
     }
 
+    public Map<ArenaTeam, List<UUID>> getTeams() {
+        return this.teams;
+    }
+
     public void forceEnd() {
         if (this.state == GameState.ENDING) return;
         this.stopForges();
@@ -791,5 +801,16 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
         }
         return null;
+    }
+
+    private ItemStack createExitDoorItem() {
+        final ItemStack item = new ItemStack(Material.IRON_DOOR);
+        final ItemMeta meta = item.getItemMeta();
+        meta.displayName(MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel")));
+        meta.lore(List.of(
+                MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel_desc"))
+        ));
+        item.setItemMeta(meta);
+        return item;
     }
 }

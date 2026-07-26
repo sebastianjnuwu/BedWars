@@ -404,38 +404,6 @@ public class ArenaListener implements Listener {
     }
 
     /**
-     * Ao reconectar, se o jogador estiver em um mundo de arena (bw_*) sem
-     * estar em partida nem em sessão de edição, teleporta para o lobby global
-     * ou para o spawn do mundo principal, evitando que fique preso.
-     */
-    @EventHandler
-    public void onPlayerJoin(final PlayerJoinEvent event) {
-        final Player player = event.getPlayer();
-        final String worldName = player.getWorld().getName();
-
-        if (!worldName.startsWith("bw_")) return;
-        if (this.gameManager.isInGame(player)) return;
-
-        final Arena arena = this.getArena(player);
-        if (arena != null && this.editorManager.isEditing(player, arena.getName())) return;
-
-        // Player reconnected into an arena world without being in a game — rescue them
-        final org.bukkit.Location lobby = this.gameManager.getConfigManager().getLobby();
-        final org.bukkit.Location destination = lobby != null
-                ? lobby
-                : org.bukkit.Bukkit.getWorlds().get(0).getSpawnLocation();
-
-        // Delay by 1 tick so the player is fully loaded before teleporting
-        org.bukkit.Bukkit.getScheduler().runTaskLater(
-                this.gameManager.getPlugin(), () -> {
-                    if (player.isOnline()) {
-                        player.teleport(destination);
-                        player.setGameMode(org.bukkit.GameMode.SURVIVAL);
-                    }
-                }, 1L);
-    }
-
-    /**
      * Cancela o jogador dormir em camas — tanto em modo edição quanto em partidas.
      */
     @EventHandler

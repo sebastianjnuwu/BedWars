@@ -3,7 +3,7 @@ version: ${project.version}
 main: dev.sebastianjnuwu.bedwars.BedWarsPlugin
 api-version: 1.21
 author: sebastianjnuwu
-softdepend: [WorldEdit, FancyNpcs]
+softdepend: [WorldEdit]
 description: Plugin de BedWars para Paper 1.21.4
 website: https://github.com/sebastianjnuwu
 
