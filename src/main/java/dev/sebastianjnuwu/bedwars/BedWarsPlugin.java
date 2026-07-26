@@ -20,6 +20,8 @@ import dev.sebastianjnuwu.bedwars.listener.GameListener;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.npc.FancyNpcsHook;
+import dev.sebastianjnuwu.bedwars.npc.NpcInteractListener;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
 
@@ -46,6 +48,13 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.arenaManager.startSaveTask();
 
         this.gameManager = new GameManager(this, this.arenaManager, this.configManager, this.lang);
+
+        FancyNpcsHook.init();
+        if (FancyNpcsHook.isAvailable()) {
+            final NpcInteractListener npcListener = new NpcInteractListener(this.gameManager);
+            this.getServer().getPluginManager().registerEvents(npcListener, this);
+            this.getLogger().info("FancyNpcs encontrado! NPCs disponiveis.");
+        }
 
         this.getServer().getPluginManager().registerEvents(new ArenaListener(this.arenaManager, this.gameManager, this.editorManager), this);
         this.getServer().getPluginManager().registerEvents(new GameListener(this.gameManager), this);

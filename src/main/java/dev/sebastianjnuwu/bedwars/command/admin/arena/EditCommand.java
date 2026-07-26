@@ -120,9 +120,13 @@ public class EditCommand extends BaseCommand implements SubCommand {
                 }
             }
             this.arenaManager.applyWorldSettings(world, arena);
-            arena.setWorldName(worldName);
-            this.arenaManager.save(arena);
-            this.arenaManager.flush(arena.getName());
+            this.arenaManager.reload(arena.getName());
+            final Arena refreshed = this.arenaManager.get(arena.getName());
+            if (refreshed != null) {
+                refreshed.setWorldName(worldName);
+                this.arenaManager.save(refreshed);
+                this.arenaManager.flush(refreshed.getName());
+            }
         }
 
         this.arenaManager.showMarkerBlocks(arena);

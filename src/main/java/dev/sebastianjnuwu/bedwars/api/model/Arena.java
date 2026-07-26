@@ -1,5 +1,6 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
+import dev.sebastianjnuwu.bedwars.npc.ArenaNpc;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,6 +77,8 @@ public interface Arena {
     List<ArenaGenerator> getGenerators();
 
     void addGenerator(ArenaGenerator generator);
+
+    List<ArenaNpc> getNpcs();
 
     int getMinPlayers();
 

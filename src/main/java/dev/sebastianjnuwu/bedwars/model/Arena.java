@@ -2,6 +2,7 @@ package dev.sebastianjnuwu.bedwars.model;
 
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.npc.ArenaNpc;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,6 +39,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private boolean spawnAnimals;
     private final List<ArenaTeam> teams;
     private final List<ArenaGenerator> generators;
+    private final List<ArenaNpc> npcs;
 
     /**
      * Cria uma nova arena.
@@ -49,6 +51,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.enabled = false;
         this.teams = new ArrayList<>();
         this.generators = new ArrayList<>();
+        this.npcs = new ArrayList<>();
     }
 
     /**
@@ -262,6 +265,10 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
      */
     public List<ArenaGenerator> getGenerators() {
         return this.generators;
+    }
+
+    public List<ArenaNpc> getNpcs() {
+        return this.npcs;
     }
 
     /**

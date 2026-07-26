@@ -120,11 +120,15 @@ public class LoadCommand extends BaseCommand implements SubCommand {
                     : world.getSpawnLocation();
             schematic.paste(pasteLoc);
             this.arenaManager.applyWorldSettings(world, arena);
-            arena.setWorldName(worldName);
-            this.arenaManager.showMarkerBlocks(arena);
+            this.arenaManager.reload(arena.getName());
+            final Arena refreshed = this.arenaManager.get(arena.getName());
+            if (refreshed != null) {
+                refreshed.setWorldName(worldName);
+                this.arenaManager.showMarkerBlocks(refreshed);
+                this.arenaManager.save(refreshed);
+                this.arenaManager.flush(refreshed.getName());
+            }
             this.editorManager.startSession(player, name);
-            this.arenaManager.save(arena);
-            this.arenaManager.flush(arena.getName());
             LocationUtil.safeTeleport(player, pasteLoc);
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "load.success"));
