@@ -24,6 +24,7 @@ public interface BedWarsAPI {
 
     /**
      * Obtém o jogo ativo para uma arena pelo nome.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @param arenaName nome da arena registrada
      * @return o jogo ativo, ou {@code null} se nenhum jogo estiver em andamento
@@ -33,6 +34,7 @@ public interface BedWarsAPI {
 
     /**
      * Obtém o jogo em que um jogador está atualmente.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @param player o jogador a ser consultado
      * @return o jogo do jogador, ou {@code null} se não estiver em nenhum jogo
@@ -41,6 +43,7 @@ public interface BedWarsAPI {
 
     /**
      * Verifica se um jogador está atualmente em uma partida.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @param player o jogador a ser consultado
      * @return {@code true} se o jogador estiver em uma partida
@@ -49,6 +52,7 @@ public interface BedWarsAPI {
 
     /**
      * Obtém os dados do jogador dentro da partida atual.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @param player o jogador a ser consultado
      * @return os dados do jogador na partida, ou {@code null} se não estiver
@@ -58,6 +62,7 @@ public interface BedWarsAPI {
 
     /**
      * Obtém o gerenciador de arenas para operações de registro e carga.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @return o gerenciador de arenas
      */
@@ -65,6 +70,7 @@ public interface BedWarsAPI {
 
     /**
      * Obtém o gerenciador de jogos para operações de criação e controle.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @return o gerenciador de jogos
      */
@@ -72,6 +78,7 @@ public interface BedWarsAPI {
 
     /**
      * Retorna todas as arenas registradas no plugin.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @return coleção de todas as arenas disponíveis
      */
@@ -79,6 +86,7 @@ public interface BedWarsAPI {
 
     /**
      * Obtém uma arena registrada pelo nome.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
      *
      * @param name nome da arena
      * @return a arena encontrada, ou {@code null} se não existir
@@ -88,6 +96,7 @@ public interface BedWarsAPI {
     /**
      * Força o início imediato de uma partida em uma arena,
      * ignorando a contagem regressiva e o número mínimo de jogadores.
+     * <p><b>Segurança de threads:</b> Deve ser chamado na thread principal do servidor.</p>
      *
      * @param arenaName nome da arena para iniciar
      * @return {@code true} se a partida foi iniciada com sucesso,
@@ -101,6 +110,7 @@ public interface BedWarsAPI {
      * O time com mais jogadores vivos será declarado vencedor.
      * Se não houver vencedor, a partida é encerrada sem vencedor.
      * </p>
+     * <p><b>Segurança de threads:</b> Deve ser chamado na thread principal do servidor.</p>
      *
      * @param arenaName nome da arena para encerrar
      * @return {@code true} se a partida foi encerrada com sucesso,
@@ -114,6 +124,7 @@ public interface BedWarsAPI {
      * O jogador será atribuído automaticamente ao time com menos membros.
      * Se o jogo ainda não existir, ele será criado.
      * </p>
+     * <p><b>Segurança de threads:</b> Deve ser chamado na thread principal do servidor.</p>
      *
      * @param player    o jogador a ser adicionado
      * @param arenaName nome da arena para entrar
@@ -127,6 +138,7 @@ public interface BedWarsAPI {
      * <p>
      * Se o jogo ainda não existir, ele será criado.
      * </p>
+     * <p><b>Segurança de threads:</b> Deve ser chamado na thread principal do servidor.</p>
      *
      * @param player    o jogador a ser adicionado
      * @param arenaName nome da arena para entrar
@@ -141,9 +153,28 @@ public interface BedWarsAPI {
      * Se a partida ficar vazia após a remoção, ela será automaticamente
      * encerrada e removida do gerenciador de jogos.
      * </p>
+     * <p><b>Segurança de threads:</b> Deve ser chamado na thread principal do servidor.</p>
      *
      * @param player o jogador a ser removido
      * @return {@code true} se o jogador foi removido com sucesso
      */
     boolean removePlayer(@NotNull Player player);
+
+    /**
+     * Obtém todos os jogadores presentes em uma arena específica.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
+     *
+     * @param arenaName nome da arena
+     * @return uma coleção de jogadores na arena
+     */
+    @NotNull Collection<Player> getPlayersInArena(@NotNull String arenaName);
+
+    /**
+     * Envia uma mensagem para todos os jogadores na partida da arena.
+     * <p><b>Segurança de threads:</b> Pode ser chamado de qualquer thread.</p>
+     *
+     * @param arenaName nome da arena
+     * @param message   mensagem a ser enviada
+     */
+    void broadcast(@NotNull String arenaName, @NotNull String message);
 }

@@ -2,6 +2,7 @@ package dev.sebastianjnuwu.bedwars.api.events;
 
 import dev.sebastianjnuwu.bedwars.game.Game;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -18,15 +19,26 @@ import org.jetbrains.annotations.NotNull;
  * @author Sebastian J. Nuwu
  * @since 1.0
  */
-public class PlayerJoinGameEvent extends Event {
+public class PlayerJoinGameEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private final Game game;
     private final Player player;
+    private boolean cancelled;
 
     public PlayerJoinGameEvent(final Game game, final Player player) {
         this.game = game;
         this.player = player;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        this.cancelled = cancel;
     }
 
     /**

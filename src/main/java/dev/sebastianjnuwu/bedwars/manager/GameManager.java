@@ -151,7 +151,7 @@ public class GameManager {
         final Game game = this.playerGames.remove(player.getUniqueId());
         if (game != null) {
             game.leave(player);
-            if (game.getPlayerCount() == 0) {
+            if (game.getPlayers().isEmpty()) {
                 this.games.remove(game.getArena().getName());
             }
         }

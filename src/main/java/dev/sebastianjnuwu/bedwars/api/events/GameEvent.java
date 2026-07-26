@@ -1,6 +1,7 @@
 package dev.sebastianjnuwu.bedwars.api.events;
 
 import dev.sebastianjnuwu.bedwars.game.Game;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -20,9 +21,10 @@ import org.jetbrains.annotations.NotNull;
  * @author Sebastian J. Nuwu
  * @since 1.0
  */
-public abstract class GameEvent extends Event {
+public abstract class GameEvent extends Event implements Cancellable {
 
     private final Game game;
+    private boolean cancelled;
 
     /**
      * Cria um novo evento de jogo.
@@ -35,6 +37,17 @@ public abstract class GameEvent extends Event {
     public GameEvent(final Game game) {
         this.game = game;
     }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        this.cancelled = cancel;
+    }
+
 
     /**
      * Obtém a instância do jogo BedWars a qual este evento pertence.

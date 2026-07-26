@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Represents a single BedWars game instance. Manages the state machine,
@@ -40,6 +41,7 @@ import java.util.*;
  * win condition, and auto-start countdown.
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
+
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -734,13 +736,31 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.players.size();
     }
 
+    public Map<ArenaTeam, List<UUID>> getTeams() {
+        return this.teams;
+    }
+
+
+    @Override
     public Collection<GamePlayer> getGamePlayers() {
         return this.players.values();
     }
 
-    public Map<ArenaTeam, List<UUID>> getTeams() {
-        return this.teams;
+    public Collection<Player> getPlayers() {
+        return this.players.keySet().stream()
+                .map(Bukkit::getPlayer)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
+
+    public void broadcast(String message) {
+        Component component = MiniMessage.miniMessage().deserialize(message);
+        this.players.keySet().stream()
+                .map(Bukkit::getPlayer)
+                .filter(Objects::nonNull)
+                .forEach(p -> p.sendMessage(component));
+    }
+
 
     public void forceEnd() {
         if (this.state == GameState.ENDING) return;

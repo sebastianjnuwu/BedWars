@@ -2,6 +2,7 @@ package dev.sebastianjnuwu.bedwars;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -180,6 +181,20 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         }
         this.gameManager.leaveGame(player);
         return true;
+    }
+
+    @Override
+    public @NotNull Collection<Player> getPlayersInArena(@NotNull String arenaName) {
+        Game game = this.gameManager.getGame(arenaName);
+        return game != null ? game.getPlayers() : Collections.emptyList();
+    }
+
+    @Override
+    public void broadcast(@NotNull String arenaName, @NotNull String message) {
+        Game game = this.gameManager.getGame(arenaName);
+        if (game != null) {
+            game.broadcast(message);
+        }
     }
 
     public EditorManager getEditorManager() {
