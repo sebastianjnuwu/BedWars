@@ -1,6 +1,8 @@
 package dev.sebastianjnuwu.bedwars.command.admin.arena;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,6 +19,7 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -37,6 +40,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  */
 public class SaveCommand extends BaseCommand implements SubCommand {
 
+    private final SlimeManager slimeManager;
+
     /**
      * Construtor do comando de salvamento de arena.
      *
@@ -56,6 +61,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             final File mapsFolder
     ) {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
+        this.slimeManager = new SlimeManager(org.bukkit.Bukkit.getPluginManager().getPlugin("BedWars"));
     }
 
     /**
@@ -102,31 +108,57 @@ public class SaveCommand extends BaseCommand implements SubCommand {
         }
         try {
             this.restoreOriginalBlocks(arena);
-            final Location pos1 = new Location(
-                    world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
-            final Location pos2 = new Location(
-                    world,
-                    arena.getPasteX() + arena.getSchematicWidth() - 1,
-                    arena.getPasteY() + arena.getSchematicHeight() - 1,
-                    arena.getPasteZ() + arena.getSchematicLength() - 1);
-            final Schematic schematic = new Schematic(name, pos1, pos2);
-            File mapFile = new File(this.mapsFolder, name + ".schem");
-            try {
-                // Salvar clipboard do FAWE como .bd
-                if (sender instanceof final Player player) {
-                    File clipboardDir = new File("plugins/FastAsyncWorldEdit/clipboard/" + player.getUniqueId().toString());
-                    if (clipboardDir.exists()) {
-                        File[] clipboardFiles = clipboardDir.listFiles();
-                        if (clipboardFiles != null && clipboardFiles.length > 0) {
-                            File clipboardFile = clipboardFiles[0];
-                            java.nio.file.Files.copy(clipboardFile.toPath(), mapFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        }
-                    }
-                }
-            } catch (final Exception e) {
-                mapFile = new File(this.mapsFolder, name + ".bwmap");
-                schematic.save(mapFile);
+
+            final int pasteX = arena.getPasteX();
+            final int pasteY = arena.getPasteY();
+            final int pasteZ = arena.getPasteZ();
+            final int w = arena.getSchematicWidth();
+            final int h = arena.getSchematicHeight();
+            final int l = arena.getSchematicLength();
+
+            if (w <= 0 || h <= 0 || l <= 0) {
+                org.bukkit.Bukkit.getLogger().severe(
+                        "Dimensões inválidas do schematic para arena '" + name + "': " + w + "x" + h + "x" + l);
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error",
+                        "Dimensões do schematic inválidas. Use //pos1 e //pos2 para selecionar a área."));
+                return;
             }
+
+            final Location pos1 = new Location(world, pasteX, pasteY, pasteZ);
+            final Location pos2 = new Location(world, pasteX + w - 1, pasteY + h - 1, pasteZ + l - 1);
+            final Schematic schematic = new Schematic(name, pos1, pos2);
+
+            final File mapFile = new File(this.mapsFolder, name + ".schem");
+            this.mapsFolder.mkdirs();
+            org.bukkit.Bukkit.getLogger().info("Salvando schematic da arena '" + name + "' em "
+                    + mapFile.getAbsolutePath()
+                    + " (região: " + pasteX + "," + pasteY + "," + pasteZ + " a "
+                    + (pasteX + w - 1) + "," + (pasteY + h - 1) + "," + (pasteZ + l - 1) + ")");
+
+            try {
+                schematic.save(mapFile, world);
+                org.bukkit.Bukkit.getLogger().info("Schematic salvo com sucesso: " + mapFile.getAbsolutePath()
+                        + " (" + w + "x" + h + "x" + l + " blocos)");
+            } catch (final IOException e) {
+                org.bukkit.Bukkit.getLogger().log(Level.SEVERE,
+                        "Falha ao salvar schematic da arena '" + name + "': " + e.getMessage(), e);
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error",
+                        "Falha ao salvar o arquivo do mapa: " + e.getMessage()));
+                return;
+            }
+
+            if (this.slimeManager.isAvailable()) {
+                this.slimeManager.saveTemplate(name, world)
+                        .thenRun(() -> org.bukkit.Bukkit.getLogger().info(
+                                "Template Slime salvo: " + name))
+                        .exceptionally(ex -> {
+                            org.bukkit.Bukkit.getLogger().log(Level.WARNING,
+                                    "Falha ao salvar template Slime para arena '" + name + "': "
+                                            + ex.getMessage(), ex);
+                            return null;
+                        });
+            }
+
             this.arenaManager.save(arena);
             this.arenaManager.flush(arena.getName());
             this.editorManager.endSession(name);
@@ -154,6 +186,8 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                 }
             }
         } catch (final Exception e) {
+            org.bukkit.Bukkit.getLogger().log(Level.SEVERE,
+                    "Erro inesperado ao salvar arena '" + name + "': " + e.getMessage(), e);
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error", e.getMessage()));
         }
     }

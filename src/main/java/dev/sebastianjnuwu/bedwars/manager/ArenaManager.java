@@ -346,60 +346,91 @@ public class ArenaManager {
     }
 
     private void flushArena(final Arena arena) {
-        final File file = new File(this.arenasFolder, arena.getName() + ".yml");
+        final String arenaName = arena.getName();
+        final File file = new File(this.arenasFolder, arenaName + ".yml");
+
+        // Verifica permissões da pasta
+        if (!this.arenasFolder.exists()) {
+            this.plugin.getLogger().severe("Pasta de arenas não existe: " + this.arenasFolder.getAbsolutePath());
+            if (!this.arenasFolder.mkdirs()) {
+                this.plugin.getLogger().severe("Falha ao criar pasta de arenas (permissões?): "
+                        + this.arenasFolder.getAbsolutePath());
+                return;
+            }
+        }
+        if (!this.arenasFolder.canWrite()) {
+            this.plugin.getLogger().severe("Sem permissão de escrita na pasta de arenas: "
+                    + this.arenasFolder.getAbsolutePath());
+            return;
+        }
+
+        this.plugin.getLogger().fine("Serializando arena '" + arenaName + "' para YML...");
 
         final YamlConfiguration config = file.exists()
                 ? YamlConfiguration.loadConfiguration(file)
                 : new YamlConfiguration();
 
-        config.set("enabled", arena.isEnabled());
+        try {
+            config.set("enabled", arena.isEnabled());
 
-        setIfNotNull(config, "lobby", arena.getLobby() != null ? this.serializeLocation(arena.getLobby()) : null);
-        setIfNotNull(config, "world", arena.getWorldName());
-        config.set("paste", arena.getPasteX() + "," + arena.getPasteY() + "," + arena.getPasteZ());
-        config.set("schematic_size",
-                arena.getSchematicWidth() + "," + arena.getSchematicHeight() + "," + arena.getSchematicLength());
-        setIfNotNull(config, "arena_spawn", arena.getArenaSpawn() != null ? this.serializeLocation(arena.getArenaSpawn()) : null);
-        setIfNotNull(config, "spawn_block", arena.getSpawnBlockData());
-        config.set("min_players", arena.getMinPlayers());
-        config.set("countdown", arena.getCountdown());
+            setIfNotNull(config, "lobby", arena.getLobby() != null ? this.serializeLocation(arena.getLobby()) : null);
+            setIfNotNull(config, "world", arena.getWorldName());
+            config.set("paste", arena.getPasteX() + "," + arena.getPasteY() + "," + arena.getPasteZ());
+            config.set("schematic_size",
+                    arena.getSchematicWidth() + "," + arena.getSchematicHeight() + "," + arena.getSchematicLength());
+            setIfNotNull(config, "arena_spawn", arena.getArenaSpawn() != null ? this.serializeLocation(arena.getArenaSpawn()) : null);
+            setIfNotNull(config, "spawn_block", arena.getSpawnBlockData());
+            config.set("min_players", arena.getMinPlayers());
+            config.set("countdown", arena.getCountdown());
 
-        setIfNotNull(config, "difficulty", arena.getDifficulty());
-        setIfNotNull(config, "time", arena.getTime());
-        setIfNotNull(config, "weather", arena.getWeather());
-        config.set("cycle_day", arena.isCycleDay());
-        config.set("cycle_weather", arena.isCycleWeather());
-        config.set("spawn_mobs", arena.isSpawnMobs());
-        config.set("spawn_animals", arena.isSpawnAnimals());
+            setIfNotNull(config, "difficulty", arena.getDifficulty());
+            setIfNotNull(config, "time", arena.getTime());
+            setIfNotNull(config, "weather", arena.getWeather());
+            config.set("cycle_day", arena.isCycleDay());
+            config.set("cycle_weather", arena.isCycleWeather());
+            config.set("spawn_mobs", arena.isSpawnMobs());
+            config.set("spawn_animals", arena.isSpawnAnimals());
 
-        // Replace entire teams section
-        config.set("teams", null);
-        for (final ArenaTeam team : arena.getTeams()) {
-            final String path = "teams." + team.getName();
-            config.set(path + ".color", team.getColor());
-            setIfNotNull(config, path + ".spawn", team.getSpawn() != null ? this.serializeLocation(team.getSpawn()) : null);
-            setIfNotNull(config, path + ".spawn_block", team.getSpawnBlockData());
-            setIfNotNull(config, path + ".bed", team.getBed() != null ? this.serializeLocation(team.getBed()) : null);
-            setIfNotNull(config, path + ".bed_facing", team.getBedFacing());
+            // Replace entire teams section
+            config.set("teams", null);
+            for (final ArenaTeam team : arena.getTeams()) {
+                final String path = "teams." + team.getName();
+                config.set(path + ".color", team.getColor());
+                setIfNotNull(config, path + ".spawn", team.getSpawn() != null ? this.serializeLocation(team.getSpawn()) : null);
+                setIfNotNull(config, path + ".spawn_block", team.getSpawnBlockData());
+                setIfNotNull(config, path + ".bed", team.getBed() != null ? this.serializeLocation(team.getBed()) : null);
+                setIfNotNull(config, path + ".bed_facing", team.getBedFacing());
+            }
+
+            // Replace entire generators section
+            config.set("generators", null);
+            final List<ArenaGenerator> generators = arena.getGenerators();
+            for (int i = 0; i < generators.size(); i++) {
+                final ArenaGenerator gen = generators.get(i);
+                final String path = "generators." + i;
+                config.set(path + ".type", gen.getType());
+                setIfNotNull(config, path + ".location", gen.getLocation() != null ? this.serializeLocation(gen.getLocation()) : null);
+                setIfNotNull(config, path + ".team", gen.getTeam());
+                setIfNotNull(config, path + ".origin_block", gen.getOriginBlockData());
+                setIfNotNull(config, path + ".origin_block_above", gen.getOriginBlockDataAbove());
+            }
+        } catch (final Exception e) {
+            this.plugin.getLogger().severe("Erro durante serialização da arena '" + arenaName + "': "
+                    + e.getMessage());
+            return;
         }
 
-        // Replace entire generators section
-        config.set("generators", null);
-        final List<ArenaGenerator> generators = arena.getGenerators();
-        for (int i = 0; i < generators.size(); i++) {
-            final ArenaGenerator gen = generators.get(i);
-            final String path = "generators." + i;
-            config.set(path + ".type", gen.getType());
-            setIfNotNull(config, path + ".location", gen.getLocation() != null ? this.serializeLocation(gen.getLocation()) : null);
-            setIfNotNull(config, path + ".team", gen.getTeam());
-            setIfNotNull(config, path + ".origin_block", gen.getOriginBlockData());
-            setIfNotNull(config, path + ".origin_block_above", gen.getOriginBlockDataAbove());
-        }
-
+        // Escrita do arquivo
+        this.plugin.getLogger().fine("Escrevendo arquivo YML da arena '" + arenaName + "' em: "
+                + file.getAbsolutePath());
         try {
             config.save(file);
+            this.plugin.getLogger().fine("Arena '" + arenaName + "' salva com sucesso em "
+                    + file.getAbsolutePath());
         } catch (final IOException e) {
-            this.plugin.getLogger().severe("Erro ao salvar arena " + arena.getName() + ": " + e.getMessage());
+            this.plugin.getLogger().severe("Erro ao salvar arquivo da arena '" + arenaName + "' em "
+                    + file.getAbsolutePath() + ": " + e.getMessage());
+            this.plugin.getLogger().severe("Verifique permissões de escrita e espaço em disco.");
         }
     }
 

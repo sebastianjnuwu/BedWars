@@ -4,13 +4,11 @@ import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.arena.LifecycleRouter;
 import dev.sebastianjnuwu.bedwars.command.admin.arena.SetLobbyCommand;
-import dev.sebastianjnuwu.bedwars.command.admin.arena.SaveSlimeCommand;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -39,9 +37,6 @@ public class AdminCommand extends BaseCommand {
             final File mapsFolder
     ) {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
-        
-        // Inicializa SlimeManager
-        final SlimeManager slimeManager = new SlimeManager(org.bukkit.Bukkit.getPluginManager().getPlugin("BedWars"));
 
         final LifecycleRouter lifecycle = new LifecycleRouter(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
         this.register("arena", new ArenaRouter(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
@@ -52,7 +47,6 @@ public class AdminCommand extends BaseCommand {
         this.register("save", lifecycle);
         this.register("load", lifecycle);
         this.register("edit", lifecycle);
-        this.register("saveslime", new SaveSlimeCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder, slimeManager));
         this.register("reload", new ReloadCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
     }
 

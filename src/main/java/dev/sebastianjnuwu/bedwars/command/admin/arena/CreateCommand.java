@@ -115,6 +115,10 @@ public class CreateCommand extends BaseCommand implements SubCommand {
                 worldName
         ));
         sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "create.instructions"));
+
+        if (!this.configManager.hasLobby()) {
+            sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "no_lobby"));
+        }
     }
 
     private @Nullable String createFallbackWorld(@NotNull String arenaName, @NotNull Player creator) {

@@ -3,3 +3,4 @@ src/test/
 .m2/
 .idea/
 dependency-reduced-pom.xml
+BUGS.md

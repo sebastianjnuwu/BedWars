@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,11 +62,19 @@ public class LangManager {
      */
     public String raw(final @NotNull String key, final Object... args) {
         String text = this.messages.getString(key, "§c[missing: " + key + "]");
-        text = text.replace('&', '§');
-        if (args == null || args.length == 0) {
-            return text;
+        if (text == null) {
+            return "§c[missing: " + key + "]";
         }
 
+        if (args != null && args.length > 0) {
+            text = this.replacePlaceholders(text, args);
+        }
+
+        text = text.replace('&', '§');
+        return text;
+    }
+
+    private String replacePlaceholders(String text, final Object... args) {
         final Object[] actualArgs;
         if (args.length == 1 && args[0] instanceof final Object[] arr) {
             actualArgs = arr;
@@ -74,12 +83,22 @@ public class LangManager {
         }
 
         final Matcher matcher = VAR_PATTERN.matcher(text);
-        final StringBuffer sb = new StringBuffer();
+        if (!matcher.find()) {
+            return text;
+        }
+        matcher.reset();
+
+        final StringBuilder sb = new StringBuilder(text.length());
         while (matcher.find()) {
             final int idx = Integer.parseInt(matcher.group(1));
-            final String val = idx < actualArgs.length && actualArgs[idx] != null
-                    ? String.valueOf(actualArgs[idx])
-                    : matcher.group(0);
+            final String val;
+            if (idx < actualArgs.length && actualArgs[idx] != null) {
+                val = String.valueOf(actualArgs[idx]);
+            } else {
+                this.plugin.getLogger().log(Level.WARNING,
+                        "Placeholder {" + idx + "} não encontrado em args para a chave \"" + text + "\"");
+                val = matcher.group(0);
+            }
             matcher.appendReplacement(sb, Matcher.quoteReplacement(val));
         }
         matcher.appendTail(sb);
