@@ -19,14 +19,16 @@ Um plugin moderno de **BedWars** para **Paper 1.21.4**, desenvolvido com foco em
 - Java **21+**
 - Maven **3.9+**
 - Paper **1.21.4**
+- FastAsyncWorldEdit **2.15+**
+- AdvancedSlimePaper **4.0+**
 
 ## Tutorial — Como utilizar o plugin?
 
-### 1. Definir o lobby###
+### 1. Definir o lobby
 
 Primeiro, vá até o local onde será o lobby principal e execute o comando abaixo.
 
-> Esse lobby é obrigatório, pois sempre que uma partida terminar ou um administrador finalizar a edição de uma arena, todos os jogadores serão teleportados automaticamente para esse local.
+> Esse lobby é obrigatório — sempre que uma partida terminar ou um administrador finalizar a edição de uma arena, todos os jogadores serão teleportados automaticamente para esse local.
 
 ```bash
 /bw admin setlobby
@@ -34,34 +36,29 @@ Primeiro, vá até o local onde será o lobby principal e execute o comando abai
 
 ### 2. Criar a arena
 
-
 Crie uma nova arena utilizando um **nome único e sem espaços**. Esse nome será usado como identificador interno da arena.
 
-> Ao executar o comando, o plugin criará automaticamente um **mundo vazio (Void)** para a edição da arena. A partir daí, você pode construir a arena manualmente ou utilizar o **WorldEdit/FAWE** para colar um mapa já existente e continuar a configuração normalmente.
+> O plugin criará automaticamente um **mundo vazio (Void)** e te teleportará para lá em modo criativo com voo ativo. Construa a arena manualmente ou utilize **WorldEdit/FAWE** para colar um mapa existente.
 
 ```bash
 /bw admin create <nome_da_arena>
 ```
 
+### 3. Construir e salvar o mapa
 
-### 3. Carregar a arena
-
-Após criar a arena, carregue-a para iniciar a edição.
-
-> Esse comando carregará o mundo da arena e teleportará você para ele. Caso a arena ainda não esteja carregada, ela será carregada automaticamente.
+Após construir a arena com FAWE, selecione toda a construção com `//pos1` e `//pos2` e execute:
 
 ```bash
-/bw admin load <nome_da_arena>
+/bw admin save <nome_da_arena>
 ```
 
-Segue a continuação no mesmo padrão:
+> O comando lê a seleção do FAWE automaticamente, gera o arquivo `.schem` na pasta `maps/` e o template SlimeWorld em `templates/`.
 
-### 4. Entrar no modo de edição
+### 4. Editar a arena (configurar spawn, times, etc.)
 
-Com a arena carregada, entre no modo de edição para começar a configurá-la.
+Com a arena salva, entre no modo de edição para configurá-la.
 
-> **Após concluir a edição, não se esqueça de salvar a arena utilizando o comando:**  `/bw admin save <nome_da_arena>`
-
+> O comando carrega o schematic salvo, teleporta você para o spawn da arena (se definido) e ativa os marcadores visuais.
 
 ```bash
 /bw admin edit <nome_da_arena>
@@ -69,9 +66,7 @@ Com a arena carregada, entre no modo de edição para começar a configurá-la.
 
 ### 5. Definir o spawn de espera
 
-Vá até o local onde os jogadores deverão aguardar o início da partida e execute o comando abaixo.
-
-> Todos os jogadores serão teleportados para esse ponto antes do jogo começar.
+Vá até o local onde os jogadores deverão aguardar o início da partida e execute:
 
 ```bash
 /bw admin arena <nome_da_arena> spawn
@@ -79,20 +74,9 @@ Vá até o local onde os jogadores deverão aguardar o início da partida e exec
 
 ### 6. Adicionar os times
 
-Adicione todos os times que farão parte da partida. Cada time criado precisará ser configurado posteriormente.
+Adicione todos os times que farão parte da partida.
 
-**Cores disponíveis:**
-
-* Azul
-* Vermelho
-* Verde
-* Amarelo
-* Roxo
-* Rosa
-* Laranja
-* Ciano
-
-**Exemplo:**
+**Cores disponíveis:** `azul`, `vermelho`, `verde`, `amarelo`, `roxo`, `rosa`, `laranja`, `ciano`
 
 ```bash
 /bw admin arena <nome_da_arena> addteam azul
@@ -103,35 +87,29 @@ Adicione todos os times que farão parte da partida. Cada time criado precisará
 
 ### 7. Definir o spawn dos times
 
-Vá até o local onde os jogadores de cada time deverão nascer no início da partida e execute o comando correspondente.
-
-**Exemplo:**
+Vá até o local onde os jogadores de cada time deverão nascer e execute:
 
 ```bash
 /bw admin arena <nome_da_arena> setspawn azul
 /bw admin arena <nome_da_arena> setspawn vermelho
 ```
 
-> Repita o processo para todos os times adicionados.
+> Repita para todos os times.
 
 ### 8. Definir a cama dos times
 
-Posicione-se sobre a cama correspondente ao time e execute o comando abaixo.
-
-**Exemplo:**
+Posicione-se sobre a cama correspondente ao time e execute:
 
 ```bash
 /bw admin arena <nome_da_arena> setbed azul
 /bw admin arena <nome_da_arena> setbed vermelho
 ```
 
-> Repita o processo para todos os times.
+> Repita para todos os times.
 
 ### 9. Adicionar geradores
 
 #### Geradores globais
-
-Vá até o local onde cada gerador deverá aparecer durante a partida e execute um dos comandos abaixo.
 
 ```bash
 /bw admin arena <nome_da_arena> addgenerator ferro
@@ -142,40 +120,25 @@ Vá até o local onde cada gerador deverá aparecer durante a partida e execute 
 
 #### Geradores das bases (Forja)
 
-Cada base deve possuir uma forja associada ao seu respectivo time.
-
-**Exemplo:**
-
 ```bash
-/bw admin arena <nome_da_arena> addgenerator forge azul
-/bw admin arena <nome_da_arena> addgenerator forge vermelho
+/bw admin arena <nome_da_arena> addgenerator forja azul
+/bw admin arena <nome_da_arena> addgenerator forja vermelho
 ```
 
-> Repita o processo para todos os times.
+> Repita para todos os times.
 
 ### 10. Configurações opcionais
 
-Defina a quantidade mínima de jogadores necessária para iniciar a partida.
-
 ```bash
 /bw admin arena <nome_da_arena> setminplayers 4
-```
-
-Defina o tempo da contagem regressiva antes do início da partida.
-
-```bash
 /bw admin arena <nome_da_arena> setcountdown 30
-```
-
-Verifique o status da arena para conferir quais configurações ainda estão pendentes.
-
-```bash
 /bw admin arena <nome_da_arena> status
+/bw admin arena <nome_da_arena> teams
 ```
 
 ### 11. Salvar a arena
 
-Após concluir toda a configuração, salve a arena.
+Após concluir toda a configuração:
 
 ```bash
 /bw admin save <nome_da_arena>
@@ -183,82 +146,31 @@ Após concluir toda a configuração, salve a arena.
 
 ### 12. Jogar na arena
 
-Entrar na arena com um time escolhido automaticamente.
-
 ```bash
-/bw join <nome_da_arena>
+/bw join <nome_da_arena>         # time automático
+/bw join <nome_da_arena> azul    # time específico
+/bw start <nome_da_arena>        # iniciar manualmente
+/bw leave                         # sair da partida
 ```
 
-Entrar em um time específico.
+### Comandos administrativos adicionais
 
-```bash
-/bw join <nome_da_arena> azul
-```
-
-Iniciar a partida manualmente, ignorando a quantidade mínima de jogadores.
-
-```bash
-/bw start <nome_da_arena>
-```
-
-Sair da partida.
-
-```bash
-/bw leave
-```
+| Comando | Descrição |
+|---------|-----------|
+| `/bw admin list` | Lista todas as arenas registradas |
+| `/bw admin delete <nome>` | Deleta uma arena |
+| `/bw admin load <nome>` | Carrega o schematic de uma arena em um mundo void |
+| `/bw admin reload` | Recarrega arquivos de configuração |
+| `/bw admin arena <nome> removeteam <cor>` | Remove um time |
 
 ## 🚀 Compilação
-
-### Compilar
-
-```bash
-mvn clean compile
-```
-
-### Executar testes
-
-```bash
-mvn test
-```
-
-### Gerar o JAR
 
 ```bash
 mvn clean package
 ```
 
-### Instalar localmente
-
-```bash
-mvn clean install
-```
-
-### Executar
-
-```bash
-mvn spring-boot:run
-```
-
-### Limpar arquivos temporários
-
-```bash
-mvn clean
-```
-
-### Resolver dependências
-
-```bash
-mvn dependency:resolve
-```
-
-### Visualizar dependências
-
-```bash
-mvn dependency:tree
-```
+O JAR será gerado em `target/BedWars-1.0.0.jar`.
 
 # 🤝 Contribuindo
 
 Pull Requests são muito bem-vindos!
-
-> Atenção: este projeto ainda está em desenvolvimento e não possui uma versão estável. As versões atuais são instáveis (unstable) e podem conter bugs, mudanças incompatíveis e funcionalidades incompletas. Não é recomendado utilizá-las em ambiente de produção.
