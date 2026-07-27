@@ -117,14 +117,26 @@ public class Schematic {
         );
         final CuboidRegion region = new CuboidRegion(weWorld, min, max);
 
-        final ClipboardFormat format = ClipboardFormats.findByAlias("sponge");
+        ClipboardFormat format = ClipboardFormats.findByAlias("sponge");
         if (format == null) {
-            throw new IOException("Nenhum formato de schematic disponível (sponge)");
+            format = ClipboardFormats.findByAlias("schem");
+        }
+        if (format == null) {
+            format = ClipboardFormats.findByAlias("schematic");
+        }
+        if (format == null) {
+            final java.util.Collection<ClipboardFormat> all = ClipboardFormats.getAll();
+            if (!all.isEmpty()) {
+                format = all.iterator().next();
+            }
+        }
+        if (format == null) {
+            throw new IOException("Nenhum formato de schematic registrado no FAWE");
         }
 
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
             final Clipboard clipboard = new BlockArrayClipboard(region, java.util.UUID.randomUUID());
-            final ForwardExtentCopy copy = new ForwardExtentCopy(editSession, region, clipboard, BlockVector3.ZERO);
+            final ForwardExtentCopy copy = new ForwardExtentCopy(editSession, region, clipboard, region.getMinimumPoint());
             Operations.completeLegacy(copy);
 
             try (ClipboardWriter writer = format.getWriter(new java.io.FileOutputStream(file))) {

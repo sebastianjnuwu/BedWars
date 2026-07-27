@@ -28,8 +28,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class SlimeManager {
 
-    private static final String SLIME_PLUGIN_NAME = "SlimeWorldManager";
-
     private final Plugin plugin;
     private final File templatesFolder;
     private final File instancesFolder;
@@ -53,8 +51,12 @@ public class SlimeManager {
      * @return true se disponível
      */
     public boolean isAvailable() {
-        final Plugin slimePlugin = Bukkit.getPluginManager().getPlugin(SLIME_PLUGIN_NAME);
-        return slimePlugin != null && slimePlugin.isEnabled();
+        try {
+            AdvancedSlimePaperAPI.instance();
+            return true;
+        } catch (final Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -144,7 +146,7 @@ public class SlimeManager {
     public @NotNull CompletableFuture<World> createInstance(@NotNull String templateName, @NotNull Arena arena) {
         return CompletableFuture.supplyAsync(() -> {
             if (!isAvailable()) {
-                throw new IllegalStateException(SLIME_PLUGIN_NAME + " não está disponível");
+                throw new IllegalStateException("AdvancedSlimePaper não está disponível");
             }
 
             final SlimeWorld templateWorld = loadTemplate(templateName);

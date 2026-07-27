@@ -3,7 +3,7 @@ version: ${project.version}
 main: dev.sebastianjnuwu.bedwars.BedWarsPlugin
 api-version: 1.21
 author: sebastianjnuwu
-softdepend: [WorldEdit, SlimeWorldManager]
+softdepend: [WorldEdit]
 description: Plugin de BedWars para Paper 1.21.4 usando SlimeWorld
 website: https://github.com/sebastianjnuwu
 
@@ -26,9 +26,6 @@ permissions:
     default: op
   bedwars.admin.save:
     description: Permissão para salvar arenas
-    default: op
-  bedwars.admin.saveslime:
-    description: Permissão para salvar como template Slime
     default: op
   bedwars.play:
     description: Permissão para jogar BedWars
