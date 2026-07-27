@@ -137,8 +137,10 @@ public class EditCommand extends BaseCommand implements SubCommand {
         final Location destination = arena.getArenaSpawn() != null
                 ? arena.getArenaSpawn().clone()
                 : world.getSpawnLocation();
-        LocationUtil.safeTeleport(player, destination);
         player.setGameMode(GameMode.CREATIVE);
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        LocationUtil.safeTeleport(player, destination);
         sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "edit.teleported", name));
     }
 
