@@ -1,12 +1,6 @@
 package dev.sebastianjnuwu.bedwars.editor;
 
 import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.world.block.BlockTypes;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -63,24 +57,10 @@ public class ArenaCreator {
         world.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
         world.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
 
-        // Cria plataforma inicial usando FAWE
-        createInitialPlatform(world);
-
         // Teleporta o administrador
         teleportEditor(creator, world);
 
         return worldName;
-    }
-
-    private void createInitialPlatform(@NotNull World world) {
-        final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
-        try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-            CuboidRegion region = new CuboidRegion(
-                BlockVector3.at(-10, 0, -10),
-                BlockVector3.at(10, 0, 10)
-            );
-            editSession.setBlocks((com.sk89q.worldedit.regions.Region) region, BlockTypes.GLASS.getDefaultState());
-        }
     }
 
     /**

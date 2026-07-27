@@ -139,16 +139,7 @@ public class CreateCommand extends BaseCommand implements SubCommand {
         world.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
         world.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
 
-        createPlatform(world);
         creator.teleport(new org.bukkit.Location(world, 0.5, 2, 0.5));
         return worldName;
-    }
-
-    private void createPlatform(@NotNull World world) {
-        for (int x = -10; x <= 10; x++) {
-            for (int z = -10; z <= 10; z++) {
-                world.getBlockAt(x, 0, z).setType(org.bukkit.Material.GLASS);
-            }
-        }
     }
 }

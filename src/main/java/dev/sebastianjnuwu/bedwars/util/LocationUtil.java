@@ -2,9 +2,7 @@ package dev.sebastianjnuwu.bedwars.util;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,34 +30,22 @@ public final class LocationUtil {
     }
 
     /**
-     * Teleporta o jogador e coloca vidro abaixo dos pés se não houver bloco sólido.
+     * Teleporta o jogador de forma segura.
      */
     public static void safeTeleport(final @NotNull Player player, final @Nullable Location location) {
         if (location == null || location.getWorld() == null) {
             return;
         }
-        final Location target = location.clone();
-        ensureSolidBelow(target);
-        player.teleport(target);
+        player.teleport(location.clone());
     }
 
     /**
      * Teleporta o jogador de forma assíncrona usando teleportAsync para evitar travamento.
-     * Deve ser usado apenas após o mundo estar completamente carregado.
      */
     public static void safeTeleportAsync(final @NotNull Player player, final @Nullable Location location) {
         if (location == null || location.getWorld() == null) {
             return;
         }
-        final Location target = location.clone();
-        ensureSolidBelow(target);
-        player.teleportAsync(target);
-    }
-
-    private static void ensureSolidBelow(final @NotNull Location location) {
-        final Block below = location.getBlock().getRelative(0, -1, 0);
-        if (!below.getType().isSolid()) {
-            below.setType(Material.GLASS, false);
-        }
+        player.teleportAsync(location.clone());
     }
 }
