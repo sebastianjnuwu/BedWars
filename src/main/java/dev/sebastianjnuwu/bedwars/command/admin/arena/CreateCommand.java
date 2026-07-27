@@ -139,6 +139,9 @@ public class CreateCommand extends BaseCommand implements SubCommand {
         world.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
         world.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
 
+        creator.setGameMode(org.bukkit.GameMode.CREATIVE);
+        creator.setAllowFlight(true);
+        creator.setFlying(true);
         creator.teleport(new org.bukkit.Location(world, 0.5, 2, 0.5));
         return worldName;
     }

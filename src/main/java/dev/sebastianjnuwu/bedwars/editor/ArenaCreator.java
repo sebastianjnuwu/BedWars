@@ -70,6 +70,9 @@ public class ArenaCreator {
      * @param world mundo
      */
     private void teleportEditor(@NotNull Player player, @NotNull World world) {
+        player.setGameMode(org.bukkit.GameMode.CREATIVE);
+        player.setAllowFlight(true);
+        player.setFlying(true);
         final org.bukkit.Location location = new org.bukkit.Location(world, 0.5, 2, 0.5);
         player.teleport(location);
     }
