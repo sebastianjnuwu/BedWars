@@ -11,11 +11,15 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 import dev.sebastianjnuwu.bedwars.template.TemplateManager;
+import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
@@ -77,7 +81,12 @@ public class CreateCommand extends BaseCommand implements SubCommand {
         }
 
         // Cria o mundo de edição void
-        final String worldName = this.arenaCreator.createEditWorld(name, player);
+        final String worldName;
+        if (this.slimeManager.isAvailable()) {
+            worldName = this.arenaCreator.createEditWorld(name, player);
+        } else {
+            worldName = createFallbackWorld(name, player);
+        }
         if (worldName == null) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "create.error", "Falha ao criar mundo de edição"));
             return;
@@ -106,5 +115,36 @@ public class CreateCommand extends BaseCommand implements SubCommand {
                 worldName
         ));
         sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "create.instructions"));
+    }
+
+    private @Nullable String createFallbackWorld(@NotNull String arenaName, @NotNull Player creator) {
+        final String worldName = "bw_edit_" + arenaName + "_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+
+        final WorldCreator wc = new WorldCreator(worldName);
+        wc.generator(new VoidGenerator());
+        wc.generateStructures(false);
+        wc.environment(World.Environment.NORMAL);
+
+        final World world = wc.createWorld();
+        if (world == null) {
+            return null;
+        }
+
+        world.setDifficulty(org.bukkit.Difficulty.PEACEFUL);
+        world.setTime(1000);
+        world.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
+        world.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
+
+        createPlatform(world);
+        creator.teleport(new org.bukkit.Location(world, 0.5, 2, 0.5));
+        return worldName;
+    }
+
+    private void createPlatform(@NotNull World world) {
+        for (int x = -10; x <= 10; x++) {
+            for (int z = -10; z <= 10; z++) {
+                world.getBlockAt(x, 0, z).setType(org.bukkit.Material.GLASS);
+            }
+        }
     }
 }

@@ -2,4 +2,4 @@ target/
 src/test/
 .m2/
 .idea/
-SkyWarsReloaded-master/
+dependency-reduced-pom.xml

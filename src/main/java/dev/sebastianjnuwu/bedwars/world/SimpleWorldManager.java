@@ -1,10 +1,12 @@
 package dev.sebastianjnuwu.bedwars.world;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
+import org.bukkit.generator.ChunkGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,10 +99,9 @@ public class SimpleWorldManager implements SlimeWorldManager {
 
         // Cria e carrega o mundo
         final WorldCreator wc = new WorldCreator(name);
-        wc.generator(null); // Usa o generator padrão do mundo
+        wc.generator((ChunkGenerator) null);
         wc.generateStructures(false);
-        wc.autoSave(true);
-        wc.type(World.Environment.NORMAL);
+        wc.environment(World.Environment.NORMAL);
 
         world = wc.createWorld();
 
@@ -136,7 +137,7 @@ public class SimpleWorldManager implements SlimeWorldManager {
 
         // Teleporta jogadores para o lobby
         for (final Player player : world.getPlayers()) {
-            player.kickPlayer("Arena being reset.");
+            player.kick(Component.text("Arena being reset."));
         }
 
         return Bukkit.unloadWorld(world, true);

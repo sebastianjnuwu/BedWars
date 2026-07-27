@@ -1,6 +1,6 @@
 package dev.sebastianjnuwu.bedwars.slime;
 
-import com.infernalsuite.asp.api.SlimeWorld;
+import com.infernalsuite.asp.api.world.SlimeWorld;
 import com.infernalsuite.asp.api.world.SlimeWorldInstance;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -85,7 +85,7 @@ public class WorldInstance {
      */
     public @NotNull CompletableFuture<Void> generate() {
         return CompletableFuture.runAsync(() -> {
-            slimeWorld.generate();
+            // O mundo é gerado quando carregado via api.loadWorld()
             // Aguarda o mundo ser carregado no Bukkit
             int retries = 20;
             while (retries-- > 0 && getBukkitWorld() == null) {

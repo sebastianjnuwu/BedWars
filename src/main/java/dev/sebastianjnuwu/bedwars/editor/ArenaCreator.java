@@ -49,6 +49,9 @@ public class ArenaCreator {
 
         // Cria o mundo void usando SlimeWorld
         final var slimeWorld = slimeManager.createVoidSlimeWorld(worldName);
+        if (slimeWorld == null) {
+            return null;
+        }
         final World world = slimeManager.createBukkitWorld(slimeWorld);
         if (world == null) {
             return null;
@@ -76,7 +79,7 @@ public class ArenaCreator {
                 BlockVector3.at(-10, 0, -10),
                 BlockVector3.at(10, 0, 10)
             );
-            editSession.setBlocks(region, BlockTypes.GLASS.getDefaultState());
+            editSession.setBlocks((com.sk89q.worldedit.regions.Region) region, BlockTypes.GLASS.getDefaultState());
         }
     }
 

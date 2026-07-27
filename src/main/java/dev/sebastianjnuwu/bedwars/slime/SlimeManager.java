@@ -2,9 +2,10 @@ package dev.sebastianjnuwu.bedwars.slime;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import com.infernalsuite.asp.api.AdvancedSlimePaperAPI;
-import com.infernalsuite.asp.api.SlimeWorld;
-import com.infernalsuite.asp.api.world.SlimePropertyMap;
+import com.infernalsuite.asp.api.world.SlimeWorld;
 import com.infernalsuite.asp.api.world.SlimeWorldInstance;
+import com.infernalsuite.asp.api.world.properties.SlimeProperties;
+import com.infernalsuite.asp.api.world.properties.SlimePropertyMap;
 import com.infernalsuite.asp.loaders.file.FileLoader;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -93,20 +94,10 @@ public class SlimeManager {
         }
 
         try {
-            final Plugin slimePlugin = Bukkit.getPluginManager().getPlugin(SLIME_PLUGIN_NAME);
-            if (slimePlugin == null) {
-                return null;
-            }
+            final AdvancedSlimePaperAPI api = AdvancedSlimePaperAPI.instance();
+            final FileLoader loader = new FileLoader(templatesFolder);
 
-            // Usa a API do AdvancedSlimePaper
-            final AdvancedSlimePaperAPI api = (AdvancedSlimePaperAPI) slimePlugin;
-            final FileLoader fileLoader = api.getLoader(FileLoader.class);
-
-            final SlimePropertyMap props = new SlimePropertyMap();
-            props.setBoolean("keep-spawn-in-memory", false);
-            props.setBoolean("auto-save", true);
-
-            return api.loadWorld(fileLoader, templateFolder.getAbsolutePath(), props);
+            return api.readVanillaWorld(templateFolder, name, loader);
 
         } catch (Exception e) {
             plugin.getLogger().severe("Erro ao carregar template " + name + ": " + e.getMessage());
@@ -126,12 +117,7 @@ public class SlimeManager {
         }
 
         try {
-            final Plugin slimePlugin = Bukkit.getPluginManager().getPlugin(SLIME_PLUGIN_NAME);
-            if (slimePlugin == null) {
-                return null;
-            }
-
-            final AdvancedSlimePaperAPI api = (AdvancedSlimePaperAPI) slimePlugin;
+            final AdvancedSlimePaperAPI api = AdvancedSlimePaperAPI.instance();
             final SlimeWorldInstance worldInstance = api.loadWorld(slimeWorld, true);
 
             // Aguarda o mundo ser carregado
@@ -170,16 +156,11 @@ public class SlimeManager {
             final String instanceName = "bw-" + arena.getName() + "-" + UUID.randomUUID().toString().substring(0, 8);
 
             try {
-                // Clona o mundo
-                final SlimeWorld clonedWorld = templateWorld.clone(instanceName, null);
+                // Clona o mundo (temporário, sem loader persistente)
+                final SlimeWorld clonedWorld = templateWorld.clone(instanceName);
 
                 // Carrega o mundo no servidor
-                final Plugin slimePlugin = Bukkit.getPluginManager().getPlugin(SLIME_PLUGIN_NAME);
-                if (slimePlugin == null) {
-                    throw new IllegalStateException(SLIME_PLUGIN_NAME + " não encontrado");
-                }
-
-                final AdvancedSlimePaperAPI api = (AdvancedSlimePaperAPI) slimePlugin;
+                final AdvancedSlimePaperAPI api = AdvancedSlimePaperAPI.instance();
                 final SlimeWorldInstance worldInstance = api.loadWorld(clonedWorld, true);
 
                 // Aguarda o mundo ser carregado
@@ -198,7 +179,7 @@ public class SlimeManager {
 
                 return world;
 
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException e) {
                 throw new IllegalStateException("Erro ao criar instância: " + e.getMessage(), e);
             }
         });
@@ -214,7 +195,7 @@ public class SlimeManager {
         if (world != null) {
             // Remove todos os jogadores
             for (final org.bukkit.entity.Player player : world.getPlayers()) {
-                player.kickPlayer(Component.text("Arena being reset", NamedTextColor.RED));
+                player.kick(Component.text("Arena being reset", NamedTextColor.RED));
             }
 
             Bukkit.unloadWorld(world, true);
@@ -255,18 +236,17 @@ public class SlimeManager {
      * @param name nome do mundo
      * @return SlimeWorld
      */
-    public @NotNull SlimeWorld createVoidSlimeWorld(@NotNull String name) {
+    public @Nullable SlimeWorld createVoidSlimeWorld(@NotNull String name) {
         if (!isAvailable()) {
-            throw new IllegalStateException(SLIME_PLUGIN_NAME + " não disponível");
+            return null;
         }
 
-        final AdvancedSlimePaperAPI api = (AdvancedSlimePaperAPI) Bukkit.getPluginManager().getPlugin(SLIME_PLUGIN_NAME);
+        final AdvancedSlimePaperAPI api = AdvancedSlimePaperAPI.instance();
         final SlimePropertyMap props = new SlimePropertyMap();
-        props.setBoolean("keep-spawn-in-memory", false);
-        props.setBoolean("auto-save", true);
-        props.setBoolean("void", true);
+        props.setValue(SlimeProperties.ALLOW_MONSTERS, false);
+        props.setValue(SlimeProperties.ALLOW_ANIMALS, false);
 
-        return api.createWorld(name, props);
+        return api.createEmptyWorld(name, false, props, null);
     }
 
     /**

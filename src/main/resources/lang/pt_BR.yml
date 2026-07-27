@@ -17,6 +17,8 @@ create:
   no_selection: "Selecao incompleta! Use //pos1 e //pos2 do FAWE."
   too_large: "A arena é muito grande! Tamanho máximo permitido: &f{0}"
   error: "Erro: {0}"
+  success_void: "Mundo void {1} criado para a arena {0}! Use //pos1 e //pos2 do FAWE para construir."
+  instructions: "Depois de construir, use /bw admin saveslime <nome> para salvar como template, ou /bw save <nome> para salvar como esquema."
 
 # ── delete ────────────────────────────
 delete:

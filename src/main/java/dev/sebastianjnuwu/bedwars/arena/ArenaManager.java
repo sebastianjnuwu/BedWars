@@ -191,7 +191,7 @@ public class ArenaManager {
      */
     public boolean templateExists(@NotNull String name) {
         if (slimeManager != null) {
-            return slimeManager.templateExists(name);
+            return new File(slimeManager.getTemplatesFolder(), name).exists();
         }
         return templateLoader.templateExists(name);
     }
@@ -278,9 +278,11 @@ public class ArenaManager {
         }
 
         // Deleta instâncias ativas
-        instances.values().stream()
-                .filter(i -> i.getTemplateName().equals(name))
-                .forEach(i -> slimeManager.deleteInstance(i.getInstanceName()));
+        if (slimeManager != null) {
+            instances.values().stream()
+                    .filter(i -> i.getTemplateName().equals(name))
+                    .forEach(i -> slimeManager.deleteInstance(i.getInstanceName()));
+        }
 
         return true;
     }
