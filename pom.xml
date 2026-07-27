@@ -96,6 +96,14 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/versions/9/module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.infernalsuite.asp:api</artifact>
+                                    <excludes>
+                                        <exclude>plugin.yml</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

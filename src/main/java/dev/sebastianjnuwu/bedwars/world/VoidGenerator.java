@@ -33,6 +33,7 @@ public class VoidGenerator extends ChunkGenerator {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean shouldGenerateBedrock() {
         return false;
     }

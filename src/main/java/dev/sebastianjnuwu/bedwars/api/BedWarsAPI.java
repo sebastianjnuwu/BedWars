@@ -1,9 +1,7 @@
 package dev.sebastianjnuwu.bedwars.api;
 
-import dev.sebastianjnuwu.bedwars.game.Game;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.Game;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +28,7 @@ public interface BedWarsAPI {
      * @return o jogo ativo, ou {@code null} se nenhum jogo estiver em andamento
      *         ou a arena não existir
      */
-    @Nullable Game getGame(@NotNull String arenaName);
+    @Nullable dev.sebastianjnuwu.bedwars.api.model.Game getGame(@NotNull String arenaName);
 
     /**
      * Obtém o jogo em que um jogador está atualmente.
@@ -39,7 +37,7 @@ public interface BedWarsAPI {
      * @param player o jogador a ser consultado
      * @return o jogo do jogador, ou {@code null} se não estiver em nenhum jogo
      */
-    @Nullable Game getPlayerGame(@NotNull Player player);
+    @Nullable dev.sebastianjnuwu.bedwars.api.model.Game getPlayerGame(@NotNull Player player);
 
     /**
      * Verifica se um jogador está atualmente em uma partida.
@@ -66,7 +64,7 @@ public interface BedWarsAPI {
      *
      * @return o gerenciador de arenas
      */
-    @NotNull ArenaManager getArenaManager();
+    @NotNull dev.sebastianjnuwu.bedwars.api.ArenaManager getArenaManager();
 
     /**
      * Obtém o gerenciador de jogos para operações de criação e controle.
@@ -74,7 +72,7 @@ public interface BedWarsAPI {
      *
      * @return o gerenciador de jogos
      */
-    @NotNull GameManager getGameManager();
+    @NotNull dev.sebastianjnuwu.bedwars.api.GameManager getGameManager();
 
     /**
      * Retorna todas as arenas registradas no plugin.

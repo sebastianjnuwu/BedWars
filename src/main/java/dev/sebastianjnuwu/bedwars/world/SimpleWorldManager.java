@@ -25,7 +25,9 @@ import java.util.UUID;
  * Nota: Quando AdvancedSlimeWorldManager estiver disponível, essa classe pode ser
  * substituída por uma implementação que use SlimeWorld diretamente.
  */
-public class SimpleWorldManager implements SlimeWorldManager {
+@SuppressWarnings("deprecation")
+public class SimpleWorldManager implements
+ SlimeWorldManager {
 
     private static final Set<String> IGNORED_FILES = new HashSet<>();
 

@@ -20,7 +20,7 @@ import java.util.UUID;
  * Manages all active BedWars games and player-to-game mappings.
  * Handles game creation, joining, leaving, and cleanup.
  */
-public class GameManager {
+public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     private final JavaPlugin plugin;
     private final ArenaManager arenaManager;
@@ -54,18 +54,22 @@ public class GameManager {
         return this.arenaManager;
     }
 
-    public @Nullable Game getGame(final String arenaName) {
+    @Override
+    public @Nullable dev.sebastianjnuwu.bedwars.api.model.Game getGame(final String arenaName) {
         return this.games.get(arenaName);
     }
 
-    public @Nullable Game getPlayerGame(final Player player) {
+    @Override
+    public @Nullable dev.sebastianjnuwu.bedwars.api.model.Game getPlayerGame(final Player player) {
         return this.playerGames.get(player.getUniqueId());
     }
 
+    @Override
     public boolean isInGame(final Player player) {
         return this.playerGames.containsKey(player.getUniqueId());
     }
 
+    @Override
     public List<String> validateArena(final Arena arena) {
         final List<String> missing = new ArrayList<>();
         if (arena.getArenaSpawn() == null) {
@@ -94,10 +98,12 @@ public class GameManager {
         return missing;
     }
 
+    @Override
     public void joinGame(final Player player, final String arenaName) {
         this.joinGame(player, arenaName, null);
     }
 
+    @Override
     public void joinGame(final Player player, final String arenaName, final @Nullable String teamName) {
         if (this.isInGame(player)) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_game"));
@@ -127,7 +133,7 @@ public class GameManager {
 
         Game game = this.games.get(arenaName);
         if (game == null) {
-            game = new dev.sebastianjnuwu.bedwars.game.Game(this, refreshedArena);
+            game = new Game(this, refreshedArena);
             this.games.put(arenaName, game);
         }
 
@@ -147,8 +153,9 @@ public class GameManager {
         this.playerGames.put(player.getUniqueId(), game);
     }
 
+    @Override
     public void leaveGame(final Player player) {
-        final Game game = this.playerGames.remove(player.getUniqueId());
+        final Game game = (Game) this.playerGames.remove(player.getUniqueId());
         if (game != null) {
             game.leave(player);
             if (game.getPlayers().isEmpty()) {
@@ -157,6 +164,7 @@ public class GameManager {
         }
     }
 
+    @Override
     public void startGame(final String arenaName) {
         final Game game = this.games.get(arenaName);
         if (game == null) {
@@ -170,10 +178,12 @@ public class GameManager {
         game.start();
     }
 
+    @Override
     public void removePlayerMapping(final Player player) {
         this.playerGames.remove(player.getUniqueId());
     }
 
+    @Override
     public void removeGame(final String arenaName) {
         final Game game = this.games.remove(arenaName);
         if (game != null) {

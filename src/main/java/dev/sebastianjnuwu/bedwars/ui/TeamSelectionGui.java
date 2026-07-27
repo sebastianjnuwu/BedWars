@@ -2,7 +2,6 @@ package dev.sebastianjnuwu.bedwars.ui;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import net.kyori.adventure.text.Component;
@@ -151,16 +150,14 @@ public class TeamSelectionGui implements InventoryHolder {
     private int playerCountOnTeam(final String teamName) {
         if (this.gameManager == null) return 0;
 
-        final Game game = this.arena.getName() != null ? 
+        final dev.sebastianjnuwu.bedwars.api.model.Game game = this.arena.getName() != null ?
                 this.gameManager.getGame(this.arena.getName()) : null;
         if (game == null) return 0;
 
-        // Conta jogadores no time
         int count = 0;
-        for (final ArenaTeam team : game.getTeams().keySet()) {
-            if (team.getName().equalsIgnoreCase(teamName)) {
-                count = game.getTeams().get(team).size();
-                break;
+        for (final dev.sebastianjnuwu.bedwars.api.model.GamePlayer gp : game.getGamePlayers()) {
+            if (gp.getTeam() != null && gp.getTeam().getName().equalsIgnoreCase(teamName)) {
+                count++;
             }
         }
         return count;

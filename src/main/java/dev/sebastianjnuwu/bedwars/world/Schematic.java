@@ -170,12 +170,12 @@ public class Schematic {
             BlockVector3 min = clipboard.getMinimumPoint();
             BlockVector3 max = clipboard.getMaximumPoint();
 
-            int width = max.getX() - min.getX() + 1;
-            int height = max.getY() - min.getY() + 1;
-            int length = max.getZ() - min.getZ() + 1;
+            int width = max.x() - min.x() + 1;
+            int height = max.y() - min.y() + 1;
+            int length = max.z() - min.z() + 1;
 
             return new Schematic(name, width, height, length,
-                    min.getBlockX(), min.getBlockY(), min.getBlockZ());
+                    min.x(), min.y(), min.z());
         }
     }
 

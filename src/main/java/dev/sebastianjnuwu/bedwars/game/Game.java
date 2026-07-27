@@ -2,7 +2,15 @@ package dev.sebastianjnuwu.bedwars.game;
 
 import dev.sebastianjnuwu.bedwars.api.events.BedBreakEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GameEndEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerDeathEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerEliminateEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerKillEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStatChangeEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStreakEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GameStartEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GameStateChangeEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GeneratorSpawnEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GeneratorUpgradeEvent;
 import dev.sebastianjnuwu.bedwars.api.events.PlayerJoinGameEvent;
 import dev.sebastianjnuwu.bedwars.api.events.PlayerKillEvent;
 import dev.sebastianjnuwu.bedwars.api.events.PlayerLeaveGameEvent;
@@ -15,7 +23,9 @@ import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
+import dev.sebastianjnuwu.bedwars.api.model.DeathCause;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
+import dev.sebastianjnuwu.bedwars.api.model.StatType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -269,7 +279,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     public void start() {
         if (this.state != GameState.WAITING && this.state != GameState.STARTING) return;
         this.stopCountdown();
+        final GameState prevState = this.state;
         this.state = GameState.PLAYING;
+        Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prevState, GameState.PLAYING));
 
         this.restoreArenaSpawnBlock();
         this.restoreTeamSpawnBlocks();
@@ -343,6 +355,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final Integer level = this.forgeLevels.get(forge);
         if (level == null || level >= this.getForgeMaxLevel()) return false;
         this.forgeLevels.put(forge, level + 1);
+        Bukkit.getPluginManager().callEvent(new GeneratorUpgradeEvent(this, forge, level, level + 1));
         this.scheduleForge(forge);
         return true;
     }
@@ -381,7 +394,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             if (nearbyCount >= 32) {
                 return;
             }
-            dropLocation.getWorld().dropItem(dropLocation, new ItemStack(material), item -> {
+            final ItemStack stack = new ItemStack(material);
+            final GeneratorSpawnEvent spawnEvent = new GeneratorSpawnEvent(generator, stack);
+            Bukkit.getPluginManager().callEvent(spawnEvent);
+            if (spawnEvent.isCancelled()) return;
+            dropLocation.getWorld().dropItem(dropLocation, spawnEvent.getItem(), item -> {
                 item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
                 item.setPickupDelay(0);
             });
@@ -423,7 +440,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                         .count();
                 if (nearbyCount >= 32) return;
 
-                dropLocation.getWorld().dropItem(dropLocation, new ItemStack(material), item -> {
+                final ItemStack stack = new ItemStack(material);
+                final GeneratorSpawnEvent spawnEvent = new GeneratorSpawnEvent(forge, stack);
+                Bukkit.getPluginManager().callEvent(spawnEvent);
+                if (spawnEvent.isCancelled()) return;
+                dropLocation.getWorld().dropItem(dropLocation, spawnEvent.getItem(), item -> {
                     item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
                     item.setPickupDelay(0);
                 });
@@ -446,6 +467,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     @SuppressWarnings("deprecation")
     private void startCountdown() {
         this.state = GameState.STARTING;
+        Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.WAITING, GameState.STARTING));
         this.countdownSeconds = this.arena.getCountdown();
 
         this.countdownTask = Bukkit.getScheduler().runTaskTimer(
@@ -475,6 +497,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.stopCountdown();
         if (this.state != GameState.STARTING) return;
         this.state = GameState.WAITING;
+        Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.STARTING, GameState.WAITING));
         final Component langMsg = this.lang.text(NamedTextColor.RED, "game.countdown_cancelled");
         Bukkit.getOnlinePlayers().forEach(p -> {
             if (this.players.containsKey(p.getUniqueId())) {
@@ -487,13 +510,17 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     public void killPlayer(final Player player) {
         final GamePlayer gp = this.players.get(player.getUniqueId());
         if (gp == null || !gp.isAlive()) return;
+        final int oldDeaths = gp.getDeaths();
         gp.setAlive(false);
         gp.addDeath();
 
         final ArenaTeam team = gp.getTeam();
         Bukkit.getPluginManager().callEvent(new PlayerKillEvent(this, null, player, null, team));
+        Bukkit.getPluginManager().callEvent(new GamePlayerDeathEvent(this, gp, DeathCause.CUSTOM));
+        Bukkit.getPluginManager().callEvent(new GamePlayerStatChangeEvent(this, gp, StatType.DEATHS, oldDeaths, gp.getDeaths()));
 
         if (this.bedlessTeams.contains(team)) {
+            Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, gp, null));
             player.setGameMode(GameMode.SPECTATOR);
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.no_bed"));
             if (this.getAliveCount(team) == 0) {
@@ -593,6 +620,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new TeamEliminateEvent(this, team));
 
         for (final UUID uuid : this.teams.get(team)) {
+            final GamePlayer eliminated = this.players.get(uuid);
+            if (eliminated != null) {
+                Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, eliminated, null));
+            }
             final Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 player.setGameMode(GameMode.SPECTATOR);
@@ -623,7 +654,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private void endGame(final ArenaTeam winner) {
+        final GameState prevState = this.state;
         this.state = GameState.ENDING;
+        Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prevState, GameState.ENDING));
         this.stopForges();
 
         final Component msg = this.lang.text(NamedTextColor.GOLD, "game.team_wins", winner.getName().toUpperCase());
@@ -769,7 +802,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         if (winner != null) {
             this.endGame(winner);
         } else {
+            final GameState prev = this.state;
             this.state = GameState.ENDING;
+            Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prev, GameState.ENDING));
             for (final BukkitTask task : this.respawnTasks.values()) {
                 task.cancel();
             }

@@ -132,12 +132,12 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                     final BlockVector3 min = selection.getMinimumPoint();
                     final BlockVector3 max = selection.getMaximumPoint();
 
-                    pasteX = min.getBlockX();
-                    pasteY = min.getBlockY();
-                    pasteZ = min.getBlockZ();
-                    w = max.getBlockX() - min.getBlockX() + 1;
-                    h = max.getBlockY() - min.getBlockY() + 1;
-                    l = max.getBlockZ() - min.getBlockZ() + 1;
+                    pasteX = min.x();
+                    pasteY = min.y();
+                    pasteZ = min.z();
+                    w = max.x() - min.x() + 1;
+                    h = max.y() - min.y() + 1;
+                    l = max.z() - min.z() + 1;
 
                     arena.setPaste(pasteX, pasteY, pasteZ);
                     arena.setSchematicSize(w, h, l);

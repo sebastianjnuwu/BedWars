@@ -302,6 +302,7 @@ public class SlimeManager {
      * @param world mundo
      * @param arena arena
      */
+    @SuppressWarnings("deprecation")
     private void applyArenaSettings(@NotNull World world, @NotNull Arena arena) {
         if (arena.getDifficulty() != null) {
             try {

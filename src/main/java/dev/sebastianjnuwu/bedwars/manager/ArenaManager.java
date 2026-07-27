@@ -1,5 +1,7 @@
 package dev.sebastianjnuwu.bedwars.manager;
 
+import dev.sebastianjnuwu.bedwars.api.events.ArenaLoadEvent;
+import dev.sebastianjnuwu.bedwars.api.events.ArenaSaveEvent;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
@@ -34,7 +36,7 @@ import org.bukkit.scheduler.BukkitTask;
  * Gerencia todas as arenas do servidor.
  * Cada arena é salva em um arquivo separado: arenas/&lt;nome&gt;.yml.
  */
-public class ArenaManager {
+public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager {
 
     private final JavaPlugin plugin;
     private final Map<String, Arena> arenas;
@@ -119,7 +121,7 @@ public class ArenaManager {
         return refreshed != null;
     }
 
-    public boolean resetArenaMap(final String name) {
+    public boolean resetArenaMap(final @org.jetbrains.annotations.NotNull String name) {
         final Arena arena = this.get(name);
         if (arena == null) {
             return false;
@@ -158,6 +160,7 @@ public class ArenaManager {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void applyWorldSettings(final World world, final Arena arena) {
         if (arena.getDifficulty() != null) {
             try {
@@ -420,6 +423,15 @@ public class ArenaManager {
             return;
         }
 
+        // Evento pré-save (antes de escrever o arquivo)
+        final World saveWorld = arena.getWorldName() != null ? Bukkit.getWorld(arena.getWorldName()) : null;
+        final ArenaSaveEvent saveEvent = new ArenaSaveEvent(arena, saveWorld);
+        Bukkit.getPluginManager().callEvent(saveEvent);
+        if (saveEvent.isCancelled()) {
+            this.plugin.getLogger().fine("Save da arena '" + arenaName + "' cancelado por evento externo.");
+            return;
+        }
+
         // Escrita do arquivo
         this.plugin.getLogger().fine("Escrevendo arquivo YML da arena '" + arenaName + "' em: "
                 + file.getAbsolutePath());
@@ -605,6 +617,8 @@ public class ArenaManager {
             }
         }
 
+        final World loadWorld = arena.getWorldName() != null ? Bukkit.getWorld(arena.getWorldName()) : null;
+        Bukkit.getPluginManager().callEvent(new ArenaLoadEvent(arena, loadWorld));
         return arena;
     }
 

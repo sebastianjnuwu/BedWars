@@ -1,10 +1,15 @@
 package dev.sebastianjnuwu.bedwars.listener;
 
-import dev.sebastianjnuwu.bedwars.game.Game;
+import dev.sebastianjnuwu.bedwars.api.model.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerDamageByPlayerEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerKillEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStatChangeEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStreakEvent;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
+import dev.sebastianjnuwu.bedwars.api.model.StatType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -28,7 +33,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
@@ -80,9 +84,21 @@ public class GameListener implements Listener {
         event.setDroppedExp(0);
 
         final Player killer = player.getKiller();
+        final GamePlayer victimGP = game.getGamePlayer(player);
         if (killer != null) {
-            final GamePlayer gp = game.getGamePlayer(killer);
-            if (gp != null) gp.addKill();
+            final GamePlayer killerGP = game.getGamePlayer(killer);
+            if (killerGP != null) {
+                final int oldKills = killerGP.getKills();
+                killerGP.addKill();
+                if (victimGP != null) {
+                    Bukkit.getPluginManager().callEvent(new GamePlayerKillEvent(game, killerGP, victimGP));
+                }
+                Bukkit.getPluginManager().callEvent(new GamePlayerStatChangeEvent(game, killerGP, StatType.KILLS, oldKills, killerGP.getKills()));
+                final int streak = killerGP.getKills();
+                if (streak > 0 && streak % 5 == 0) {
+                    Bukkit.getPluginManager().callEvent(new GamePlayerStreakEvent(game, killerGP, streak));
+                }
+            }
         }
 
         game.killPlayer(player);
@@ -311,6 +327,20 @@ public class GameListener implements Listener {
         if (victimTeam != null && attackerTeam != null
                 && victimTeam.getName().equals(attackerTeam.getName())) {
             event.setCancelled(true);
+            return;
+        }
+
+        final GamePlayer victimGP = game.getGamePlayer(victim);
+        final GamePlayer attackerGP = game.getGamePlayer(attacker);
+        if (victimGP != null && attackerGP != null) {
+            final GamePlayerDamageByPlayerEvent dmgEvent = new GamePlayerDamageByPlayerEvent(
+                    game, attackerGP, victimGP, event.getDamage());
+            Bukkit.getPluginManager().callEvent(dmgEvent);
+            if (dmgEvent.isCancelled()) {
+                event.setCancelled(true);
+            } else if (dmgEvent.getDamage() != event.getDamage()) {
+                event.setDamage(dmgEvent.getDamage());
+            }
         }
     }
 
@@ -349,7 +379,8 @@ public class GameListener implements Listener {
      * Jogadores vivos podem coletar normalmente.
      */
     @EventHandler
-    public void onPlayerPickupItem(final PlayerPickupItemEvent event) {
+    @SuppressWarnings("deprecation")
+    public void onPlayerPickupItem(final org.bukkit.event.player.PlayerPickupItemEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null) return;

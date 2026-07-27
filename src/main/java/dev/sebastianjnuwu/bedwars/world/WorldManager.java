@@ -66,6 +66,7 @@ public class WorldManager {
         return world;
     }
 
+    @SuppressWarnings("deprecation")
     public World loadWorld(final String name) {
         World world = Bukkit.getWorld(name);
         if (world != null) {

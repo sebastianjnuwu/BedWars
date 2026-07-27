@@ -11,10 +11,10 @@ import org.jetbrains.annotations.Nullable;
 
 import dev.sebastianjnuwu.bedwars.api.BedWarsAPI;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.Game;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.command.BWCommand;
-import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.listener.ArenaListener;
 import dev.sebastianjnuwu.bedwars.listener.GameListener;
@@ -87,13 +87,13 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
     @Override
     public @Nullable
-    Game getGame(final @NotNull String arenaName) {
+    dev.sebastianjnuwu.bedwars.api.model.Game getGame(final @NotNull String arenaName) {
         return this.gameManager.getGame(arenaName);
     }
 
     @Override
     public @Nullable
-    Game getPlayerGame(final @NotNull Player player) {
+    dev.sebastianjnuwu.bedwars.api.model.Game getPlayerGame(final @NotNull Player player) {
         return this.gameManager.getPlayerGame(player);
     }
 
@@ -111,13 +111,13 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
     @Override
     public @NotNull
-    ArenaManager getArenaManager() {
+    dev.sebastianjnuwu.bedwars.api.ArenaManager getArenaManager() {
         return this.arenaManager;
     }
 
     @Override
     public @NotNull
-    GameManager getGameManager() {
+    dev.sebastianjnuwu.bedwars.api.GameManager getGameManager() {
         return this.gameManager;
     }
 
