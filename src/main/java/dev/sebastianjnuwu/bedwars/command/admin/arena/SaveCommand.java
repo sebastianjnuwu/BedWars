@@ -11,6 +11,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import com.sk89q.worldedit.IncompleteRegionException;
+import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.Region;
+
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
@@ -109,12 +116,42 @@ public class SaveCommand extends BaseCommand implements SubCommand {
         try {
             this.restoreOriginalBlocks(arena);
 
-            final int pasteX = arena.getPasteX();
-            final int pasteY = arena.getPasteY();
-            final int pasteZ = arena.getPasteZ();
-            final int w = arena.getSchematicWidth();
-            final int h = arena.getSchematicHeight();
-            final int l = arena.getSchematicLength();
+            int pasteX = arena.getPasteX();
+            int pasteY = arena.getPasteY();
+            int pasteZ = arena.getPasteZ();
+            int w = arena.getSchematicWidth();
+            int h = arena.getSchematicHeight();
+            int l = arena.getSchematicLength();
+
+            // Se as dimensões não foram definidas, tenta ler da seleção do FAWE
+            if ((w <= 0 || h <= 0 || l <= 0) && sender instanceof final Player player) {
+                try {
+                    final com.sk89q.worldedit.entity.Player wePlayer = BukkitAdapter.adapt(player);
+                    final LocalSession session = WorldEdit.getInstance().getSessionManager().get(wePlayer);
+                    final Region selection = session.getSelection(wePlayer.getWorld());
+                    final BlockVector3 min = selection.getMinimumPoint();
+                    final BlockVector3 max = selection.getMaximumPoint();
+
+                    pasteX = min.getBlockX();
+                    pasteY = min.getBlockY();
+                    pasteZ = min.getBlockZ();
+                    w = max.getBlockX() - min.getBlockX() + 1;
+                    h = max.getBlockY() - min.getBlockY() + 1;
+                    l = max.getBlockZ() - min.getBlockZ() + 1;
+
+                    arena.setPaste(pasteX, pasteY, pasteZ);
+                    arena.setSchematicSize(w, h, l);
+
+                    org.bukkit.Bukkit.getLogger().info(
+                            "Dimensões lidas da seleção FAWE para arena '" + name + "': "
+                                    + w + "x" + h + "x" + l + " (paste em "
+                                    + pasteX + "," + pasteY + "," + pasteZ + ")");
+                } catch (final IncompleteRegionException | NullPointerException e) {
+                    sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error",
+                            "Seleção do FAWE incompleta. Use //pos1 e //pos2 primeiro."));
+                    return;
+                }
+            }
 
             if (w <= 0 || h <= 0 || l <= 0) {
                 org.bukkit.Bukkit.getLogger().severe(
