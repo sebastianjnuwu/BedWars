@@ -222,12 +222,12 @@ ui:
     next_page: "Próxima página"
     page: "Página {0}"
   exit_door:
-    name: "Sair da partida"
-    lore: "Clique com direito para sair"
+    name: "&c&lSair da Partida"
+    lore: "&7Clique com direito para &asair &7da partida atual"
   confirm_exit:
-    title: "Confirmar Saída"
-    yes_exit: "Sim, confirma saída!"
-    yes_exit_desc: "Clique para sair da partida"
-    no_cancel: "Não, não sair!"
-    no_cancel_desc: "Clique para cancelar"
+    title: "&6&lConfirmar Saída"
+    yes_exit: "&a&lSim, confirma saída!"
+    yes_exit_desc: "&7Clique para sair da partida"
+    no_cancel: "&c&lNão, não sair!"
+    no_cancel_desc: "&7Clique para cancelar"
 
