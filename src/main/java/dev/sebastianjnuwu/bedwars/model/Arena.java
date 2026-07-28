@@ -2,11 +2,16 @@ package dev.sebastianjnuwu.bedwars.model;
 
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
+import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Representa uma arena de BedWars. Contém todas as informações de configuração
@@ -36,6 +41,12 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private boolean cycleWeather;
     private boolean spawnMobs;
     private boolean spawnAnimals;
+    private String shop;
+    private Map<String, GeneratorConfig> generatorConfigs;
+    private int forgeMaxLevel;
+    private List<ForgeLevel> forgeLevels;
+    private List<Location> shopNpcLocations;
+    private String shopNpcSkin;
     private final List<ArenaTeam> teams;
     private final List<ArenaGenerator> generators;
 
@@ -47,6 +58,9 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     public Arena(final String name) {
         this.name = name;
         this.enabled = false;
+        this.generatorConfigs = new HashMap<>();
+        this.forgeLevels = new ArrayList<>();
+        this.shopNpcLocations = new ArrayList<>();
         this.teams = new ArrayList<>();
         this.generators = new ArrayList<>();
     }
@@ -327,6 +341,46 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     public void setSpawnBlockData(final String spawnBlockData) {
         this.spawnBlockData = spawnBlockData;
     }
+
+    public @Nullable String getShop() { return shop; }
+    public void setShop(@Nullable String shop) { this.shop = shop; }
+
+    public Map<String, GeneratorConfig> getGeneratorConfigs() { return generatorConfigs; }
+    public void setGeneratorConfigs(Map<String, GeneratorConfig> configs) { this.generatorConfigs = configs; }
+
+    public int getForgeMaxLevel() { return forgeMaxLevel; }
+    public void setForgeMaxLevel(int maxLevel) { this.forgeMaxLevel = maxLevel; }
+
+    public List<ForgeLevel> getForgeLevels() { return forgeLevels; }
+    public void setForgeLevels(List<ForgeLevel> levels) { this.forgeLevels = levels; }
+
+    /**
+     * Retorna as localizações dos NPCs da loja desta arena.
+     *
+     * @return lista de localizações dos NPCs
+     */
+    public List<Location> getShopNpcLocations() { return shopNpcLocations; }
+
+    /**
+     * Define as localizações dos NPCs da loja desta arena.
+     *
+     * @param locations lista de localizações
+     */
+    public void setShopNpcLocations(List<Location> locations) { this.shopNpcLocations = locations; }
+
+    /**
+     * Retorna a skin configurada para os NPCs da loja.
+     *
+     * @return nome da skin ou null se não definida
+     */
+    public @Nullable String getShopNpcSkin() { return shopNpcSkin; }
+
+    /**
+     * Define a skin dos NPCs da loja desta arena.
+     *
+     * @param skin nome da skin ou null para usar padrão
+     */
+    public void setShopNpcSkin(@Nullable String skin) { this.shopNpcSkin = skin; }
 
     /**
      * Restaura o bloco original abaixo do spawn (remove a esmeralda).

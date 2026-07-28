@@ -1,0 +1,282 @@
+# ─────────────────────────────────────
+# Shop Configuration for BedWars
+# ─────────────────────────────────────
+# Format inspired by ScreamingBedWars
+#
+# Each category has:
+#   display-name - Display name (MiniMessage format)
+#   icon - Material for the category item
+#   lore - Lore lines (MiniMessage format)
+#   items - List of items (can also be sub-categories)
+#
+# Each item can be:
+#   Short stack: "material;amount;display-name;lore for <amount> <currency>"
+#   Long stack:  stack: { type, amount, display-name, lore, enchants, tag }
+#                price: "<amount> <currency>"
+#
+# Currencies: iron, gold, diamond, emerald
+#
+# Positioning: skip, column, row, linebreak (before/after/both),
+#              pagebreak (before/after/both), absolute
+
+categories:
+  blocks:
+    display-name: "<bold><red>Blocos</red></bold>"
+    icon: SANDSTONE
+    lore:
+      - "<gray>Compre blocos para</gray>"
+      - "<gray>pontes e construcao</gray>"
+    items:
+      - stack: WOOL
+        price: 4 iron
+      - stack: SANDSTONE;2
+        price: 4 iron
+      - stack: END_STONE
+        price: 6 iron
+      - stack: GLASS
+        price: 3 iron
+      - stack: OAK_PLANKS
+        price: 3 iron
+      - stack: CHEST
+        price: 20 iron
+      - stack: LADDER
+        price: 4 iron
+      - stack: OBSIDIAN
+        price: 20 gold
+      - stack: BRICK
+        price: 8 iron
+      - stack: IRON_BARS
+        price: 8 iron
+      - stack: NETHERRACK
+        price: 8 iron
+      - stack: BLUE_WOOL
+        price: 4 iron
+      - stack: RED_WOOL
+        price: 4 iron
+      - stack: GREEN_WOOL
+        price: 4 iron
+      - stack: YELLOW_WOOL
+        price: 4 iron
+
+  weapons:
+    display-name: "<bold><red>Armas</red></bold>"
+    icon: IRON_SWORD
+    lore:
+      - "<gray>Compre armas para</gray>"
+      - "<gray>derrotar seus inimigos</gray>"
+    items:
+      - stack:
+          type: STONE_SWORD
+          display-name: "<yellow>Espada de Pedra</yellow>"
+        price: 10 iron
+      - stack:
+          type: IRON_SWORD
+          display-name: "<yellow>Espada de Ferro</yellow>"
+        price: 1 gold
+      - stack:
+          type: DIAMOND_SWORD
+          display-name: "<yellow>Espada de Diamante</yellow>"
+        price: 4 gold
+      - stack:
+          type: BOW
+          display-name: "<yellow>Arco</yellow>"
+        price: 12 gold
+      - stack:
+          type: ARROW
+          amount: 8
+          display-name: "<yellow>Flechas</yellow>"
+        price: 2 gold
+      - stack:
+          type: IRON_AXE
+          display-name: "<yellow>Machado de Ferro</yellow>"
+        price: 2 gold
+      - stack:
+          type: DIAMOND_AXE
+          display-name: "<yellow>Machado de Diamante</yellow>"
+        price: 6 gold
+      - stack:
+          type: STONE_PICKAXE
+        price: 10 iron
+      - stack:
+          type: SHEARS
+        price: 20 iron
+      - stack:
+          type: STICK
+          amount: 2
+        price: 5 gold
+
+  armor:
+    display-name: "<bold><red>Armaduras</red></bold>"
+    icon: CHAINMAIL_BOOTS
+    lore:
+      - "<gray>Compre armaduras</gray>"
+      - "<gray>para se proteger</gray>"
+    items:
+      - stack:
+          type: CHAINMAIL_BOOTS
+        price: 20 iron
+      - stack:
+          type: CHAINMAIL_LEGGINGS
+        price: 30 iron
+      - stack:
+          type: CHAINMAIL_CHESTPLATE
+        price: 40 iron
+      - stack:
+          type: CHAINMAIL_HELMET
+        price: 20 iron
+      - stack:
+          type: IRON_BOOTS
+        price: 1 gold
+      - stack:
+          type: IRON_LEGGINGS
+        price: 1 gold
+      - stack:
+          type: IRON_CHESTPLATE
+        price: 2 gold
+      - stack:
+          type: IRON_HELMET
+        price: 1 gold
+      - stack:
+          type: DIAMOND_BOOTS
+        price: 3 gold
+      - stack:
+          type: DIAMOND_LEGGINGS
+        price: 3 gold
+      - stack:
+          type: DIAMOND_CHESTPLATE
+        price: 4 gold
+      - stack:
+          type: DIAMOND_HELMET
+        price: 3 gold
+
+  tools:
+    display-name: "<bold><red>Ferramentas</red></bold>"
+    icon: DIAMOND_PICKAXE
+    lore:
+      - "<gray>Compre ferramentas</gray>"
+      - "<gray>para coletar recursos</gray>"
+    items:
+      - stack:
+          type: WOODEN_PICKAXE
+          display-name: "<yellow>Picareta</yellow>"
+          enchants:
+            efficiency: 1
+        price: 10 iron
+      - stack:
+          type: IRON_PICKAXE
+          display-name: "<yellow>Picareta de Ferro</yellow>"
+          enchants:
+            efficiency: 2
+        price: 1 gold
+      - stack:
+          type: GOLDEN_PICKAXE
+          display-name: "<yellow>Picareta de Ouro</yellow>"
+          enchants:
+            efficiency: 3
+        price: 3 gold
+      - stack:
+          type: DIAMOND_PICKAXE
+          display-name: "<yellow>Picareta de Diamante</yellow>"
+          enchants:
+            efficiency: 3
+        price: 6 gold
+      - stack:
+          type: WOODEN_AXE
+          display-name: "<yellow>Machado</yellow>"
+          enchants:
+            efficiency: 1
+        price: 10 iron
+      - stack:
+          type: SHEARS
+        price: 20 iron
+
+  food:
+    display-name: "<bold><red>Comida</red></bold>"
+    icon: APPLE
+    lore:
+      - "<gray>Compre comida para</gray>"
+      - "<gray>recuperar vida</gray>"
+    items:
+      - stack: APPLE;4
+        price: 2 iron
+      - stack: BREAD;2
+        price: 2 iron
+      - stack: COOKED_BEEF;2
+        price: 4 iron
+      - stack: GOLDEN_APPLE
+        price: 2 gold
+      - stack: CAKE
+        price: 10 iron
+
+  potions:
+    display-name: "<bold><red>Pocoes</red></bold>"
+    icon: POTION
+    lore:
+      - "<gray>Compre pocoes para</gray>"
+      - "<gray>ganhar vantagem</gray>"
+    items:
+      - stack:
+          type: POTION
+          tag: '{potion_contents:{potion:"minecraft:swiftness"}}'
+        price: 3 iron
+      - stack:
+          type: POTION
+          tag: '{potion_contents:{potion:"minecraft:healing"}}'
+        price: 3 iron
+      - stack:
+          type: POTION
+          tag: '{potion_contents:{potion:"minecraft:regeneration"}}'
+        price: 5 iron
+      - stack:
+          type: POTION
+          tag: '{potion_contents:{potion:"minecraft:strength"}}'
+        price: 5 gold
+      - stack:
+          type: POTION
+          tag: '{potion_contents:{potion:"minecraft:invisibility"}}'
+        price: 10 gold
+      - stack:
+          type: ARROW
+          amount: 4
+          tag: '{potion_contents:{potion:"minecraft:healing"}}'
+        price: 2 gold
+
+  upgrades:
+    display-name: "<bold><red>Melhorias</red></bold>"
+    icon: BEACON
+    lore:
+      - "<gray>Compre melhorias</gray>"
+      - "<gray>para seu time</gray>"
+    items:
+      - stack:
+          type: DIAMOND
+          display-name: "<yellow>Afiacao</yellow>"
+          lore:
+            - "<gray>Melhora as armas</gray>"
+            - "<gray>do seu time</gray>"
+        price: 4 diamond
+        upgrade: sharpness
+      - stack:
+          type: DIAMOND_CHESTPLATE
+          display-name: "<yellow>Protecao</yellow>"
+          lore:
+            - "<gray>Melhora as armaduras</gray>"
+            - "<gray>do seu time</gray>"
+        price: 4 diamond
+        upgrade: protection
+      - stack:
+          type: FURNACE
+          display-name: "<yellow>Fornalha</yellow>"
+          lore:
+            - "<gray>Melhora a fornalha</gray>"
+            - "<gray>do seu time</gray>"
+        price: 2 diamond
+        upgrade: forge
+      - stack:
+          type: ENDER_PEARL
+          display-name: "<yellow>Dragon Buff</yellow>"
+          lore:
+            - "<gray>Ganha forca quando</gray>"
+            - "<gray>a cama e destruida</gray>"
+        price: 5 diamond
+        upgrade: dragon_buff

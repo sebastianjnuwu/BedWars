@@ -5,6 +5,8 @@ import dev.sebastianjnuwu.bedwars.api.events.ArenaSaveEvent;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
+import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
 import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
@@ -15,6 +17,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -401,6 +404,41 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             config.set("spawn_mobs", arena.isSpawnMobs());
             config.set("spawn_animals", arena.isSpawnAnimals());
 
+            if (arena.getShop() != null) config.set("shop", arena.getShop());
+
+            // Shop NPCs
+            config.set("shop_npcs", null);
+            List<Location> npcLocs = arena.getShopNpcLocations();
+            if (npcLocs != null && !npcLocs.isEmpty()) {
+                for (int i = 0; i < npcLocs.size(); i++) {
+                    config.set("shop_npcs." + i + ".location", this.serializeLocation(npcLocs.get(i)));
+                }
+            }
+            if (arena.getShopNpcSkin() != null) {
+                config.set("shop_npcs.skin", arena.getShopNpcSkin());
+            }
+
+            // Generator configs
+            config.set("generator_config", null);
+            for (var entry : arena.getGeneratorConfigs().entrySet()) {
+                String type = entry.getKey();
+                GeneratorConfig gc = entry.getValue();
+                if (gc.material() != null) {
+                    config.set("generator_config." + type + ".material", gc.material().name());
+                }
+                config.set("generator_config." + type + ".interval", gc.interval());
+            }
+
+            // Forge
+            config.set("forge.max-level", arena.getForgeMaxLevel());
+            config.set("forge.levels", null);
+            for (ForgeLevel fl : arena.getForgeLevels()) {
+                String levelPath = "forge.levels." + fl.level();
+                for (var entry : fl.intervals().entrySet()) {
+                    config.set(levelPath + "." + entry.getKey().name().toLowerCase() + ".interval", entry.getValue());
+                }
+            }
+
             // Teams: remove deletados, adiciona/atualiza da memória
             // Campos null em memória mantêm o valor antigo do YML
             final org.bukkit.configuration.ConfigurationSection teamSection = config.getConfigurationSection("teams");
@@ -518,6 +556,27 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
         arena.setMinPlayers(2);
         arena.setCountdown(3);
+        // Default generator configs
+        Map<String, GeneratorConfig> genConfigs = new java.util.HashMap<>();
+        genConfigs.put("iron", new GeneratorConfig(Material.IRON_INGOT, 40));
+        genConfigs.put("gold", new GeneratorConfig(Material.GOLD_INGOT, 120));
+        genConfigs.put("diamond", new GeneratorConfig(Material.DIAMOND, 600));
+        genConfigs.put("emerald", new GeneratorConfig(Material.EMERALD, 1200));
+        arena.setGeneratorConfigs(genConfigs);
+        // Default forge levels
+        arena.setForgeMaxLevel(10);
+        List<ForgeLevel> forgeLevels = new java.util.ArrayList<>();
+        forgeLevels.add(new ForgeLevel(1, Map.of(Material.IRON_INGOT, 20L)));
+        forgeLevels.add(new ForgeLevel(2, Map.of(Material.IRON_INGOT, 18L, Material.GOLD_INGOT, 100L)));
+        forgeLevels.add(new ForgeLevel(3, Map.of(Material.IRON_INGOT, 16L, Material.GOLD_INGOT, 90L)));
+        forgeLevels.add(new ForgeLevel(4, Map.of(Material.IRON_INGOT, 14L, Material.GOLD_INGOT, 80L, Material.DIAMOND, 1200L)));
+        forgeLevels.add(new ForgeLevel(5, Map.of(Material.IRON_INGOT, 12L, Material.GOLD_INGOT, 70L, Material.DIAMOND, 1000L)));
+        forgeLevels.add(new ForgeLevel(6, Map.of(Material.IRON_INGOT, 10L, Material.GOLD_INGOT, 60L, Material.DIAMOND, 800L, Material.EMERALD, 2400L)));
+        forgeLevels.add(new ForgeLevel(7, Map.of(Material.IRON_INGOT, 8L, Material.GOLD_INGOT, 50L, Material.DIAMOND, 700L, Material.EMERALD, 2000L)));
+        forgeLevels.add(new ForgeLevel(8, Map.of(Material.IRON_INGOT, 6L, Material.GOLD_INGOT, 40L, Material.DIAMOND, 600L, Material.EMERALD, 1600L)));
+        forgeLevels.add(new ForgeLevel(9, Map.of(Material.IRON_INGOT, 5L, Material.GOLD_INGOT, 30L, Material.DIAMOND, 500L, Material.EMERALD, 1400L)));
+        forgeLevels.add(new ForgeLevel(10, Map.of(Material.IRON_INGOT, 4L, Material.GOLD_INGOT, 20L, Material.DIAMOND, 400L, Material.EMERALD, 1200L)));
+        arena.setForgeLevels(forgeLevels);
         this.arenas.put(name, arena);
         this.save(arena);
         return arena;
@@ -670,6 +729,75 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                     }
                 }
                 arena.addGenerator(gen);
+            }
+        }
+
+        if (config.contains("shop")) {
+            arena.setShop(config.getString("shop"));
+        }
+
+        if (config.contains("shop_npcs")) {
+            List<Location> npcLocs = new java.util.ArrayList<>();
+            ConfigurationSection npcSection = config.getConfigurationSection("shop_npcs");
+            if (npcSection != null) {
+                for (String key : npcSection.getKeys(false)) {
+                    if (key.equals("skin")) continue;
+                    Location loc = this.parseLocation(config.getString("shop_npcs." + key + ".location"));
+                    if (loc != null) npcLocs.add(loc);
+                }
+            }
+            if (!npcLocs.isEmpty()) arena.setShopNpcLocations(npcLocs);
+            String skin = config.getString("shop_npcs.skin");
+            if (skin != null) arena.setShopNpcSkin(skin);
+        }
+
+        if (config.contains("generator_config")) {
+            Map<String, GeneratorConfig> genConfigs = new java.util.HashMap<>();
+            for (String type : config.getConfigurationSection("generator_config").getKeys(false)) {
+                String path = "generator_config." + type;
+                String matName = config.getString(path + ".material");
+                Material mat = matName != null ? Material.matchMaterial(matName) : null;
+                long interval = config.getLong(path + ".interval", 0L);
+                if (mat != null && interval > 0L) {
+                    genConfigs.put(type, new GeneratorConfig(mat, interval));
+                }
+            }
+            if (!genConfigs.isEmpty()) {
+                arena.setGeneratorConfigs(genConfigs);
+            }
+        }
+
+        if (config.contains("forge")) {
+            arena.setForgeMaxLevel(config.getInt("forge.max-level", 10));
+            List<ForgeLevel> levels = new java.util.ArrayList<>();
+            ConfigurationSection forgeLevels = config.getConfigurationSection("forge.levels");
+            if (forgeLevels != null) {
+                for (String levelKey : forgeLevels.getKeys(false)) {
+                    try {
+                        int level = Integer.parseInt(levelKey);
+                        String levelPath = "forge.levels." + levelKey;
+                        Map<Material, Long> intervals = new java.util.HashMap<>();
+                        ConfigurationSection items = config.getConfigurationSection(levelPath);
+                        if (items != null) {
+                            for (String itemName : items.getKeys(false)) {
+                                Material mat = Material.matchMaterial(itemName);
+                                if (mat == null) {
+                                    mat = Material.matchMaterial(itemName + "_INGOT");
+                                }
+                                long interval = config.getLong(levelPath + "." + itemName + ".interval", 0L);
+                                if (mat != null && interval > 0L) {
+                                    intervals.put(mat, interval);
+                                }
+                            }
+                        }
+                        if (!intervals.isEmpty()) {
+                            levels.add(new ForgeLevel(level, intervals));
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (!levels.isEmpty()) {
+                arena.setForgeLevels(levels);
             }
         }
 

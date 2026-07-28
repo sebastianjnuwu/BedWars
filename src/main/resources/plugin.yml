@@ -3,7 +3,7 @@ version: ${project.version}
 main: dev.sebastianjnuwu.bedwars.BedWarsPlugin
 api-version: 1.21
 author: sebastianjnuwu
-softdepend: [WorldEdit]
+softdepend: [WorldEdit, FancyNpcs]
 description: Plugin de BedWars para Paper 1.21.4 usando SlimeWorld
 website: https://github.com/sebastianjnuwu
 
@@ -11,28 +11,13 @@ commands:
   bw:
     description: Comando principal do BedWars
     aliases: [bedwars]
-    permission: bedwars.play
+    permission: bw.player
     permission-message: Você não tem permissão para usar este comando.
 
 permissions:
-  bedwars.admin:
+  bw.admin:
     description: Permissão para comandos administrativos
     default: op
-  bedwars.admin.create:
-    description: Permissão para criar arenas
-    default: op
-  bedwars.admin.delete:
-    description: Permissão para deletar arenas
-    default: op
-  bedwars.admin.save:
-    description: Permissão para salvar arenas
-    default: op
-  bedwars.play:
+  bw.player:
     description: Permissão para jogar BedWars
-    default: true
-  bedwars.queue:
-    description: Permissão para entrar na fila
-    default: true
-  bedwars.spec:
-    description: Permissão para ser espectador
     default: true

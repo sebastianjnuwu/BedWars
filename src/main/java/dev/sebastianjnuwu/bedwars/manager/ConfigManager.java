@@ -28,7 +28,10 @@ public class ConfigManager {
 
     private final JavaPlugin plugin;
     private final File file;
+    private final File spawnFile;
     private YamlConfiguration config;
+    private YamlConfiguration spawnConfig;
+    private Location cachedLobby;
 
     /**
      * Cria o gerenciador de configuração global.
@@ -38,6 +41,7 @@ public class ConfigManager {
     public ConfigManager(final JavaPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "config.yml");
+        this.spawnFile = new File(plugin.getDataFolder(), "spawn.yml");
         this.load();
     }
 
@@ -53,11 +57,50 @@ public class ConfigManager {
             this.plugin.saveResource("config.yml", false);
         }
         this.config = YamlConfiguration.loadConfiguration(this.file);
+
+        // Keep global defaults for backward compatibility
         if (this.addMissingForgeDefaults()) {
             this.save();
         }
         if (this.addMissingGeneratorDefaults()) {
             this.save();
+        }
+
+        // Load spawn.yml for lobby
+        if (!this.spawnFile.exists()) {
+            try {
+                this.spawnFile.createNewFile();
+            } catch (IOException e) {
+                this.plugin.getLogger().warning("Could not create spawn.yml: " + e.getMessage());
+            }
+        }
+        this.spawnConfig = YamlConfiguration.loadConfiguration(this.spawnFile);
+        this.cachedLobby = loadLobbyFromConfig(this.spawnConfig);
+
+        // Migration: copy lobby from old config.yml to spawn.yml if not yet set
+        if (this.cachedLobby == null && this.config.contains("lobby")) {
+            try {
+                String worldName = this.config.getString("lobby.world");
+                if (worldName != null) {
+                    World world = Bukkit.getWorld(worldName);
+                    if (world != null) {
+                        Location oldLobby = new Location(
+                                world,
+                                this.config.getDouble("lobby.x"),
+                                this.config.getDouble("lobby.y"),
+                                this.config.getDouble("lobby.z"),
+                                (float) this.config.getDouble("lobby.yaw"),
+                                (float) this.config.getDouble("lobby.pitch")
+                        );
+                        this.setLobby(oldLobby);
+                        this.config.set("lobby", null);
+                        this.save();
+                        this.plugin.getLogger().info("Migrated lobby from config.yml to spawn.yml");
+                    }
+                }
+            } catch (Exception e) {
+                this.plugin.getLogger().warning("Could not migrate lobby: " + e.getMessage());
+            }
         }
     }
 
@@ -72,19 +115,29 @@ public class ConfigManager {
         }
     }
 
+    public void saveSpawn() {
+        if (this.spawnConfig == null) return;
+        try {
+            this.spawnConfig.save(this.spawnFile);
+        } catch (final IOException e) {
+            this.plugin.getLogger().severe("Erro ao salvar spawn.yml: " + e.getMessage());
+        }
+    }
+
     /**
      * Define o lobby global do BedWars.
      *
      * @param location local do lobby
      */
     public void setLobby(final Location location) {
-        this.config.set("lobby.world", location.getWorld().getName());
-        this.config.set("lobby.x", location.getBlockX());
-        this.config.set("lobby.y", location.getBlockY());
-        this.config.set("lobby.z", location.getBlockZ());
-        this.config.set("lobby.yaw", (double) location.getYaw());
-        this.config.set("lobby.pitch", (double) location.getPitch());
-        this.save();
+        this.spawnConfig.set("lobby.world", location.getWorld().getName());
+        this.spawnConfig.set("lobby.x", location.getBlockX());
+        this.spawnConfig.set("lobby.y", location.getBlockY());
+        this.spawnConfig.set("lobby.z", location.getBlockZ());
+        this.spawnConfig.set("lobby.yaw", (double) location.getYaw());
+        this.spawnConfig.set("lobby.pitch", (double) location.getPitch());
+        this.cachedLobby = location;
+        this.saveSpawn();
     }
 
     /**
@@ -93,10 +146,23 @@ public class ConfigManager {
      * @return local do lobby ou null se não definido
      */
     public Location getLobby() {
-        if (!this.config.contains("lobby")) {
+        return this.cachedLobby;
+    }
+
+    /**
+     * Verifica se o lobby global está configurado.
+     *
+     * @return true se configurado
+     */
+    public boolean hasLobby() {
+        return this.cachedLobby != null;
+    }
+
+    private @Nullable Location loadLobbyFromConfig(YamlConfiguration cfg) {
+        if (!cfg.contains("lobby")) {
             return null;
         }
-        final String worldName = this.config.getString("lobby.world");
+        final String worldName = cfg.getString("lobby.world");
         if (worldName == null) {
             return null;
         }
@@ -106,21 +172,12 @@ public class ConfigManager {
         }
         return new Location(
                 world,
-                this.config.getDouble("lobby.x"),
-                this.config.getDouble("lobby.y"),
-                this.config.getDouble("lobby.z"),
-                (float) this.config.getDouble("lobby.yaw"),
-                (float) this.config.getDouble("lobby.pitch")
+                cfg.getDouble("lobby.x"),
+                cfg.getDouble("lobby.y"),
+                cfg.getDouble("lobby.z"),
+                (float) cfg.getDouble("lobby.yaw"),
+                (float) cfg.getDouble("lobby.pitch")
         );
-    }
-
-    /**
-     * Verifica se o lobby global está configurado.
-     *
-     * @return true se configurado
-     */
-    public boolean hasLobby() {
-        return this.config.contains("lobby");
     }
 
     /**

@@ -23,6 +23,8 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.shop.ShopManager;
+import dev.sebastianjnuwu.bedwars.shop.ShopListener;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
 
 public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
@@ -32,6 +34,7 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
     private ConfigManager configManager;
     private GameManager gameManager;
     private LangManager lang;
+    private ShopManager shopManager;
 
     @Override
     public void onEnable() {
@@ -47,11 +50,25 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.arenaManager.load();
         this.arenaManager.startSaveTask();
 
-        this.gameManager = new GameManager(this, this.arenaManager, this.configManager, this.lang);
+        this.gameManager = new GameManager(this, this.arenaManager, this.configManager, this.lang, this.editorManager);
+
+        this.shopManager = new ShopManager(this);
+        this.shopManager.loadDefaults();
 
         this.getServer().getPluginManager().registerEvents(new ArenaListener(this.arenaManager, this.gameManager, this.editorManager), this);
         this.getServer().getPluginManager().registerEvents(new GameListener(this.gameManager), this);
         this.getServer().getPluginManager().registerEvents(new UIListener(this.arenaManager, this.gameManager), this);
+        this.getServer().getPluginManager().registerEvents(new ShopListener(), this);
+
+        // Register FancyNPCs listener if available
+        try {
+            Class.forName("de.oliver.fancynpcs.api.events.NpcInteractEvent");
+            this.getServer().getPluginManager().registerEvents(
+                    new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
+            this.getLogger().info("FancyNPCs hook registered!");
+        } catch (ClassNotFoundException e) {
+            this.getLogger().info("FancyNPCs not found - NPC shop interaction disabled.");
+        }
 
         final BWCommand bwCommand = new BWCommand(
                 this.arenaManager,

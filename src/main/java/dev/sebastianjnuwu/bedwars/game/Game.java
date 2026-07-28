@@ -25,7 +25,9 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.DeathCause;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
+import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
+import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -58,6 +60,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private static final int RESPAWN_DELAY = 40;
 
     private final GameManager gameManager;
+    private final ShopNpcManager shopNpcManager;
     private final LangManager lang;
     private final Arena arena;
     private final Map<ArenaTeam, List<UUID>> teams;
@@ -84,8 +87,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
      * @param gameManager gerenciador de partidas que controla esta instância (não nulo)
      * @param arena       configuração da arena onde a partida será realizada (não nula)
      */
-    public Game(final GameManager gameManager, final Arena arena) {
+    public Game(final GameManager gameManager, final Arena arena, final ShopNpcManager shopNpcManager) {
         this.gameManager = gameManager;
+        this.shopNpcManager = shopNpcManager;
         this.lang = gameManager.getLang();
         this.arena = arena;
         this.teams = new HashMap<>();
@@ -324,6 +328,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
+
+        // Spawn shop NPCs
+        this.shopNpcManager.spawnShopNpcs(
+                this.arena.getName(),
+                this.arena.getShopNpcLocations(),
+                this.arena.getShopNpcSkin()
+        );
     }
 
     private void restoreArenaSpawnBlock() {
@@ -376,8 +387,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         final String type = generator.getType().toLowerCase();
-        final Material material = this.gameManager.getConfigManager().getGeneratorMaterial(type);
-        final long interval = this.gameManager.getConfigManager().getGeneratorInterval(type);
+        final var genConfigs = this.arena.getGeneratorConfigs();
+        final GeneratorConfig config = genConfigs != null ? genConfigs.get(type) : null;
+        final Material material = config != null ? config.material() : this.gameManager.getConfigManager().getGeneratorMaterial(type);
+        final long interval = config != null ? config.interval() : this.gameManager.getConfigManager().getGeneratorInterval(type);
         if (material == null || interval <= 0L || generator.getLocation() == null) {
             return;
         }
@@ -424,7 +437,19 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         if (oldTasks != null) oldTasks.forEach(BukkitTask::cancel);
 
         final int level = this.forgeLevels.getOrDefault(forge, 1);
-        final Map<Material, Long> intervals = this.gameManager.getConfigManager().getForgeIntervals(level);
+        Map<Material, Long> intervals = null;
+        var forgeLevels = this.arena.getForgeLevels();
+        if (forgeLevels != null) {
+            for (var fl : forgeLevels) {
+                if (fl.level() == level) {
+                    intervals = fl.intervals();
+                    break;
+                }
+            }
+        }
+        if (intervals == null || intervals.isEmpty()) {
+            intervals = this.gameManager.getConfigManager().getForgeIntervals(level);
+        }
         final List<BukkitTask> tasks = new ArrayList<>();
         for (final var entry : intervals.entrySet()) {
             final Material material = entry.getKey();
@@ -454,6 +479,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private int getForgeMaxLevel() {
+        int arenaMax = this.arena.getForgeMaxLevel();
+        if (arenaMax > 0) return arenaMax;
         return this.gameManager.getConfigManager().getForgeMaxLevel();
     }
 
@@ -721,6 +748,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                             this.gameManager.removePlayerMapping(player);
                         }
                     }
+                    this.shopNpcManager.removeShopNpcs(this.arena.getName());
                     this.players.clear();
                     this.teams.values().forEach(List::clear);
                     this.eliminatedTeams.clear();
@@ -837,6 +865,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 player.setGameMode(GameMode.SURVIVAL);
                 this.gameManager.removePlayerMapping(player);
             }
+            this.shopNpcManager.removeShopNpcs(this.arena.getName());
             this.spectators.clear();
             this.players.clear();
             this.teams.values().forEach(List::clear);

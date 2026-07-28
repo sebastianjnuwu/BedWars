@@ -1,9 +1,11 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Representa uma arena no jogo BedWars.
@@ -112,4 +114,48 @@ public interface Arena {
     boolean isSpawnAnimals();
 
     void setSpawnAnimals(boolean spawnAnimals);
+
+    @Nullable String getShop();
+
+    void setShop(@Nullable String shop);
+
+    Map<String, GeneratorConfig> getGeneratorConfigs();
+
+    void setGeneratorConfigs(Map<String, GeneratorConfig> configs);
+
+    int getForgeMaxLevel();
+
+    void setForgeMaxLevel(int maxLevel);
+
+    List<ForgeLevel> getForgeLevels();
+
+    void setForgeLevels(List<ForgeLevel> levels);
+
+    /**
+     * Returns the locations of shop NPCs for this arena.
+     *
+     * @return list of NPC locations
+     */
+    List<Location> getShopNpcLocations();
+
+    /**
+     * Sets the locations of shop NPCs for this arena.
+     *
+     * @param locations the NPC locations
+     */
+    void setShopNpcLocations(List<Location> locations);
+
+    /**
+     * Returns the skin name configured for shop NPCs.
+     *
+     * @return skin name or null
+     */
+    @Nullable String getShopNpcSkin();
+
+    /**
+     * Sets the skin for shop NPCs in this arena.
+     *
+     * @param skin skin name or null for default
+     */
+    void setShopNpcSkin(@Nullable String skin);
 }

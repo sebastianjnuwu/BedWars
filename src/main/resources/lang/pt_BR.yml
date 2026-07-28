@@ -137,6 +137,7 @@ game:
   already_in_game: "Voce ja esta em uma partida."
   already_in_this_game: "Voce ja esta nesta partida."
   arena_not_found: "Arena {0} nao encontrada."
+  arena_being_edited: "A arena {0} esta sendo editada por um administrador."
   not_ready: "A arena {0} nao esta pronta. Faltando:"
   missing_entry: " - {0}"
   in_progress: "A partida ja esta em andamento."

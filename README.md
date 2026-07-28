@@ -21,6 +21,7 @@ Um plugin moderno de **BedWars** para **Paper 1.21.4**, desenvolvido com foco em
 - Paper **1.21.4**
 - FastAsyncWorldEdit **2.15+**
 - AdvancedSlimePaper **4.0+**
+- FancyNPCs **2.9+** (opcional — necessário apenas para NPCs da loja)
 
 ## Tutorial — Como utilizar o plugin?
 
@@ -109,7 +110,9 @@ Posicione-se sobre a cama correspondente ao time e execute:
 
 ### 9. Adicionar geradores
 
-#### Geradores globais
+#### Geradores base (configuração automática)
+
+Por padrão, cada arena já possui configurações para os tipos **ferro**, **ouro**, **diamante** e **esmeralda**. Para adicionar um gerador no mundo:
 
 ```bash
 /bw admin arena <nome_da_arena> addgenerator ferro
@@ -136,7 +139,22 @@ Posicione-se sobre a cama correspondente ao time e execute:
 /bw admin arena <nome_da_arena> teams
 ```
 
-### 11. Salvar a arena
+### 11. Adicionar NPC da loja
+
+Instale o **FancyNPCs** no servidor. Durante a edição da arena, posicione-se onde o NPC deverá ficar e execute:
+
+```bash
+/bw admin arena <nome_da_arena> shopnpc add [skin]
+```
+
+> O NPC será spawnado automaticamente quando a partida iniciar e removido ao final. Use `list` para ver os NPCs adicionados e `remove <id>` para remover.
+
+```bash
+/bw admin arena <nome_da_arena> shopnpc list
+/bw admin arena <nome_da_arena> shopnpc remove 0
+```
+
+### 12. Salvar a arena
 
 Após concluir toda a configuração:
 
@@ -144,7 +162,7 @@ Após concluir toda a configuração:
 /bw admin save <nome_da_arena>
 ```
 
-### 12. Jogar na arena
+### 13. Jogar na arena
 
 ```bash
 /bw join <nome_da_arena>         # time automático
@@ -153,15 +171,93 @@ Após concluir toda a configuração:
 /bw leave                         # sair da partida
 ```
 
-### Comandos administrativos adicionais
+> Enquanto um administrador estiver editando a arena, jogadores **não podem** entrar na partida.
 
-| Comando | Descrição |
-|---------|-----------|
-| `/bw admin list` | Lista todas as arenas registradas |
-| `/bw admin delete <nome>` | Deleta uma arena |
-| `/bw admin load <nome>` | Carrega o schematic de uma arena em um mundo void |
-| `/bw admin reload` | Recarrega arquivos de configuração |
-| `/bw admin arena <nome> removeteam <cor>` | Remove um time |
+### 14. Configurar a loja da arena
+
+Cada arena pode usar uma loja diferente. As lojas ficam em `plugins/BedWars/shop/<nome>.yml`.
+
+#### Criar arquivo da loja
+Copie a `default.yml` com outro nome ou edite diretamente:
+```yaml
+# plugins/BedWars/shop/minhaloja.yml
+categories:
+  blocks:
+    display-name: "<red>Blocks</red>"
+    icon: SANDSTONE
+    lore:
+      - "<gray>Buy blocks</gray>"
+    items:
+      - stack: WOOL
+        price: 4 iron
+      - stack: OBSIDIAN
+        price: 20 gold
+      - stack:
+          type: DIAMOND_SWORD
+          display-name: "<yellow>Super Sword</yellow>"
+          enchants:
+            sharpness: 1
+        price: 4 gold
+```
+
+**Formatos suportados:**
+- **Short stack:** `"material;amount;display-name;lore for <preco> <moeda>"`
+- **Long stack:** `stack: { type, amount, display-name, lore, enchants, tag }` + `price: "<preco> <moeda>"`
+- **Moedas:** `iron`, `gold`, `diamond`, `emerald`
+- **Upgrade de forja:** `upgrade: forge`
+- **Posicionamento:** `skip`, `column`, `row`, `linebreak`, `absolute`
+#### Vincular loja à arena
+
+```bash
+/bw admin arena <nome_da_arena> shop minhaloja
+```
+
+Se não definir `shop`, a arena usa `default.yml`.
+
+#### NPC da loja (com FancyNPCs)
+
+Instale o **FancyNPCs** no servidor. Os NPCs são spawnados automaticamente quando a partida inicia e removidos ao final. Para configurar as posições durante a edição da arena:
+
+```bash
+/bw admin arena <nome_da_arena> shopnpc add [skin]
+```
+
+Para gerenciar:
+
+```bash
+/bw admin arena <nome_da_arena> shopnpc list
+/bw admin arena <nome_da_arena> shopnpc remove <id>
+```
+
+> O nome do NPC será `bw-shop-<arena>-<id>` — o plugin reconhece automaticamente NPCs com nome `shop` ou prefixo `bw-shop-` e abre a loja ao interagir.
+### Comandos
+
+| Comando | Descrição | Permissão |
+|---------|-----------|-----------|
+| `/bw admin create <nome>` | Cria uma nova arena | `bw.admin` |
+| `/bw admin delete <nome>` | Deleta uma arena | `bw.admin` |
+| `/bw admin list` | Lista todas as arenas registradas | `bw.admin` |
+| `/bw admin save <nome>` | Salva o schematic da arena | `bw.admin` |
+| `/bw admin load <nome>` | Carrega o schematic em um mundo void | `bw.admin` |
+| `/bw admin edit <nome>` | Entra no modo de edição da arena | `bw.admin` |
+| `/bw admin setlobby` | Define o lobby principal | `bw.admin` |
+| `/bw admin reload` | Recarrega arquivos de configuração | `bw.admin` |
+| `/bw admin arena <arena> spawn` | Define o spawn de espera | `bw.admin` |
+| `/bw admin arena <arena> status` | Exibe o status da arena | `bw.admin` |
+| `/bw admin arena <arena> setminplayers <num>` | Define mínimo de jogadores | `bw.admin` |
+| `/bw admin arena <arena> setcountdown <seg>` | Define contagem regressiva | `bw.admin` |
+| `/bw admin arena <arena> addteam <cor>` | Adiciona um time | `bw.admin` |
+| `/bw admin arena <arena> removeteam <cor>` | Remove um time | `bw.admin` |
+| `/bw admin arena <arena> setspawn <cor>` | Define o spawn do time | `bw.admin` |
+| `/bw admin arena <arena> setbed <cor>` | Define a cama do time | `bw.admin` |
+| `/bw admin arena <arena> teams` | Lista os times | `bw.admin` |
+| `/bw admin arena <arena> addgenerator <tipo>` | Adiciona um gerador | `bw.admin` |
+| `/bw admin arena <arena> shop-npc add [skin]` | Adiciona NPC da loja | `bw.admin` |
+| `/bw admin arena <arena> shop-npc list` | Lista NPCs da loja | `bw.admin` |
+| `/bw admin arena <arena> shop-npc remove <id>` | Remove NPC da loja | `bw.admin` |
+| `/bw join <arena> [time]` | Entra em uma partida | `bw.player` |
+| `/bw leave` | Sai da partida atual | `bw.player` |
+| `/bw start <arena>` | Inicia a partida manualmente | `bw.player` |
 
 ## 🚀 Compilação
 

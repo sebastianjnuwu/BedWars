@@ -5,6 +5,8 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -28,19 +30,25 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private final LangManager lang;
     private final Map<String, Game> games;
     private final Map<UUID, Game> playerGames;
+    private final ShopNpcManager shopNpcManager;
+    private final EditorManager editorManager;
 
-    public GameManager(final JavaPlugin plugin, final ArenaManager arenaManager, final ConfigManager configManager, final LangManager lang) {
+    public GameManager(final JavaPlugin plugin, final ArenaManager arenaManager, final ConfigManager configManager, final LangManager lang, final EditorManager editorManager) {
         this.plugin = plugin;
         this.arenaManager = arenaManager;
         this.configManager = configManager;
         this.lang = lang;
         this.games = new HashMap<>();
         this.playerGames = new HashMap<>();
+        this.shopNpcManager = new ShopNpcManager(plugin);
+        this.editorManager = editorManager;
     }
 
     public JavaPlugin getPlugin() {
         return this.plugin;
     }
+
+    public ShopNpcManager getShopNpcManager() { return this.shopNpcManager; }
 
     public LangManager getLang() {
         return this.lang;
@@ -115,6 +123,11 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             return;
         }
 
+        if (this.editorManager.isBeingEdited(arenaName)) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.arena_being_edited", arenaName));
+            return;
+        }
+
         if (!this.arenaManager.ensureArenaReady(arena)) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
             return;
@@ -133,7 +146,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
         Game game = this.games.get(arenaName);
         if (game == null) {
-            game = new Game(this, refreshedArena);
+            game = new Game(this, refreshedArena, getShopNpcManager());
             this.games.put(arenaName, game);
         }
 

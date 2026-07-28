@@ -10,6 +10,7 @@ import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStatChangeEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStreakEvent;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
+import dev.sebastianjnuwu.bedwars.shop.ShopGui;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -276,9 +277,10 @@ public class GameListener implements Listener {
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null) return;
 
-        // Permite apenas o próprio inventário do jogador
+        // Permite apenas o próprio inventário do jogador ou a loja
         if (event.getInventory().getType() == InventoryType.PLAYER
-                || event.getInventory().getType() == InventoryType.CRAFTING) {
+                || event.getInventory().getType() == InventoryType.CRAFTING
+                || event.getInventory().getHolder() instanceof ShopGui) {
             return;
         }
 
@@ -299,9 +301,10 @@ public class GameListener implements Listener {
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null) return;
 
-        // Permite apenas interações no inventário próprio do jogador
+        // Permite apenas interações no inventário próprio do jogador ou na loja
         final InventoryType topType = event.getView().getTopInventory().getType();
-        if (topType == InventoryType.PLAYER || topType == InventoryType.CRAFTING) {
+        if (topType == InventoryType.PLAYER || topType == InventoryType.CRAFTING
+                || event.getView().getTopInventory().getHolder() instanceof ShopGui) {
             return;
         }
 
