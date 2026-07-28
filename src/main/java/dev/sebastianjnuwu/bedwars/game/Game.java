@@ -311,8 +311,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         final Title startTitle = Title.title(
-                Component.text("§6§lBEDWARS"),
-                Component.text("§eProteja sua cama e elimine os times!"),
+                Component.text(this.lang.raw("game.start_title")),
+                Component.text(this.lang.raw("game.start_subtitle")),
                 Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(4), Duration.ofSeconds(1))
         );
         final Component msg = this.lang.text(NamedTextColor.GOLD, "game.started");
@@ -568,8 +568,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         final Component msg = this.lang.text(NamedTextColor.RED, "game.bed_broken", team.getName().toUpperCase());
         final Title title = Title.title(
-                Component.text("§c§lCAMA DESTRUÍDA!"),
-                Component.text("§eTime " + team.getName().toUpperCase() + " §7perdeu a cama!"),
+                Component.text(this.lang.raw("game.bed_broken_title")),
+                Component.text(this.lang.raw("game.bed_broken_subtitle", team.getName().toUpperCase())),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(1))
         );
         Bukkit.getOnlinePlayers().forEach(p -> {
@@ -586,6 +586,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             final BukkitTask task = this.respawnTasks.remove(uuid);
             if (task != null) {
                 task.cancel();
+                final GamePlayer gp = this.players.get(uuid);
+                if (gp != null) {
+                    Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, gp, null));
+                }
             }
             final Player player = Bukkit.getPlayer(uuid);
             if (player != null && this.players.containsKey(uuid) && !this.players.get(uuid).isAlive()) {
@@ -605,8 +609,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         final Component msg = this.lang.text(NamedTextColor.GRAY, "game.team_eliminated", team.getName().toUpperCase());
         final Title title = Title.title(
-                Component.text("§c§lTIME ELIMINADO!"),
-                Component.text("§e" + team.getName().toUpperCase() + " §7foi eliminado!"),
+                Component.text(this.lang.raw("game.team_eliminated_title")),
+                Component.text(this.lang.raw("game.team_eliminated_subtitle", team.getName().toUpperCase())),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(1))
         );
         Bukkit.getOnlinePlayers().forEach(p -> {
@@ -620,10 +624,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new TeamEliminateEvent(this, team));
 
         for (final UUID uuid : this.teams.get(team)) {
-            final GamePlayer eliminated = this.players.get(uuid);
-            if (eliminated != null) {
-                Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, eliminated, null));
-            }
             final Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 player.setGameMode(GameMode.SPECTATOR);
@@ -661,13 +661,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         final Component msg = this.lang.text(NamedTextColor.GOLD, "game.team_wins", winner.getName().toUpperCase());
         final Title winTitle = Title.title(
-                Component.text("§6§lVITÓRIA!"),
-                Component.text("§eTime " + winner.getName().toUpperCase() + " §7venceu a partida!"),
+                Component.text(this.lang.raw("game.win_title")),
+                Component.text(this.lang.raw("game.win_subtitle", winner.getName().toUpperCase())),
                 Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(5), Duration.ofSeconds(2))
         );
         final Title loseTitle = Title.title(
-                Component.text("§c§lDERROTA!"),
-                Component.text("§7O time " + winner.getName().toUpperCase() + " §7venceu!"),
+                Component.text(this.lang.raw("game.lose_title")),
+                Component.text(this.lang.raw("game.lose_subtitle", winner.getName().toUpperCase())),
                 Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(5), Duration.ofSeconds(2))
         );
         Bukkit.getOnlinePlayers().forEach(p -> {

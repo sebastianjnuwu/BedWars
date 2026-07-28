@@ -75,7 +75,7 @@ public class ListCommand extends BaseCommand implements SubCommand {
             if (!hasFile) {
                 status = this.lang.raw("list.status_missing_map");
             } else if (arena == null) {
-                status = "§c[Erro]";
+                status = this.lang.raw("list.error");
             } else {
                 final java.util.List<String> missing = this.gameManager.validateArena(arena);
                 if (missing.isEmpty()) {

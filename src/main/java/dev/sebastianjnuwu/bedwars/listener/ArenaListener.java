@@ -150,7 +150,7 @@ public class ArenaListener implements Listener {
         this.arenaManager.save(arena);
         block.getWorld().getPlayers().stream()
                 .filter(p -> p.getWorld().equals(block.getWorld()))
-                .forEach(p -> p.sendMessage(Component.text("Spawn da arena removido!", NamedTextColor.YELLOW)));
+                .forEach(p -> p.sendMessage(this.lang.text(NamedTextColor.YELLOW, "edit.arena_spawn_removed")));
         return true;
     }
 
@@ -167,7 +167,7 @@ public class ArenaListener implements Listener {
             this.arenaManager.save(arena);
             block.getWorld().getPlayers().stream()
                     .filter(p -> p.getWorld().equals(block.getWorld()))
-                    .forEach(p -> p.sendMessage(Component.text("Spawn do time " + team.getName() + " removido!", NamedTextColor.YELLOW)));
+                    .forEach(p -> p.sendMessage(this.lang.text(NamedTextColor.YELLOW, "edit.team_spawn_removed", team.getName())));
             return true;
         }
         return false;
@@ -208,8 +208,7 @@ public class ArenaListener implements Listener {
             this.arenaManager.save(arena);
             block.getWorld().getPlayers().stream()
                     .filter(p -> p.getWorld().equals(block.getWorld()))
-                    .forEach(p -> p.sendMessage(Component.text(
-                            "Cama do time " + team.getName() + " removida!", NamedTextColor.YELLOW)));
+                    .forEach(p -> p.sendMessage(this.lang.text(NamedTextColor.YELLOW, "edit.bed_removed", team.getName())));
             return true;
         }
         return false;
@@ -236,7 +235,7 @@ public class ArenaListener implements Listener {
                 final Location footLoc = this.getBedFootLocation(block);
                 if (footLoc != null && this.isSameBlock(team.getBed(), footLoc)) {
                     event.setCancelled(true);
-                    player.sendMessage(Component.text("Use /bw admin arena setbed para configurar esta cama!", NamedTextColor.YELLOW));
+                    player.sendMessage(this.lang.text(NamedTextColor.YELLOW, "edit.setbed_hint"));
                     return;
                 }
             }
@@ -269,7 +268,7 @@ public class ArenaListener implements Listener {
                 this.arenaManager.save(arena);
                 block.getWorld().getPlayers().stream()
                         .filter(p -> p.getWorld().equals(block.getWorld()))
-                        .forEach(p -> p.sendMessage(Component.text("Gerador de " + gen.getType() + " removido!", NamedTextColor.YELLOW)));
+                        .forEach(p -> p.sendMessage(this.lang.text(NamedTextColor.YELLOW, "edit.generator_removed", gen.getType())));
                 return;
             }
         }

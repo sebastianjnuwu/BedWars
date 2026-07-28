@@ -1,5 +1,7 @@
 package dev.sebastianjnuwu.bedwars.queue;
 
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,13 +22,15 @@ public class QueueManager {
 
     private final Map<String, Queue<Player>> queues;
     private final Map<Player, String> playerQueues;
+    private final LangManager lang;
 
     /**
      * Cria um novo gerenciador de filas.
      */
-    public QueueManager() {
+    public QueueManager(final LangManager lang) {
         this.queues = new ConcurrentHashMap<>();
         this.playerQueues = new ConcurrentHashMap<>();
+        this.lang = lang;
     }
 
     /**
@@ -38,13 +42,13 @@ public class QueueManager {
      */
     public boolean addToQueue(@NotNull Player player, @NotNull String arenaName) {
         if (playerQueues.containsKey(player)) {
-            player.sendMessage("Você já está em uma fila.");
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "queue.already_in_queue"));
             return false;
         }
 
         queues.computeIfAbsent(arenaName, k -> new ConcurrentLinkedQueue<>()).offer(player);
         playerQueues.put(player, arenaName);
-        player.sendMessage("Você entrou na fila da arena " + arenaName + ".");
+        player.sendMessage(this.lang.text(NamedTextColor.GREEN, "queue.joined", arenaName));
 
         // Tenta alocar arena automaticamente
         autoAllocate(arenaName);
@@ -72,7 +76,7 @@ public class QueueManager {
             }
         }
 
-        player.sendMessage("Você saiu da fila.");
+        player.sendMessage(this.lang.text(NamedTextColor.GREEN, "queue.left"));
         return true;
     }
 
@@ -127,7 +131,7 @@ public class QueueManager {
         if (queue != null) {
             for (final Player player : queue) {
                 playerQueues.remove(player);
-                player.sendMessage("A fila da arena " + arenaName + " foi limpa.");
+                player.sendMessage(this.lang.text(NamedTextColor.YELLOW, "queue.cleared", arenaName));
             }
         }
     }

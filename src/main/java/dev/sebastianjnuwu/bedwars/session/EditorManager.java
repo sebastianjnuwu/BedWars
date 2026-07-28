@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -146,7 +147,8 @@ public class EditorManager {
     // ── shutdown ─────────────────────────────────────────────────────────
 
     public void shutdown(final @Nullable dev.sebastianjnuwu.bedwars.manager.ConfigManager configManager,
-                         final @Nullable dev.sebastianjnuwu.bedwars.manager.ArenaManager arenaManager) {
+                         final @Nullable dev.sebastianjnuwu.bedwars.manager.ArenaManager arenaManager,
+                         final @Nullable LangManager lang) {
         org.bukkit.Location lobby = configManager != null ? configManager.getLobby() : null;
         if (lobby == null && !Bukkit.getWorlds().isEmpty()) {
             lobby = Bukkit.getWorlds().get(0).getSpawnLocation();
@@ -159,8 +161,9 @@ public class EditorManager {
 
             if (player != null && player.isOnline()) {
                 if (lobby != null) player.teleport(lobby);
-                player.sendMessage("§cSua sessão de edição na arena '" + arenaName
-                        + "' foi encerrada devido ao desligamento do servidor.");
+                if (lang != null) {
+                    player.sendMessage(lang.raw("edit.session_ended", arenaName));
+                }
             }
 
             if (arenaManager != null) {

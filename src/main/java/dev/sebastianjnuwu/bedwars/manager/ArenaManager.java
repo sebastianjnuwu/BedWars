@@ -369,53 +369,118 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
         this.plugin.getLogger().fine("Serializando arena '" + arenaName + "' para YML...");
 
+        // Carrega o YML existente como base — o YML é a fonte da verdade
         final YamlConfiguration config = file.exists()
                 ? YamlConfiguration.loadConfiguration(file)
                 : new YamlConfiguration();
 
         try {
+            // Campos escalares: sobrescreve só se tiver valor em memória
+            // (se null, o valor do YML permanece)
             config.set("enabled", arena.isEnabled());
 
-            setIfNotNull(config, "lobby", arena.getLobby() != null ? this.serializeLocation(arena.getLobby()) : null);
-            setIfNotNull(config, "world", arena.getWorldName());
+            if (arena.getLobby() != null)
+                config.set("lobby", this.serializeLocation(arena.getLobby()));
+            if (arena.getWorldName() != null)
+                config.set("world", arena.getWorldName());
             config.set("paste", arena.getPasteX() + "," + arena.getPasteY() + "," + arena.getPasteZ());
             config.set("schematic_size",
                     arena.getSchematicWidth() + "," + arena.getSchematicHeight() + "," + arena.getSchematicLength());
-            setIfNotNull(config, "arena_spawn", arena.getArenaSpawn() != null ? this.serializeLocation(arena.getArenaSpawn()) : null);
-            setIfNotNull(config, "spawn_block", arena.getSpawnBlockData());
+            if (arena.getArenaSpawn() != null)
+                config.set("arena_spawn", this.serializeLocation(arena.getArenaSpawn()));
+            if (arena.getSpawnBlockData() != null)
+                config.set("spawn_block", arena.getSpawnBlockData());
             config.set("min_players", arena.getMinPlayers());
             config.set("countdown", arena.getCountdown());
 
-            setIfNotNull(config, "difficulty", arena.getDifficulty());
-            setIfNotNull(config, "time", arena.getTime());
-            setIfNotNull(config, "weather", arena.getWeather());
+            if (arena.getDifficulty() != null) config.set("difficulty", arena.getDifficulty());
+            if (arena.getTime() != null) config.set("time", arena.getTime());
+            if (arena.getWeather() != null) config.set("weather", arena.getWeather());
             config.set("cycle_day", arena.isCycleDay());
             config.set("cycle_weather", arena.isCycleWeather());
             config.set("spawn_mobs", arena.isSpawnMobs());
             config.set("spawn_animals", arena.isSpawnAnimals());
 
-            // Replace entire teams section
-            config.set("teams", null);
+            // Teams: remove deletados, adiciona/atualiza da memória
+            // Campos null em memória mantêm o valor antigo do YML
+            final org.bukkit.configuration.ConfigurationSection teamSection = config.getConfigurationSection("teams");
+            if (teamSection != null) {
+                for (final String key : teamSection.getKeys(false)) {
+                    if (arena.getTeam(key) == null) {
+                        config.set("teams." + key, null);
+                    }
+                }
+            }
             for (final ArenaTeam team : arena.getTeams()) {
                 final String path = "teams." + team.getName();
                 config.set(path + ".color", team.getColor());
-                setIfNotNull(config, path + ".spawn", team.getSpawn() != null ? this.serializeLocation(team.getSpawn()) : null);
-                setIfNotNull(config, path + ".spawn_block", team.getSpawnBlockData());
-                setIfNotNull(config, path + ".bed", team.getBed() != null ? this.serializeLocation(team.getBed()) : null);
-                setIfNotNull(config, path + ".bed_facing", team.getBedFacing());
+                if (team.getSpawn() != null)
+                    config.set(path + ".spawn", this.serializeLocation(team.getSpawn()));
+                if (team.getSpawnBlockData() != null)
+                    config.set(path + ".spawn_block", team.getSpawnBlockData());
+                if (team.getBed() != null)
+                    config.set(path + ".bed", this.serializeLocation(team.getBed()));
+                if (team.getBedFacing() != null)
+                    config.set(path + ".bed_facing", team.getBedFacing());
             }
 
-            // Replace entire generators section
+            // Generators: por usarem índices posicionais, precisa limpar e re-escrever
+            // Salva valores antigos do YML antes de limpar para usar como fallback
+            final java.util.Map<String, java.util.Map<String, String>> oldGens = new java.util.HashMap<>();
+            final org.bukkit.configuration.ConfigurationSection genSection = config.getConfigurationSection("generators");
+            if (genSection != null) {
+                for (final String key : genSection.getKeys(false)) {
+                    final java.util.Map<String, String> gd = new java.util.HashMap<>();
+                    final String gp = "generators." + key;
+                    if (config.contains(gp + ".location")) gd.put("location", config.getString(gp + ".location"));
+                    if (config.contains(gp + ".team")) gd.put("team", config.getString(gp + ".team"));
+                    if (config.contains(gp + ".origin_block")) gd.put("origin_block", config.getString(gp + ".origin_block"));
+                    if (config.contains(gp + ".origin_block_above")) gd.put("origin_block_above", config.getString(gp + ".origin_block_above"));
+                    oldGens.put(key, gd);
+                }
+            }
             config.set("generators", null);
             final List<ArenaGenerator> generators = arena.getGenerators();
             for (int i = 0; i < generators.size(); i++) {
                 final ArenaGenerator gen = generators.get(i);
                 final String path = "generators." + i;
                 config.set(path + ".type", gen.getType());
-                setIfNotNull(config, path + ".location", gen.getLocation() != null ? this.serializeLocation(gen.getLocation()) : null);
-                setIfNotNull(config, path + ".team", gen.getTeam());
-                setIfNotNull(config, path + ".origin_block", gen.getOriginBlockData());
-                setIfNotNull(config, path + ".origin_block_above", gen.getOriginBlockDataAbove());
+
+                final String locStr = gen.getLocation() != null ? this.serializeLocation(gen.getLocation()) : null;
+                if (locStr != null) {
+                    config.set(path + ".location", locStr);
+                } else {
+                    final java.util.Map<String, String> oldGen = oldGens.get(Integer.toString(i));
+                    if (oldGen != null && oldGen.containsKey("location"))
+                        config.set(path + ".location", oldGen.get("location"));
+                }
+
+                final String team = gen.getTeam();
+                if (team != null) {
+                    config.set(path + ".team", team);
+                } else {
+                    final java.util.Map<String, String> oldGen = oldGens.get(Integer.toString(i));
+                    if (oldGen != null && oldGen.containsKey("team"))
+                        config.set(path + ".team", oldGen.get("team"));
+                }
+
+                final String obd = gen.getOriginBlockData();
+                if (obd != null) {
+                    config.set(path + ".origin_block", obd);
+                } else {
+                    final java.util.Map<String, String> oldGen = oldGens.get(Integer.toString(i));
+                    if (oldGen != null && oldGen.containsKey("origin_block"))
+                        config.set(path + ".origin_block", oldGen.get("origin_block"));
+                }
+
+                final String obda = gen.getOriginBlockDataAbove();
+                if (obda != null) {
+                    config.set(path + ".origin_block_above", obda);
+                } else {
+                    final java.util.Map<String, String> oldGen = oldGens.get(Integer.toString(i));
+                    if (oldGen != null && oldGen.containsKey("origin_block_above"))
+                        config.set(path + ".origin_block_above", oldGen.get("origin_block_above"));
+                }
             }
         } catch (final Exception e) {
             this.plugin.getLogger().severe("Erro durante serialização da arena '" + arenaName + "': "
@@ -443,12 +508,6 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             this.plugin.getLogger().severe("Erro ao salvar arquivo da arena '" + arenaName + "' em "
                     + file.getAbsolutePath() + ": " + e.getMessage());
             this.plugin.getLogger().severe("Verifique permissões de escrita e espaço em disco.");
-        }
-    }
-
-    private void setIfNotNull(final YamlConfiguration config, final String path, final Object value) {
-        if (value != null) {
-            config.set(path, value);
         }
     }
 
@@ -600,9 +659,6 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 }
                 if (config.contains(path + ".origin_block_above")) {
                     gen.setOriginBlockDataAbove(config.getString(path + ".origin_block_above"));
-                }
-                if (gen.getLocation() == null) {
-                    continue;
                 }
                 // Deduplicate: skip forge generators that share the same team as one already loaded
                 if (gen.getType().equalsIgnoreCase("forge") && gen.getTeam() != null) {

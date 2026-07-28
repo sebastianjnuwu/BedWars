@@ -74,7 +74,7 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
     public void onDisable() {
 
         if (this.editorManager != null) {
-            this.editorManager.shutdown(this.configManager, this.arenaManager);
+            this.editorManager.shutdown(this.configManager, this.arenaManager, this.lang);
         }
 
         if (this.arenaManager != null) {

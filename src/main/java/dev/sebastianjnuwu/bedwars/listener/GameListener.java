@@ -250,8 +250,8 @@ public class GameListener implements Listener {
     private void broadcastBedBreak(final Player breaker, final Game game, final ArenaTeam team) {
         final Component msg = this.lang.text(NamedTextColor.RED, "game.bed_destroyed", breaker.getName(), team.getName().toUpperCase());
         final Title title = Title.title(
-                Component.text("§cCAMA DESTRUÍDA!"),
-                Component.text("§e" + team.getName().toUpperCase() + " §7perdeu a cama!"),
+                Component.text(this.lang.raw("game.bed_destroyed_title")),
+                Component.text(this.lang.raw("game.bed_destroyed_subtitle", team.getName().toUpperCase())),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(1))
         );
         for (final Player p : Bukkit.getOnlinePlayers()) {

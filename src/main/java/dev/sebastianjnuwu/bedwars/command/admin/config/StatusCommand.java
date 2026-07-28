@@ -35,12 +35,12 @@ public class StatusCommand extends BaseCommand implements ArenaSubCommand {
     public void execute(final CommandSender sender, final @NotNull Arena arena, final @NotNull String @NotNull [] args) {
         final List<String> missing = this.gameManager.validateArena(arena);
         sender.sendMessage(this.lang.text(NamedTextColor.GOLD, "admin.arena.status_header", arena.getName()));
-        sender.sendMessage(Component.text("Minimo de jogadores: " + arena.getMinPlayers(), NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("Contagem regressiva: " + arena.getCountdown() + "s", NamedTextColor.WHITE));
+        sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_minplayers", String.valueOf(arena.getMinPlayers())));
+        sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_countdown", String.valueOf(arena.getCountdown())));
         final long forgeCount = arena.getGenerators().stream()
                 .filter(generator -> generator.getType().equalsIgnoreCase("forge"))
                 .count();
-        sender.sendMessage(Component.text("Forjas configuradas: " + forgeCount, NamedTextColor.WHITE));
+        sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_forges", String.valueOf(forgeCount)));
         for (int level = 1; level <= this.configManager.getForgeMaxLevel(); level++) {
             final Map<Material, Long> intervals = this.configManager.getForgeIntervals(level);
             if (intervals.isEmpty()) continue;
@@ -48,7 +48,7 @@ public class StatusCommand extends BaseCommand implements ArenaSubCommand {
                     .map(entry -> this.displayName(entry.getKey()) + ": " + entry.getValue() + "t")
                     .reduce((left, right) -> left + ", " + right)
                     .orElse("");
-            sender.sendMessage(Component.text("Forja nivel " + level + ": " + entries, NamedTextColor.GRAY));
+            sender.sendMessage(this.lang.text(NamedTextColor.GRAY, "admin.arena.status_forge_level", String.valueOf(level), entries));
         }
         if (missing.isEmpty()) {
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.status_ready"));

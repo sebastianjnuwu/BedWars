@@ -13,6 +13,7 @@ create:
   only_player: "Apenas jogadores podem criar arenas."
   usage: "Uso: /bw admin create <nome>"
   already_exists: "Arena {0} ja existe."
+  template_exists: "Ja existe um template para a arena {0}."
   success: "Arena {0} criada com {1} blocos!"
   no_selection: "Selecao incompleta! Use //pos1 e //pos2 do FAWE."
   too_large: "A arena é muito grande! Tamanho máximo permitido: &f{0}"
@@ -35,6 +36,7 @@ list:
   status_ready: "§a[Pronta para Jogar]"
   status_incomplete: "§e[Configuração Incompleta]"
   status_missing_map: "§c[Sem Mapa]"
+  error: "§c[Erro]"
 
 # ── save ──────────────────────────────
 save:
@@ -59,6 +61,13 @@ load:
   already_being_edited: "A arena {0} ja esta sendo editada por {1}."
   success: "Arena carregada com sucesso!"
   error: "Erro ao carregar arena: {0}"
+
+# ── queue ─────────────────────────────
+queue:
+  already_in_queue: "Voce ja esta em uma fila."
+  joined: "Voce entrou na fila da arena {0}."
+  left: "Voce saiu da fila."
+  cleared: "A fila da arena {0} foi limpa."
 
 # ── geral ─────────────────────────────
 no_lobby: "O lobby global nao foi definido. Use /bw admin setlobby primeiro."
@@ -91,6 +100,7 @@ admin:
     setbed_usage: "Uso: /bw admin arena <arena> setbed <cor>"
     setbed_notfound: "Time {0} nao encontrado. Use addteam primeiro."
     setbed_success: "Cama do time {0} definida virada para {1}!"
+    setbed_stand_on_bed: "Fique de pe em cima de uma cama ou olhe para uma cama para definir."
     addgen_usage: "Uso: /bw admin arena <arena> addgenerator <ferro|ouro|diamante|esmeralda|forge>"
     addgen_invalid: "Tipo invalido. Use ferro, ouro, diamante, esmeralda ou forge."
     addgen_forge_usage: "Uso: /bw admin arena <arena> addgenerator forge <time>"
@@ -115,6 +125,10 @@ admin:
     setcountdown_usage: "Uso: /bw admin arena <arena> setcountdown <segundos>"
     setcountdown_invalid: "Numero invalido. Use pelo menos 3 segundos."
     setcountdown_success: "Tempo de contagem definido para {0} segundos!"
+    status_minplayers: "Minimo de jogadores: {0}"
+    status_countdown: "Contagem regressiva: {0}s"
+    status_forges: "Forjas configuradas: {0}"
+    status_forge_level: "Forja nivel {0}: {1}"
 
 # ── game ──────────────────────────────
 game:
@@ -154,6 +168,18 @@ game:
   validate_team_forge_duplicate: "Time {0} tem mais de uma fornalha (use removegenerator forge {0})"
   spectating: "Voce entrou como espectador. Aguarde o fim da partida."
   world_not_ready: "O mundo da arena {0} nao esta pronto. Tente novamente em alguns instantes."
+  start_title: "§6§lBEDWARS"
+  start_subtitle: "§eProteja sua cama e elimine os times!"
+  bed_broken_title: "§c§lCAMA DESTRUÍDA!"
+  bed_broken_subtitle: "§eTime {0} §7perdeu a cama!"
+  bed_destroyed_title: "§cCAMA DESTRUÍDA!"
+  bed_destroyed_subtitle: "§e{0} §7perdeu a cama!"
+  team_eliminated_title: "§c§lTIME ELIMINADO!"
+  team_eliminated_subtitle: "§e{0} §7foi eliminado!"
+  win_title: "§6§lVITÓRIA!"
+  win_subtitle: "§eTime {0} §7venceu a partida!"
+  lose_title: "§c§lDERROTA!"
+  lose_subtitle: "§7O time {0} §7venceu!"
 
 # ── edit ──────────────────────────────
 edit:
@@ -164,6 +190,12 @@ edit:
   world_not_found: "Mundo da arena nao encontrado. Use /bw admin load {0} novamente."
   already_editing: "A arena {0} ja esta sendo editada por {1}."
   teleported: "Teleportado para a arena {0}."
+  arena_spawn_removed: "Spawn da arena removido!"
+  team_spawn_removed: "Spawn do time {0} removido!"
+  setbed_hint: "Use /bw admin arena setbed para configurar esta cama!"
+  bed_removed: "Cama do time {0} removida!"
+  generator_removed: "Gerador de {0} removido!"
+  session_ended: "§cSua sessao de edicao na arena '{0}' foi encerrada devido ao desligamento do servidor."
 
 # ── ui ────────────────────────────────
 ui:
