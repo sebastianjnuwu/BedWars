@@ -223,11 +223,8 @@ ui:
     page: "Página {0}"
   confirm_exit:
     title: "Confirmar Saída"
-    warning: "⚠️ Cuidado!"
-    confirm_exit: "Você tem certeza que deseja sair?"
-    lose_progress: "Você perderá seu progresso atual."
-    yes_exit: "SIM - SAIR"
+    yes_exit: "Sim, confirma saída!"
     yes_exit_desc: "Clique para sair da partida"
-    no_cancel: "NÃO - CANCELAR"
+    no_cancel: "Não, não sair!"
     no_cancel_desc: "Clique para cancelar"
 
