@@ -324,6 +324,12 @@ public class GameListener implements Listener {
         final Game game = this.gameManager.getPlayerGame(victim);
         if (game == null) return;
 
+        // S permite PvP durante a partida (state PLAYING)
+        if (game.getState() != dev.sebastianjnuwu.bedwars.api.model.GameState.PLAYING) {
+            event.setCancelled(true);
+            return;
+        }
+
         final ArenaTeam victimTeam = game.getPlayerTeam(victim);
         final ArenaTeam attackerTeam = game.getPlayerTeam(attacker);
 

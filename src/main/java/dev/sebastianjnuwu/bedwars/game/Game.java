@@ -69,9 +69,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Set<ArenaTeam> bedlessTeams;
     private final Set<UUID> spectators;
     private final Map<UUID, BukkitTask> respawnTasks;
-    private final Map<ArenaGenerator, Integer> forgeLevels;
-    private final Map<ArenaGenerator, List<BukkitTask>> forgeTasks;
+    private final Map<String, Integer> forgeLevels;
+    private final Map<ArenaGenerator, BukkitTask> forgeTasks;
     private final Map<ArenaGenerator, BukkitTask> generatorTasks;
+    private final Map<UUID, ItemStack[]> savedInventories;
+    private final Map<UUID, ItemStack[]> savedArmor;
     private GameState state;
     private BukkitTask countdownTask;
     private int countdownSeconds;
@@ -101,6 +103,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.forgeLevels = new HashMap<>();
         this.forgeTasks = new HashMap<>();
         this.generatorTasks = new HashMap<>();
+        this.savedInventories = new HashMap<>();
+        this.savedArmor = new HashMap<>();
         this.state = GameState.WAITING;
         for (final ArenaTeam team : arena.getTeams()) {
             this.teams.put(team, new ArrayList<>());
@@ -133,7 +137,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
         this.spectators.add(player.getUniqueId());
+
+        // Salva inventario antes de limpar
+        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
+        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+
         player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
         player.getInventory().setItem(8, createExitDoorItem());
         final Location spawn = this.arena.getArenaSpawn();
         if (spawn != null) {
@@ -141,6 +151,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
         player.setGameMode(GameMode.SPECTATOR);
         player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.spectating"));
+
+        // Esconde jogadores de outras partidas
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.hidePlayer(this.gameManager.getPlugin(), online);
+            online.hidePlayer(this.gameManager.getPlugin(), player);
+        }
     }
 
     public boolean isBedless(final ArenaTeam team) {
@@ -204,21 +221,37 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         Bukkit.getPluginManager().callEvent(new PlayerJoinGameEvent(this, player));
 
+        // Salva inventario do mundo normal antes de limpar
+        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
+        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+
         final Location spawn = this.arena.getArenaSpawn();
         if (spawn != null) {
             LocationUtil.safeTeleport(player, spawn);
         }
         player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
         player.setGameMode(GameMode.ADVENTURE);
         player.setHealth(20);
         player.setFoodLevel(20);
         player.getInventory().setItem(8, createExitDoorItem());
 
+        // Esconde jogadores de outras partidas
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.hidePlayer(this.gameManager.getPlugin(), online);
+            online.hidePlayer(this.gameManager.getPlugin(), player);
+        }
+
         final int count = this.players.size();
         final int max = this.arena.getTeams().size();
         final Component msg = this.lang.text(NamedTextColor.GREEN, "game.join_broadcast",
                 player.getName(), String.valueOf(count), String.valueOf(max));
-        Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(msg));
+        // Envia mensagem apenas para jogadores desta partida
+        for (final var entry : this.players.entrySet()) {
+            final Player p = Bukkit.getPlayer(entry.getKey());
+            if (p != null) p.sendMessage(msg);
+        }
 
         if (this.state == GameState.WAITING && this.countdownTask == null
                 && count >= this.arena.getMinPlayers()) {
@@ -238,6 +271,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
             }
             player.setGameMode(GameMode.SURVIVAL);
+            // Restaura inventario do mundo normal
+            restoreInventory(player);
             return;
         }
 
@@ -252,7 +287,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final ArenaTeam team = gp.getTeam();
         this.teams.get(team).remove(player.getUniqueId());
 
-        player.getInventory().clear();
+        // Restaura inventario do mundo normal
+        restoreInventory(player);
+
         final Location lobby = this.gameManager.getConfigManager().getLobby();
         if (lobby != null) {
             player.teleport(lobby);
@@ -261,8 +298,19 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
         player.setGameMode(GameMode.SURVIVAL);
 
+        // Mostra jogadores de outras partidas novamente
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.showPlayer(this.gameManager.getPlugin(), online);
+            online.showPlayer(this.gameManager.getPlugin(), player);
+        }
+
         final Component msg = this.lang.text(NamedTextColor.YELLOW, "game.leave_broadcast", player.getName());
-        Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(msg));
+        // Envia mensagem apenas para jogadores desta partida
+        for (final var entry : this.players.entrySet()) {
+            final Player p = Bukkit.getPlayer(entry.getKey());
+            if (p != null) p.sendMessage(msg);
+        }
 
         Bukkit.getPluginManager().callEvent(new PlayerLeaveGameEvent(this, player));
 
@@ -896,5 +944,27 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         ));
         item.setItemMeta(meta);
         return item;
+    }
+
+    /**
+     * Restaura o inventario salvo do mundo normal do jogador.
+     */
+    private void restoreInventory(final Player player) {
+        final UUID uuid = player.getUniqueId();
+        final ItemStack[] contents = this.savedInventories.remove(uuid);
+        final ItemStack[] armor = this.savedArmor.remove(uuid);
+        player.getInventory().clear();
+        if (contents != null) {
+            player.getInventory().setContents(contents);
+        }
+        if (armor != null) {
+            player.getInventory().setArmorContents(armor);
+        }
+        // Mostra jogadores de outras partidas novamente
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.showPlayer(this.gameManager.getPlugin(), online);
+            online.showPlayer(this.gameManager.getPlugin(), player);
+        }
     }
 }

@@ -71,11 +71,11 @@ public class UIListener implements Listener {
     public void onInventoryClick(final InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof final Player player)) return;
 
-        // Verifica se o clique foi no slot 8 (porta de saída)
+        // Verifica se o clique foi no slot 8 (porta de sada)
         if (event.getRawSlot() == 8) {
             if (event.getInventory().getType() == InventoryType.PLAYER) {
-                // Verifica se é o item da porta de saída
-                final ItemStack clickedItem = event.getCursor();
+                // Verifica se o item no slot 8 a porta de sada
+                final ItemStack clickedItem = event.getCurrentItem();
                 if (clickedItem != null && clickedItem.getType() == Material.IRON_DOOR) {
                     final BedWarsPlugin plugin = (BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars");
                     final LangManager lang = plugin.getLang();
