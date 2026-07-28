@@ -889,7 +889,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 for (final UUID uuid : entry.getValue()) {
                     final Player player = Bukkit.getPlayer(uuid);
                     if (player == null) continue;
-                    player.getInventory().clear();
+                    restoreInventory(player);
                     final Location lobby = this.gameManager.getConfigManager().getLobby();
                     if (lobby != null && lobby.getWorld() != null) {
                         player.teleport(lobby);
@@ -905,6 +905,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             for (final UUID uuid : this.spectators) {
                 final Player player = Bukkit.getPlayer(uuid);
                 if (player == null) continue;
+                restoreInventory(player);
                 if (lobby != null && lobby.getWorld() != null) {
                     player.teleport(lobby);
                 } else if (!Bukkit.getWorlds().isEmpty()) {

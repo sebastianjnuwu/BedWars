@@ -93,6 +93,10 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             this.editorManager.shutdown(this.configManager, this.arenaManager, this.lang);
         }
 
+        if (this.gameManager != null) {
+            this.gameManager.forceEndAll();
+        }
+
         if (this.arenaManager != null) {
             this.arenaManager.flush();
         }

@@ -210,4 +210,13 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             this.playerGames.values().removeIf(g -> g == game);
         }
     }
+
+    public void forceEndAll() {
+        for (final Game game : this.games.values()) {
+            game.forceEnd();
+        }
+        this.games.clear();
+        this.playerGames.clear();
+        this.shopNpcManager.removeAll();
+    }
 }
