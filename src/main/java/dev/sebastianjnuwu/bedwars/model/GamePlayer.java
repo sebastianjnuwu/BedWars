@@ -3,8 +3,8 @@ package dev.sebastianjnuwu.bedwars.model;
 import java.util.UUID;
 
 /**
- * Represents a player within a BedWars game instance. Tracks
- * team assignment, alive state, kills, and deaths.
+ * Representa um jogador dentro de uma instância de partida de BedWars. Monitora
+ * a atribuição de equipe, estado de vida, mortes causadas e mortes sofridas.
  */
 public class GamePlayer implements dev.sebastianjnuwu.bedwars.api.model.GamePlayer {
 

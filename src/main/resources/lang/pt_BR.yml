@@ -14,9 +14,6 @@ create:
   usage: "Uso: /bw admin create <nome>"
   already_exists: "Arena {0} ja existe."
   template_exists: "Ja existe um template para a arena {0}."
-  success: "Arena {0} criada com {1} blocos!"
-  no_selection: "Selecao incompleta! Use //pos1 e //pos2 do FAWE."
-  too_large: "A arena é muito grande! Tamanho máximo permitido: &f{0}"
   error: "Erro: {0}"
   success_void: "Mundo void {1} criado para a arena {0}! Use //pos1 e //pos2 do FAWE para construir."
   instructions: "Depois de construir, use /bw admin save <nome> para salvar a arena."
@@ -25,7 +22,6 @@ create:
 delete:
   usage: "Uso: /bw admin delete <nome>"
   not_found: "Arena {0} nao encontrada."
-  file_error: "Arena deletada, mas nao foi possivel remover o arquivo do mapa."
   success: "Arena {0} deletada."
 
 # ── list ──────────────────────────────
@@ -78,7 +74,6 @@ admin:
   unknown: "Subcomando admin desconhecido: {0}"
   reload_success: "Reload concluido! {0} arena(s) carregada(s)."
   setlobby:
-    usage: "Uso: /bw admin setlobby"
     only_player: "Apenas jogadores podem definir o lobby."
     success: "Lobby global definido em {0}, {1}, {2}!"
   arena:
@@ -146,7 +141,6 @@ admin:
 
 # ── game ──────────────────────────────
 game:
-  validate_forge: "adicione pelo menos uma forja"
   join_usage: "Uso: /bw join <arena> [time]"
   already_in_game: "Voce ja esta em uma partida."
   already_in_this_game: "Voce ja esta nesta partida."

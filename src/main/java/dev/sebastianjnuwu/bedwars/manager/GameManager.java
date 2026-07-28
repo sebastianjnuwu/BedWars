@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Manages all active BedWars games and player-to-game mappings.
- * Handles game creation, joining, leaving, and cleanup.
+ * Gerencia todas as partidas ativas de BedWars e o mapeamento de jogadores para partidas.
+ * Lida com criação, entrada, saída e limpeza de partidas.
  */
 public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 

@@ -190,15 +190,15 @@ public class ConfigManager {
     }
 
     /**
-     * Returns the configured maximum forge level, with a safe minimum of one.
+     * Retorna o nível máximo configurado para forjas, com um mínimo seguro de um.
      */
     public int getForgeMaxLevel() {
         return Math.max(1, this.config.getInt("forge.max-level", 1));
     }
 
     /**
-     * Returns the item intervals, in ticks, for a forge level. Invalid entries
-     * are ignored.
+     * Retorna os intervalos de itens, em ticks, para um nível de forja. Entradas
+     * inválidas são ignoradas.
      */
     public Map<Material, Long> getForgeIntervals(final int level) {
         final Map<Material, Long> intervals = new EnumMap<>(Material.class);
@@ -219,14 +219,14 @@ public class ConfigManager {
     }
 
     /**
-     * Returns the drop interval in ticks for a global generator type.
+     * Retorna o intervalo de queda em ticks para um tipo de gerador global.
      */
     public long getGeneratorInterval(final String type) {
         return this.config.getLong("generators." + type + ".interval", 0L);
     }
 
     /**
-     * Returns the material configured for a global generator type.
+     * Retorna o material configurado para um tipo de gerador global.
      */
     public @Nullable Material getGeneratorMaterial(final String type) {
         final String materialName = this.config.getString("generators." + type + ".material");
@@ -237,8 +237,8 @@ public class ConfigManager {
     }
 
     /**
-     * Adds new forge options to existing configuration files without
-     * overwriting custom values.
+     * Adiciona novas opções de forja a arquivos de configuração existentes sem
+     * sobrescrever valores personalizados.
      */
     private boolean addMissingForgeDefaults() {
         boolean changed = false;

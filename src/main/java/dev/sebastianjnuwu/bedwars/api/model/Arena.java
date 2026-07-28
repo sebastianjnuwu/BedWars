@@ -132,30 +132,30 @@ public interface Arena {
     void setForgeLevels(List<ForgeLevel> levels);
 
     /**
-     * Returns the locations of shop NPCs for this arena.
+     * Retorna as localizações dos NPCs de loja para esta arena.
      *
-     * @return list of NPC locations
+     * @return lista de localizações dos NPCs
      */
     List<Location> getShopNpcLocations();
 
     /**
-     * Sets the locations of shop NPCs for this arena.
+     * Define as localizações dos NPCs de loja para esta arena.
      *
-     * @param locations the NPC locations
+     * @param locations as localizações dos NPCs
      */
     void setShopNpcLocations(List<Location> locations);
 
     /**
-     * Returns the skin name configured for shop NPCs.
+     * Retorna o nome da skin configurada para os NPCs de loja.
      *
-     * @return skin name or null
+     * @return nome da skin ou null
      */
     @Nullable String getShopNpcSkin();
 
     /**
-     * Sets the skin for shop NPCs in this arena.
+     * Define a skin para os NPCs de loja nesta arena.
      *
-     * @param skin skin name or null for default
+     * @param skin nome da skin ou null para padrão
      */
     void setShopNpcSkin(@Nullable String skin);
 }

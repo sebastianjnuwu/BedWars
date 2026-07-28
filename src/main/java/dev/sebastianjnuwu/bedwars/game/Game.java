@@ -48,9 +48,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Represents a single BedWars game instance. Manages the state machine,
- * player joins/leaves, deaths/respawns, bed breaks, team elimination,
- * win condition, and auto-start countdown.
+ * Representa uma única instância de partida de BedWars. Gerencia a máquina de estados,
+ * entrada/saída de jogadores, mortes/renascimentos, quebra de berços, eliminação de equipes,
+ * condição de vitória e contagem regressiva de início automático.
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
@@ -69,8 +69,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Set<ArenaTeam> bedlessTeams;
     private final Set<UUID> spectators;
     private final Map<UUID, BukkitTask> respawnTasks;
-    private final Map<String, Integer> forgeLevels;
-    private final Map<ArenaGenerator, BukkitTask> forgeTasks;
+    private final Map<ArenaGenerator, Integer> forgeLevels;
+    private final Map<ArenaGenerator, List<BukkitTask>> forgeTasks;
     private final Map<ArenaGenerator, BukkitTask> generatorTasks;
     private final Map<UUID, ItemStack[]> savedInventories;
     private final Map<UUID, ItemStack[]> savedArmor;
@@ -399,16 +399,16 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
     }
 
-    /** Returns the current level of a forge in this match, or zero when it is not active. */
+    /** Retorna o nível atual de uma forja nesta partida, ou zero quando não está ativa. */
     public int getForgeLevel(final ArenaGenerator forge) {
         return this.forgeLevels.getOrDefault(forge, 0);
     }
 
     /**
-     * Upgrades an active forge by one level. This is intentionally independent of a shop;
-     * a future shop can charge the player and then invoke this method.
+     * Aumenta o nível de uma forja ativa em um nível. Isto é intencionalmente independente de uma loja;
+     * uma loja futura pode cobrar do jogador e então invocar este método.
      *
-     * @return true when the forge was upgraded, false when it is invalid or at the maximum level
+     * @return true quando a forja foi atualizada, false quando é inválida ou está no nível máximo
      */
     public boolean upgradeForge(final ArenaGenerator forge) {
         final Integer level = this.forgeLevels.get(forge);
