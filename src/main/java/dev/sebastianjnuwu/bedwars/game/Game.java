@@ -874,55 +874,50 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     public void forceEnd() {
         if (this.state == GameState.ENDING) return;
         this.stopForges();
-        final ArenaTeam winner = this.determineWinner();
-        if (winner != null) {
-            this.endGame(winner);
-        } else {
-            final GameState prev = this.state;
-            this.state = GameState.ENDING;
-            Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prev, GameState.ENDING));
-            for (final BukkitTask task : this.respawnTasks.values()) {
-                task.cancel();
-            }
-            this.respawnTasks.clear();
-            for (final var entry : this.teams.entrySet()) {
-                for (final UUID uuid : entry.getValue()) {
-                    final Player player = Bukkit.getPlayer(uuid);
-                    if (player == null) continue;
-                    restoreInventory(player);
-                    final Location lobby = this.gameManager.getConfigManager().getLobby();
-                    if (lobby != null && lobby.getWorld() != null) {
-                        player.teleport(lobby);
-                    } else if (!Bukkit.getWorlds().isEmpty()) {
-                        player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
-                    }
-                    player.setGameMode(GameMode.SURVIVAL);
-                    player.clearTitle();
-                    this.gameManager.removePlayerMapping(player);
-                }
-            }
-            final Location lobby = this.gameManager.getConfigManager().getLobby();
-            for (final UUID uuid : this.spectators) {
+        final GameState prev = this.state;
+        this.state = GameState.ENDING;
+        Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prev, GameState.ENDING));
+        for (final BukkitTask task : this.respawnTasks.values()) {
+            task.cancel();
+        }
+        this.respawnTasks.clear();
+        for (final var entry : this.teams.entrySet()) {
+            for (final UUID uuid : entry.getValue()) {
                 final Player player = Bukkit.getPlayer(uuid);
                 if (player == null) continue;
                 restoreInventory(player);
+                final Location lobby = this.gameManager.getConfigManager().getLobby();
                 if (lobby != null && lobby.getWorld() != null) {
                     player.teleport(lobby);
                 } else if (!Bukkit.getWorlds().isEmpty()) {
                     player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
                 }
                 player.setGameMode(GameMode.SURVIVAL);
+                player.clearTitle();
                 this.gameManager.removePlayerMapping(player);
             }
-            this.shopNpcManager.removeGameNpcs(this.arena.getName());
-            this.spectators.clear();
-            this.players.clear();
-            this.teams.values().forEach(List::clear);
-            this.eliminatedTeams.clear();
-            this.bedlessTeams.clear();
-            this.gameManager.removeGame(this.arena.getName());
-            this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
         }
+        final Location lobby = this.gameManager.getConfigManager().getLobby();
+        for (final UUID uuid : this.spectators) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player == null) continue;
+            restoreInventory(player);
+            if (lobby != null && lobby.getWorld() != null) {
+                player.teleport(lobby);
+            } else if (!Bukkit.getWorlds().isEmpty()) {
+                player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
+            }
+            player.setGameMode(GameMode.SURVIVAL);
+            this.gameManager.removePlayerMapping(player);
+        }
+        this.shopNpcManager.removeGameNpcs(this.arena.getName());
+        this.spectators.clear();
+        this.players.clear();
+        this.teams.values().forEach(List::clear);
+        this.eliminatedTeams.clear();
+        this.bedlessTeams.clear();
+        this.gameManager.removeGame(this.arena.getName());
+        this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
     }
 
     private @Nullable ArenaTeam determineWinner() {
