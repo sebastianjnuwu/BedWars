@@ -329,8 +329,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
 
-        // Spawn shop NPCs
-        this.shopNpcManager.spawnShopNpcs(
+        // Spawna NPCs da loja
+        this.shopNpcManager.spawnGameNpcs(
                 this.arena.getName(),
                 this.arena.getShopNpcLocations(),
                 this.arena.getShopNpcSkin()
@@ -748,7 +748,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                             this.gameManager.removePlayerMapping(player);
                         }
                     }
-                    this.shopNpcManager.removeShopNpcs(this.arena.getName());
+                    this.shopNpcManager.removeGameNpcs(this.arena.getName());
                     this.players.clear();
                     this.teams.values().forEach(List::clear);
                     this.eliminatedTeams.clear();
@@ -865,7 +865,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 player.setGameMode(GameMode.SURVIVAL);
                 this.gameManager.removePlayerMapping(player);
             }
-            this.shopNpcManager.removeShopNpcs(this.arena.getName());
+            this.shopNpcManager.removeGameNpcs(this.arena.getName());
             this.spectators.clear();
             this.players.clear();
             this.teams.values().forEach(List::clear);

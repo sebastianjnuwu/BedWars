@@ -198,6 +198,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
 
             this.arenaManager.save(arena);
             this.arenaManager.flush(arena.getName());
+            this.gameManager.getShopNpcManager().removeEditorNpcs(arena.getName());
             this.editorManager.endSession(name);
 
             // ── YML validation report ────────────────────────────────────

@@ -129,6 +129,20 @@ admin:
     status_countdown: "Contagem regressiva: {0}s"
     status_forges: "Forjas configuradas: {0}"
     status_forge_level: "Forja nivel {0}: {1}"
+    shop_npc:
+      usage_add: "Uso: /bw admin arena <arena> shop-npc add <skin>"
+      usage_remove: "Uso: /bw admin arena <arena> shop-npc remove <id>"
+      usage_list: "Uso: /bw admin arena <arena> shop-npc list"
+      added: "Shop NPC adicionado na arena {0}"
+      added_no_npcs: "Localizacao do Shop NPC salva (FancyNPCs nao disponivel)"
+      removed: "Shop NPC {0} removido"
+      removed_last: "Ultimo Shop NPC removido"
+      invalid_id: "ID invalido"
+      none: "Nenhum Shop NPC configurado"
+      header: "Shop NPCs da arena {0}:"
+      entry: "  {0}: {1}, {2}, {3}"
+      skin_label: "Skin: {0}"
+      unknown_action: "Acao invalida. Use: add, remove, list"
 
 # ── game ──────────────────────────────
 game:

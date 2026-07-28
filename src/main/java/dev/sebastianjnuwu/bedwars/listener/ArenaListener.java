@@ -394,6 +394,7 @@ public class ArenaListener implements Listener {
         final Player player = event.getPlayer();
         final String arenaName = this.editorManager.getPlayerArena(player);
         if (arenaName != null) {
+            this.gameManager.getShopNpcManager().removeEditorNpcs(arenaName);
             this.editorManager.endSession(player);
             final Arena arena = this.arenaManager.get(arenaName);
             if (arena != null) {
