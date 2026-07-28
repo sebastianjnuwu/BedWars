@@ -75,14 +75,6 @@ public class TeamSelectionGui implements InventoryHolder {
                 List.of(MM.deserialize(this.lang.raw("ui.team_selection.next_page")))
         ));
 
-        // Botão de página atual
-        this.inventory.setItem(49, createItem(
-                Material.PAPER,
-                MM.deserialize(this.lang.raw("ui.team_selection.page", String.valueOf(this.currentPage + 1))),
-                List.of()
-        ));
-
-        // Lista de times da página atual
         final List<ArenaTeam> teams = this.arena.getTeams();
         final int minPlayers = this.arena.getMinPlayers();
         final int startIdx = this.currentPage * PAGE_SIZE;
@@ -93,9 +85,8 @@ public class TeamSelectionGui implements InventoryHolder {
             this.inventory.setItem(i - startIdx + 1, createTeamItem(team, minPlayers));
         }
 
-        // Atualiza o botão de página
-        final int totalPages = (teams.size() + PAGE_SIZE - 1) / PAGE_SIZE;
-        this.inventory.setItem(49, createItem(
+        final int totalPages = Math.max(1, (teams.size() + PAGE_SIZE - 1) / PAGE_SIZE);
+        this.inventory.setItem(44, createItem(
                 Material.PAPER,
                 MM.deserialize(this.lang.raw("ui.team_selection.page", String.valueOf(this.currentPage + 1) + "/" + totalPages)),
                 List.of()

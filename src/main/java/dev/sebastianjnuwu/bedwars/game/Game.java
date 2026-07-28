@@ -934,9 +934,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private ItemStack createExitDoorItem() {
         final ItemStack item = new ItemStack(Material.IRON_DOOR);
         final ItemMeta meta = item.getItemMeta();
-        meta.displayName(MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel")));
+        meta.displayName(MM.deserialize(this.lang.raw("ui.exit_door.name")));
         meta.lore(List.of(
-                MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel_desc"))
+                MM.deserialize(this.lang.raw("ui.exit_door.lore"))
         ));
         item.setItemMeta(meta);
         return item;

@@ -221,6 +221,9 @@ ui:
     prev_page: "Página anterior"
     next_page: "Próxima página"
     page: "Página {0}"
+  exit_door:
+    name: "Sair da partida"
+    lore: "Clique com direito para sair"
   confirm_exit:
     title: "Confirmar Saída"
     yes_exit: "Sim, confirma saída!"
