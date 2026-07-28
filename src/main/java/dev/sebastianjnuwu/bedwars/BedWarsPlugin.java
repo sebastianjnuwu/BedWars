@@ -48,7 +48,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
         this.arenaManager = new ArenaManager(this, worldManager, mapsFolder);
         this.arenaManager.load();
-        this.arenaManager.startSaveTask();
 
         this.gameManager = new GameManager(this, this.arenaManager, this.configManager, this.lang, this.editorManager);
 
@@ -95,7 +94,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         }
 
         if (this.arenaManager != null) {
-            this.arenaManager.stopSaveTask();
             this.arenaManager.flush();
         }
 

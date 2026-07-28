@@ -10,7 +10,6 @@ import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStatChangeEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStreakEvent;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
-import dev.sebastianjnuwu.bedwars.shop.ShopGui;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -28,9 +27,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -263,52 +259,6 @@ public class GameListener implements Listener {
                 p.showTitle(title);
             }
         }
-    }
-
-    /**
-     * Impede que jogadores em partida abram inventários externos (baús, fornalhas, etc.).
-     * O inventário próprio do jogador (PLAYER) é sempre permitido.
-     *
-     * @param event o evento de abertura de inventário (não nulo)
-     */
-    @EventHandler
-    public void onInventoryOpen(final InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof final Player player)) return;
-        final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
-
-        // Permite apenas o próprio inventário do jogador ou a loja
-        if (event.getInventory().getType() == InventoryType.PLAYER
-                || event.getInventory().getType() == InventoryType.CRAFTING
-                || event.getInventory().getHolder() instanceof ShopGui) {
-            return;
-        }
-
-        event.setCancelled(true);
-        player.sendMessage(this.lang.text(NamedTextColor.RED, "game.cant_open_inventory"));
-    }
-
-    /**
-     * Impede cliques em inventários externos durante a partida.
-     * Garante que jogadores não manipulem baús ou outros contêineres mesmo
-     * que o evento de abertura seja bypassado.
-     *
-     * @param event o evento de clique em inventário (não nulo)
-     */
-    @EventHandler
-    public void onInventoryClick(final InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof final Player player)) return;
-        final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
-
-        // Permite apenas interações no inventário próprio do jogador ou na loja
-        final InventoryType topType = event.getView().getTopInventory().getType();
-        if (topType == InventoryType.PLAYER || topType == InventoryType.CRAFTING
-                || event.getView().getTopInventory().getHolder() instanceof ShopGui) {
-            return;
-        }
-
-        event.setCancelled(true);
     }
 
     /**

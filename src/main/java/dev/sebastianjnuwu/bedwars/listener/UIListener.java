@@ -33,19 +33,27 @@ public class UIListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(final PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
 
         final Block block = event.getClickedBlock();
-        if (block == null) return;
-
         final Player player = event.getPlayer();
 
-        // Verifica se é uma porta de saída (IRON_DOOR)
-        if (block.getType() == Material.IRON_DOOR) {
-            final BedWarsPlugin plugin = (BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars");
-            final LangManager lang = plugin.getLang();
+        final BedWarsPlugin plugin = (BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars");
+        final LangManager lang = plugin.getLang();
 
-            // Se o jogador já está em uma partida, abre confirmação de saída
+        // Se o jogador estiver em uma partida e segurando o item de porta de ferro → confirmar saída
+        if (this.gameManager.isInGame(player)) {
+            final ItemStack hand = player.getInventory().getItemInMainHand();
+            if (hand != null && hand.getType() == Material.IRON_DOOR) {
+                final ConfirmExitGui gui = new ConfirmExitGui(player, lang);
+                gui.open();
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        // Interação com bloco de porta de ferro (entrar na arena pelo lobby ou sair)
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && block.getType() == Material.IRON_DOOR) {
             if (this.gameManager.isInGame(player)) {
                 final ConfirmExitGui gui = new ConfirmExitGui(player, lang);
                 gui.open();
@@ -53,7 +61,6 @@ public class UIListener implements Listener {
                 return;
             }
 
-            // Se não está em partida, verifica se é uma arena válida e abre seleção de time
             final String worldName = player.getWorld().getName();
             if (!worldName.startsWith("bw_")) return;
 
@@ -71,10 +78,23 @@ public class UIListener implements Listener {
     public void onInventoryClick(final InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof final Player player)) return;
 
-        // Verifica se o clique foi no slot 8 (porta de sada)
+        // Delega para o GUI de confirmação de saída
+        if (event.getView().getTopInventory().getHolder() instanceof final ConfirmExitGui confirmGui) {
+            event.setCancelled(true);
+            confirmGui.onClick(event);
+            return;
+        }
+
+        // Delega para o GUI de seleção de time
+        if (event.getView().getTopInventory().getHolder() instanceof final TeamSelectionGui teamGui) {
+            event.setCancelled(true);
+            teamGui.onClick(event);
+            return;
+        }
+
+        // Clique no slot 8 (porta de saída no inventário do jogador)
         if (event.getRawSlot() == 8) {
             if (event.getInventory().getType() == InventoryType.PLAYER) {
-                // Verifica se o item no slot 8 a porta de sada
                 final ItemStack clickedItem = event.getCurrentItem();
                 if (clickedItem != null && clickedItem.getType() == Material.IRON_DOOR) {
                     final BedWarsPlugin plugin = (BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars");
