@@ -47,6 +47,12 @@ public interface GamePlayer {
     ArenaTeam getTeam();
 
     /**
+     * Altera a equipe do jogador durante a partida (antes do início).
+     * @param team nova equipe
+     */
+    void setTeam(ArenaTeam team);
+
+    /**
      * Verifica se o jogador está vivo na partida.
      * <p>
      * Um jogador vivo pode participar do jogo e atacar outros jogadores.

@@ -41,10 +41,21 @@ public class UIListener implements Listener {
         final BedWarsPlugin plugin = (BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars");
         final LangManager lang = plugin.getLang();
 
-        // Se o jogador estiver em uma partida e segurando o item de porta de ferro → confirmar saída
         if (this.gameManager.isInGame(player)) {
             final ItemStack hand = player.getInventory().getItemInMainHand();
-            if (hand != null && hand.getType() == Material.IRON_DOOR) {
+            if (hand == null) return;
+
+            if (hand.getType() == Material.COMPASS) {
+                final Game game = (Game) this.gameManager.getPlayerGame(player);
+                if (game == null) return;
+                final var arena = game.getArena();
+                final TeamSelectionGui gui = new TeamSelectionGui(player, arena, lang, this.gameManager);
+                gui.open();
+                event.setCancelled(true);
+                return;
+            }
+
+            if (hand.getType() == Material.IRON_DOOR) {
                 final ConfirmExitGui gui = new ConfirmExitGui(player, lang);
                 gui.open();
                 event.setCancelled(true);

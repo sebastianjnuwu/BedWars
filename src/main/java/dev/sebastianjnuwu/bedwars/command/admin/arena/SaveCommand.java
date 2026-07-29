@@ -242,7 +242,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             }
         }
         for (final var gen : arena.getGenerators()) {
-            if (gen.getOriginBlockData() != null) {
+            if (gen.getOriginBlockData() != null && gen.getLocation() != null) {
                 final var b = gen.getLocation().getBlock().getRelative(0, -1, 0);
                 b.setBlockData(Bukkit.createBlockData(gen.getOriginBlockData()), false);
             }

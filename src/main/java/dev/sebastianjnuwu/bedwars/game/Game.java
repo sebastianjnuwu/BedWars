@@ -145,6 +145,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
         player.getInventory().setItem(8, createExitDoorItem());
+        player.getInventory().setItem(0, createTeamSelectorItem());
         final Location spawn = this.arena.getArenaSpawn();
         if (spawn != null) {
             LocationUtil.safeTeleport(player, spawn);
@@ -184,6 +185,36 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public void join(final Player player) {
         this.join(player, null);
+    }
+
+    public void switchTeam(final Player player, final String teamName) {
+        if (this.state != GameState.WAITING && this.state != GameState.STARTING) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.in_progress"));
+            return;
+        }
+        final GamePlayer gp = this.players.get(player.getUniqueId());
+        if (gp == null) {
+            this.join(player, teamName);
+            return;
+        }
+        final ArenaTeam oldTeam = gp.getTeam();
+        if (oldTeam.getName().equalsIgnoreCase(teamName)) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_team"));
+            return;
+        }
+        final ArenaTeam newTeam = this.findNamedTeam(teamName);
+        if (newTeam == null) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.team_not_found", teamName));
+            return;
+        }
+        if (this.teams.get(newTeam).size() >= this.maxTeamSlots()) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.team_full"));
+            return;
+        }
+        this.teams.get(oldTeam).remove(player.getUniqueId());
+        this.teams.get(newTeam).add(player.getUniqueId());
+        gp.setTeam(newTeam);
+        player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.switched_team", newTeam.getName()));
     }
 
     public void join(final Player player, final @Nullable String teamName) {
@@ -235,6 +266,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.setHealth(20);
         player.setFoodLevel(20);
         player.getInventory().setItem(8, createExitDoorItem());
+        player.getInventory().setItem(0, createTeamSelectorItem());
 
         // Esconde jogadores de outras partidas
         for (final Player online : Bukkit.getOnlinePlayers()) {
@@ -481,6 +513,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private void scheduleForge(final ArenaGenerator forge) {
+        if (forge.getLocation() == null) return;
+
         final List<BukkitTask> oldTasks = this.forgeTasks.remove(forge);
         if (oldTasks != null) oldTasks.forEach(BukkitTask::cancel);
 
@@ -937,6 +971,17 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         meta.displayName(MM.deserialize(this.lang.raw("ui.exit_door.name")));
         meta.lore(List.of(
                 MM.deserialize(this.lang.raw("ui.exit_door.lore"))
+        ));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createTeamSelectorItem() {
+        final ItemStack item = new ItemStack(Material.COMPASS);
+        final ItemMeta meta = item.getItemMeta();
+        meta.displayName(MM.deserialize(this.lang.raw("ui.team_selector.name")));
+        meta.lore(List.of(
+                MM.deserialize(this.lang.raw("ui.team_selector.lore"))
         ));
         item.setItemMeta(meta);
         return item;

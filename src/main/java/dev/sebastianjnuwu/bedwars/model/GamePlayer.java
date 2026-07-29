@@ -9,7 +9,7 @@ import java.util.UUID;
 public class GamePlayer implements dev.sebastianjnuwu.bedwars.api.model.GamePlayer {
 
     private final UUID uuid;
-    private final dev.sebastianjnuwu.bedwars.api.model.ArenaTeam team;
+    private dev.sebastianjnuwu.bedwars.api.model.ArenaTeam team;
     private boolean alive;
     private int deaths;
     private int kills;
@@ -26,6 +26,10 @@ public class GamePlayer implements dev.sebastianjnuwu.bedwars.api.model.GamePlay
 
     public dev.sebastianjnuwu.bedwars.api.model.ArenaTeam getTeam() {
         return this.team;
+    }
+
+    public void setTeam(final dev.sebastianjnuwu.bedwars.api.model.ArenaTeam team) {
+        this.team = team;
     }
 
     public boolean isAlive() {

@@ -144,6 +144,8 @@ game:
   join_usage: "Uso: /bw join <arena> [time]"
   already_in_game: "Voce ja esta em uma partida."
   already_in_this_game: "Voce ja esta nesta partida."
+  already_in_team: "Voce ja esta neste time."
+  switched_team: "&aVoce trocou para o time {0}."
   arena_not_found: "Arena {0} nao encontrada."
   arena_being_edited: "A arena {0} esta sendo editada por um administrador."
   not_ready: "A arena {0} nao esta pronta. Faltando:"
@@ -209,25 +211,19 @@ edit:
 # ── ui ────────────────────────────────
 ui:
   team_selection:
-    title: "Selecionar Time"
-    available_teams: "Times Disponíveis"
-    click_to_join: "Clique em um time para entrar na partida"
-    back: "Voltar"
-    min_players: "Mínimo: {0} jogadores"
-    in_team: "No time: {0}"
-    will_start: "✅ Vai começar!"
-    waiting_more: "⏳ Esperando mais..."
-    no_teams_available: "❌ Faltando times"
-    prev_page: "Página anterior"
-    next_page: "Próxima página"
-    page: "Página {0}"
+    title: "Qual seu time?"
+    close: "Fechar"
+    team_selected: "Seu time {0} foi selecionado"
+  team_selector:
+    name: "<gold><bold>Selecionar Time"
+    lore: "<gray>Clique com direito para trocar de time"
   exit_door:
-    name: "&c&lSair da Partida"
-    lore: "&7Clique com direito para &asair &7da partida atual"
+    name: "<red><bold>Sair da Partida"
+    lore: "<gray>Clique com direito para <green>sair <gray>da partida atual"
   confirm_exit:
-    title: "&6&lConfirmar Saída"
-    yes_exit: "&a&lSim, confirma saída!"
-    yes_exit_desc: "&7Clique para sair da partida"
-    no_cancel: "&c&lNão, não sair!"
-    no_cancel_desc: "&7Clique para cancelar"
+    title: "<gold><bold>Confirmar Saída"
+    yes_exit: "<green><bold>Sim, confirma saída!"
+    yes_exit_desc: "<gray>Clique para sair da partida"
+    no_cancel: "<red><bold>Não, não sair!"
+    no_cancel_desc: "<gray>Clique para cancelar"
 
