@@ -21,49 +21,46 @@ public class VersionChecker {
         this.logger = logger;
         this.lang = lang;
     }
-
-    public void checkAsync() {
+    public void check() {
         this.logger.info(this.lang.raw("version_check.checking"));
 
-        Thread.startVirtualThread(() -> {
-            try {
-                final HttpURLConnection conn = (HttpURLConnection) URI.create(JSON_URL).toURL().openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("User-Agent", "BedWars");
-                conn.setConnectTimeout(5000);
-                conn.setReadTimeout(5000);
+        try {
+            final HttpURLConnection conn = (HttpURLConnection) URI.create(JSON_URL).toURL().openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "BedWars");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
 
-                final int code = conn.getResponseCode();
-                if (code != 200) {
-                    this.logger.warning(this.lang.raw("version_check.error", "HTTP " + code));
+            final int code = conn.getResponseCode();
+            if (code != 200) {
+                this.logger.warning(this.lang.raw("version_check.error", "HTTP " + code));
+                return;
+            }
+
+            try (final BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                final StringBuilder body = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    body.append(line);
+                }
+
+                final String latestVersion = parseVersion(body.toString());
+                if (latestVersion == null) {
+                    this.logger.warning(this.lang.raw("version_check.error", "Resposta inválida"));
                     return;
                 }
 
-                try (final BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-                    final StringBuilder body = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        body.append(line);
-                    }
-
-                    final String latestVersion = parseVersion(body.toString());
-                    if (latestVersion == null) {
-                        this.logger.warning(this.lang.raw("version_check.error", "Resposta inválida"));
-                        return;
-                    }
-
-                    final int cmp = compareVersions(normalize(this.currentVersion), normalize(latestVersion));
-                    if (cmp == 0) {
-                        this.logger.info(this.lang.raw("version_check.up_to_date", this.currentVersion));
-                    } else if (cmp < 0) {
-                        this.logger.warning(this.lang.raw("version_check.new_version", latestVersion, this.currentVersion));
-                        this.logger.warning(this.lang.raw("version_check.download", "https://github.com/sebastianjnuwu/BedWars"));
-                    }
+                final int cmp = compareVersions(normalize(this.currentVersion), normalize(latestVersion));
+                if (cmp == 0) {
+                    this.logger.info(this.lang.raw("version_check.up_to_date", this.currentVersion));
+                } else if (cmp < 0) {
+                    this.logger.warning(this.lang.raw("version_check.new_version", latestVersion, this.currentVersion));
+                    this.logger.warning(this.lang.raw("version_check.download", "https://github.com/sebastianjnuwu/BedWars"));
                 }
-            } catch (final Exception e) {
-                this.logger.warning(this.lang.raw("version_check.error", e.getMessage()));
             }
-        });
+        } catch (final Exception e) {
+            this.logger.warning(this.lang.raw("version_check.error", e.getMessage()));
+        }
     }
 
     private static String normalize(final String v) {

@@ -43,6 +43,30 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.editorManager = new EditorManager(this);
         this.lang = new LangManager(this, this.configManager.getLang());
 
+        this.getLogger().info("\n\n"
+                + "██████╗ ███████╗██████╗ ██╗    ██╗ █████╗ ██████╗ ███████╗\n"
+                + "██╔══██╗██╔════╝██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔════╝\n"
+                + "██████╔╝█████╗  ██║  ██║██║ █╗ ██║███████║██████╔╝███████╗\n"
+                + "██╔══██╗██╔══╝  ██║  ██║██║███╗██║██╔══██║██╔══██╗╚════██║\n"
+                + "██████╔╝███████╗██████╔╝╚███╔███╔╝██║  ██║██║  ██║███████║\n"
+                + "╚═════╝ ╚══════╝╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝\n"
+                + "                                                           \n"
+                + "  - GitHub: " + this.lang.raw("startup.github") + "\n"
+                + "  - Author: " + this.lang.raw("startup.author") + "\n"
+                + "  - Version: " + this.lang.raw("startup.version", getDescription().getVersion())
+                + "\n");
+
+        if (this.configManager.isVersionCheckEnabled()) {
+            final VersionChecker checker = new VersionChecker(
+                    getDescription().getVersion(),
+                    this.getLogger(),
+                    this.lang
+            );
+            this.getServer().getScheduler().runTaskLater(this, checker::check, 1L);
+        } else {
+            this.getLogger().info(this.lang.raw("version_check.disabled"));
+        }
+
         final WorldManager worldManager = new WorldManager(this);
         final File mapsFolder = new File(this.getDataFolder(), "maps");
         mapsFolder.mkdirs();
@@ -82,29 +106,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         if (command != null) {
             command.setExecutor(bwCommand);
             command.setTabCompleter(bwCommand);
-        }
-
-        this.getLogger().info("\n\n" +
-                "██████╗ ███████╗██████╗ ██╗    ██╗ █████╗ ██████╗ ███████╗\n" +
-                "██╔══██╗██╔════╝██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔════╝\n" +
-                "██████╔╝█████╗  ██║  ██║██║ █╗ ██║███████║██████╔╝███████╗\n" +
-                "██╔══██╗██╔══╝  ██║  ██║██║███╗██║██╔══██║██╔══██╗╚════██║\n" +
-                "██████╔╝███████╗██████╔╝╚███╔███╔╝██║  ██║██║  ██║███████║\n" +
-                "╚═════╝ ╚══════╝╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝\n" +
-                "                                                           \n" +
-                "  - GitHub: " + this.lang.raw("startup.github") + "\n" +
-                "  - Author: " + this.lang.raw("startup.author") + "\n" +
-                "  - Version: " + this.lang.raw("startup.version", getDescription().getVersion()) +
-                "\n");
-
-        if (this.configManager.isVersionCheckEnabled()) {
-            new VersionChecker(
-                    getDescription().getVersion(),
-                    this.getLogger(),
-                    this.lang
-            ).checkAsync();
-        } else {
-            this.getLogger().info(this.lang.raw("version_check.disabled"));
         }
 
     }
@@ -226,7 +227,8 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
     }
 
     @Override
-    public @NotNull Collection<Player> getPlayersInArena(@NotNull String arenaName) {
+    public @NotNull
+    Collection<Player> getPlayersInArena(@NotNull String arenaName) {
         Game game = this.gameManager.getGame(arenaName);
         return game != null ? game.getPlayers() : Collections.emptyList();
     }

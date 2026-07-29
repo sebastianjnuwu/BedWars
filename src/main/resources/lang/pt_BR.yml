@@ -300,7 +300,7 @@ log:
 # ── version_check ─────────────────────
 version_check:
   checking: "Verificando atualizações..."
-  up_to_date: "Você está na versão mais recente ({0})."
+  up_to_date: "Você está na versão mais recente (v{0})."
   new_version: "Nova versão disponível: v{0} (atual: v{1})"
   download: "Baixe em: {0}"
   error: "Erro ao verificar atualizações: {0}"
