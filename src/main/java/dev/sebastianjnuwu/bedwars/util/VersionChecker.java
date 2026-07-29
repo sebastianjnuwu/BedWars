@@ -66,11 +66,15 @@ public class VersionChecker {
     }
 
     private String parseVersion(final String json) {
-        final String key = "\"version\":\"";
+        final String key = "\"version\"";
         final int start = json.indexOf(key);
         if (start == -1) return null;
-        final int end = json.indexOf("\"", start + key.length());
-        if (end == -1) return null;
-        return json.substring(start + key.length(), end);
+        final int colon = json.indexOf(":", start + key.length());
+        if (colon == -1) return null;
+        final int valueStart = json.indexOf("\"", colon + 1);
+        if (valueStart == -1) return null;
+        final int valueEnd = json.indexOf("\"", valueStart + 1);
+        if (valueEnd == -1) return null;
+        return json.substring(valueStart + 1, valueEnd);
     }
 }
