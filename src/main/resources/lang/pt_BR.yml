@@ -46,6 +46,9 @@ save:
   success_with_warnings: "Mapa {0} salvo, mas ha itens faltando:"
   validation_warnings: "§eA arena foi salva mas NAO esta pronta para jogar:"
   error: "Erro ao salvar: {0}"
+  fawe_incomplete: "Seleção do FAWE incompleta. Use //pos1 e //pos2 primeiro."
+  invalid_dimensions: "Dimensões do schematic inválidas. Use //pos1 e //pos2 para selecionar a área."
+  map_save_fail: "Falha ao salvar o arquivo do mapa: {0}"
 
 # ── load ──────────────────────────────
 load:
@@ -179,6 +182,7 @@ game:
   validate_team_forge_duplicate: "Time {0} tem mais de uma fornalha (use removegenerator forge {0})"
   spectating: "Voce entrou como espectador. Aguarde o fim da partida."
   world_not_ready: "O mundo da arena {0} nao esta pronto. Tente novamente em alguns instantes."
+  countdown_preparing: "&7Preparando..."
   start_title: "§6§lBEDWARS"
   start_subtitle: "§eProteja sua cama e elimine os times!"
   bed_broken_title: "§c§lCAMA DESTRUÍDA!"
@@ -208,13 +212,98 @@ edit:
   generator_removed: "Gerador de {0} removido!"
   session_ended: "§cSua sessao de edicao na arena '{0}' foi encerrada devido ao desligamento do servidor."
 
+# ── team ──────────────────────────────
+team:
+  name_red: "<red><b>🔴 Vermelho</b></red>"
+  name_blue: "<blue><b>🔵 Azul</b></blue>"
+  name_green: "<green><b>🟢 Verde</b></green>"
+  name_yellow: "<yellow><b>🟡 Amarelo</b></yellow>"
+  name_purple: "<purple><b>🟣 Roxo</b></purple>"
+  name_pink: "<light_purple><b>🌸 Rosa</b></light_purple>"
+  name_orange: "<gold><b>🟠 Laranja</b></gold>"
+  name_cyan: "<aqua><b>🔵 Ciano</b></aqua>"
+  name_white: "<white><b>⬜ Branco</b></white>"
+
+# ── shop ──────────────────────────────
+shop:
+  title: "<red>Loja</red>"
+  selected: "<green>< Selecionado</green>"
+  previous: "<green><< Anterior</green>"
+  next: "<green>Próximo >></green>"
+  back_categories: "<red>Voltar às Categorias</red>"
+  price: "<yellow>Preço: {0} {1}</yellow>"
+  team_upgrade: "<aqua>Upgrade do Time</aqua>"
+  not_enough: "<red>Você não tem {0} suficiente!</red>"
+  purchased: "<green>Comprado!</green>"
+  currency_iron: "Ferro"
+  currency_gold: "Ouro"
+  currency_diamond: "Diamante"
+  currency_emerald: "Esmeralda"
+
+# ── kick ──────────────────────────────
+kick:
+  arena_reset: "Arena sendo resetada"
+
+# ── log ───────────────────────────────
+log:
+  lang:
+    loaded: "Idioma carregado: {0}"
+    placeholder_missing: "Placeholder {0} não encontrado em args para a chave \"{1}\""
+  config_manager:
+    migrate_lobby: "Lobby migrado de config.yml para spawn.yml"
+    create_spawn_error: "Não foi possível criar spawn.yml: {0}"
+    migrate_lobby_error: "Não foi possível migrar lobby: {0}"
+    save_config_error: "Erro ao salvar config.yml: {0}"
+    save_spawn_error: "Erro ao salvar spawn.yml: {0}"
+  arena_manager:
+    loaded: "Arenas carregadas: {0}"
+    forge_duplicate: "Arena {0}: forge duplicado para o time '{1}' ignorado."
+    forge_duplicate_load: "Arena {0}: forge duplicado para o time '{1}' ignorado ao carregar."
+    save_error: "Erro ao salvar arena {0}: {1}"
+    reset_error: "Erro ao resetar arena {0}: {1}"
+    load_error: "Erro ao carregar mundo da arena {0}: {1}"
+    folder_not_exist: "Pasta de arenas não existe: {0}"
+    folder_create_fail: "Falha ao criar pasta de arenas: {0}"
+    folder_no_permission: "Sem permissão de escrita na pasta de arenas: {0}"
+    save_arena_error: "Erro ao salvar arena '{0}': {1}"
+  shop_manager:
+    migrate_shop: "shop.yml migrado para shop/default.yml"
+    migrate_shop_error: "Não foi possível migrar shop.yml antigo: {0}"
+    extract_default_error: "Não foi possível extrair shop padrão: {0}"
+    not_found: "Shop '{0}' não encontrado, usando padrão"
+    parse_error: "Falha ao processar item da loja: {0} - {1}"
+  shop_npc:
+    not_installed: "FancyNPCs nao instalado, nao foi possivel spawnar NPCs da loja"
+    spawn_error: "Falha ao spawnar NPC da loja {0} para {1}: {2}"
+    remove_error: "Falha ao remover NPC da loja: {0}"
+  slime_manager:
+    template_saved: "Template salvo: {0}"
+    instance_unloaded: "Instância descarregada: {0}"
+    template_load_error: "Erro ao carregar template {0}: {1}"
+    world_create_error: "Erro ao criar mundo Bukkit: {0}"
+    directory_create_error: "Não foi possível criar diretório: {0}"
+    copy_error: "Erro ao copiar arquivo {0}: {1}"
+  editor_manager:
+    session_create_error: "Erro criando session.yml: {0}"
+  save_command:
+    fawe_dimensions: "Dimensões lidas da seleção FAWE para arena '{0}': {1}x{2}x{3} (paste em {4},{5},{6})"
+    saving_schematic: "Salvando schematic da arena '{0}' em {1} (região: {2},{3},{4} a {5},{6},{7})"
+    schematic_saved: "Schematic salvo com sucesso: {0} ({1}x{2}x{3} blocos)"
+    slime_template_saved: "Template Slime salvo: {0}"
+    invalid_dimensions: "Dimensões inválidas do schematic para arena '{0}': {1}x{2}x{3}"
+    schematic_save_error: "Falha ao salvar schematic da arena '{0}': {1}"
+    slime_template_error: "Falha ao salvar template Slime para arena '{0}': {1}"
+    save_unexpected_error: "Erro inesperado ao salvar arena '{0}': {1}"
+  create_command:
+    world_create_error: "Falha ao criar mundo de edição"
+
 # ── startup ───────────────────────────
 startup:
   github: "https://github.com/sebastianjnuwu/bedwars"
   author: "sebastianjnuwu <sebastianjnuwu@gmail.com>"
   version: "v{0}"
-  fancynpcs_hook: "FancyNPCs hook registered!"
-  fancynpcs_not_found: "FancyNPCs not found - NPC shop interaction disabled."
+  fancynpcs_hook: "FancyNPCs registrado!"
+  fancynpcs_not_found: "FancyNPCs não encontrado - interação com NPC da loja desativada."
 
 # ── ui ────────────────────────────────
 ui:

@@ -1,6 +1,8 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,11 +15,13 @@ import java.util.*;
 public class ShopManager {
 
     private final JavaPlugin plugin;
+    private final LangManager lang;
     private final File shopFolder;
     private final Map<String, List<ShopCategory>> shopCache;
 
     public ShopManager(JavaPlugin plugin) {
         this.plugin = plugin;
+        this.lang = ((BedWarsPlugin) plugin).getLang();
         this.shopFolder = new File(plugin.getDataFolder(), "shop");
         this.shopFolder.mkdirs();
         this.shopCache = new HashMap<>();
@@ -31,10 +35,10 @@ public class ShopManager {
         if (oldShop.exists() && !defaultShop.exists()) {
             try {
                 java.nio.file.Files.copy(oldShop.toPath(), defaultShop.toPath());
-                plugin.getLogger().info("Migrated shop.yml → shop/default.yml");
+                plugin.getLogger().info(this.lang.raw("log.shop_manager.migrate_shop"));
                 // Don't delete old one, user might want it as reference
             } catch (IOException e) {
-                plugin.getLogger().warning("Could not migrate old shop.yml: " + e.getMessage());
+                plugin.getLogger().warning(this.lang.raw("log.shop_manager.migrate_shop_error", e.getMessage()));
             }
         }
 
@@ -46,7 +50,7 @@ public class ShopManager {
                     java.nio.file.Files.copy(in, defaultShop.toPath());
                 }
             } catch (IOException | NullPointerException e) {
-                plugin.getLogger().warning("Could not extract default shop: " + e.getMessage());
+                plugin.getLogger().warning(this.lang.raw("log.shop_manager.extract_default_error", e.getMessage()));
             }
         }
         // Pre-load default shop
@@ -59,7 +63,7 @@ public class ShopManager {
 
         File file = new File(shopFolder, name + ".yml");
         if (!file.exists()) {
-            plugin.getLogger().warning("Shop '" + name + "' not found, using default");
+            plugin.getLogger().warning(this.lang.raw("log.shop_manager.not_found", name));
             return loadShop("default");
         }
 
@@ -201,7 +205,7 @@ public class ShopManager {
 
             return builder.build();
         } catch (Exception e) {
-            plugin.getLogger().warning("Failed to parse shop item: " + entry + " - " + e.getMessage());
+            plugin.getLogger().warning(this.lang.raw("log.shop_manager.parse_error", String.valueOf(entry), e.getMessage()));
             return null;
         }
     }

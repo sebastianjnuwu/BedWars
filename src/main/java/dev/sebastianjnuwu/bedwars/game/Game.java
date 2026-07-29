@@ -592,7 +592,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                     }
                     for (final Player p : Bukkit.getOnlinePlayers()) {
                         if (this.players.containsKey(p.getUniqueId())) {
-                            p.sendTitle("§e" + this.countdownSeconds, "§7Preparando...", 0, 20, 10);
+                            p.sendTitle("§e" + this.countdownSeconds, this.lang.raw("game.countdown_preparing"), 0, 20, 10);
                         }
                     }
                     this.countdownSeconds--;

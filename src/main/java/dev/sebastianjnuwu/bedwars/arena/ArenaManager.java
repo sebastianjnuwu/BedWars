@@ -1,8 +1,10 @@
 package dev.sebastianjnuwu.bedwars.arena;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 import dev.sebastianjnuwu.bedwars.slime.TemplateLoader;
 import org.bukkit.Bukkit;
@@ -27,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ArenaManager {
 
+    private final LangManager lang;
     private final File arenasFolder;
     private final File mapsFolder;
     private final Map<String, Arena> arenas;
@@ -41,6 +44,7 @@ public class ArenaManager {
      * @param slimeManager gerenciador de SlimeWorld
      */
     public ArenaManager(@Nullable File mapsFolder, @Nullable SlimeManager slimeManager) {
+        this.lang = ((BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars")).getLang();
         this.arenasFolder = new File("arenas");
         this.arenasFolder.mkdirs();
         this.mapsFolder = mapsFolder != null ? mapsFolder : new File("maps");
@@ -333,7 +337,7 @@ public class ArenaManager {
         try {
             config.save(file);
         } catch (IOException e) {
-            Bukkit.getLogger().severe("Erro ao salvar arena " + arena.getName() + ": " + e.getMessage());
+            Bukkit.getLogger().severe(this.lang.raw("log.arena_manager.save_error", arena.getName(), e.getMessage()));
         }
     }
 
@@ -394,7 +398,7 @@ public class ArenaManager {
                 if (gen.getType().equalsIgnoreCase("forge") && gen.getTeam() != null) {
                     final String dedupeKey = "forge:" + gen.getTeam().toLowerCase();
                     if (!seenLocations.add(dedupeKey)) {
-                        Bukkit.getLogger().warning("Arena " + name + ": forge duplicado para o time '" + gen.getTeam() + "' ignorado.");
+                        Bukkit.getLogger().warning(this.lang.raw("log.arena_manager.forge_duplicate", name, gen.getTeam()));
                         continue;
                     }
                 }

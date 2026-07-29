@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +28,7 @@ public class EditorManager {
     private static final long PARTICLE_INTERVAL = 4L;
 
     private final JavaPlugin plugin;
+    private final LangManager lang;
     private final Map<String, UUID>       arenaEditors;
     private final Map<UUID, String>       playerArenas;
     private final Map<String, BukkitTask> particleTasks; // arenaName → task
@@ -36,6 +38,7 @@ public class EditorManager {
 
     public EditorManager(final JavaPlugin plugin) {
         this.plugin        = plugin;
+        this.lang          = ((BedWarsPlugin) plugin).getLang();
         this.arenaEditors  = new HashMap<>();
         this.playerArenas  = new HashMap<>();
         this.particleTasks = new HashMap<>();
@@ -47,7 +50,7 @@ public class EditorManager {
                 this.file.getParentFile().mkdirs();
                 this.file.createNewFile();
             } catch (final IOException e) {
-                plugin.getLogger().severe("Erro criando session.yml: " + e.getMessage());
+                plugin.getLogger().severe(this.lang.raw("log.editor_manager.session_create_error", e.getMessage()));
             }
         }
 

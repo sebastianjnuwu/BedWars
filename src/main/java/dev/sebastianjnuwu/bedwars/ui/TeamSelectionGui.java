@@ -76,15 +76,15 @@ public class TeamSelectionGui implements InventoryHolder {
 
     private Component getTeamName(final String color) {
         return switch (color.toLowerCase()) {
-            case "red", "vermelho" -> MM.deserialize("<red><b>🔴 Vermelho</b></red>");
-            case "blue", "azul" -> MM.deserialize("<blue><b>🔵 Azul</b></blue>");
-            case "green", "verde" -> MM.deserialize("<green><b>🟢 Verde</b></green>");
-            case "yellow", "amarelo" -> MM.deserialize("<yellow><b>🟡 Amarelo</b></yellow>");
-            case "purple", "roxo" -> MM.deserialize("<purple><b>🟣 Roxo</b></purple>");
-            case "pink", "rosa" -> MM.deserialize("<light_purple><b>🌸 Rosa</b></light_purple>");
-            case "orange", "laranja" -> MM.deserialize("<gold><b>🟠 Laranja</b></gold>");
-            case "cyan", "ciano" -> MM.deserialize("<aqua><b>🔵 Ciano</b></aqua>");
-            default -> MM.deserialize("<white><b>⬜ Branco</b></white>");
+            case "red", "vermelho" -> MM.deserialize(this.lang.raw("team.name_red"));
+            case "blue", "azul" -> MM.deserialize(this.lang.raw("team.name_blue"));
+            case "green", "verde" -> MM.deserialize(this.lang.raw("team.name_green"));
+            case "yellow", "amarelo" -> MM.deserialize(this.lang.raw("team.name_yellow"));
+            case "purple", "roxo" -> MM.deserialize(this.lang.raw("team.name_purple"));
+            case "pink", "rosa" -> MM.deserialize(this.lang.raw("team.name_pink"));
+            case "orange", "laranja" -> MM.deserialize(this.lang.raw("team.name_orange"));
+            case "cyan", "ciano" -> MM.deserialize(this.lang.raw("team.name_cyan"));
+            default -> MM.deserialize(this.lang.raw("team.name_white"));
         };
     }
 

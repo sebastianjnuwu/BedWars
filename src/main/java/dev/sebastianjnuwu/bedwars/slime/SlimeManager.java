@@ -1,5 +1,6 @@
 package dev.sebastianjnuwu.bedwars.slime;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import com.infernalsuite.asp.api.AdvancedSlimePaperAPI;
 import com.infernalsuite.asp.api.world.SlimeWorld;
@@ -75,7 +76,7 @@ public class SlimeManager {
             // Copia os arquivos do mundo para o template
             copyWorldFolder(world.getWorldFolder(), dest);
 
-            plugin.getLogger().info("Template salvo: " + name);
+            plugin.getLogger().info(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.template_saved", name));
         });
     }
 
@@ -102,7 +103,7 @@ public class SlimeManager {
             return api.readVanillaWorld(templateFolder, name, loader);
 
         } catch (Exception e) {
-            plugin.getLogger().severe("Erro ao carregar template " + name + ": " + e.getMessage());
+            plugin.getLogger().severe(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.template_load_error", name, e.getMessage()));
             return null;
         }
     }
@@ -131,7 +132,7 @@ public class SlimeManager {
 
             return world;
         } catch (Exception e) {
-            plugin.getLogger().severe("Erro ao criar mundo Bukkit: " + e.getMessage());
+            plugin.getLogger().severe(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.world_create_error", e.getMessage()));
             return null;
         }
     }
@@ -197,11 +198,11 @@ public class SlimeManager {
         if (world != null) {
             // Remove todos os jogadores
             for (final org.bukkit.entity.Player player : world.getPlayers()) {
-                player.kick(Component.text("Arena being reset", NamedTextColor.RED));
+                player.kick(Component.text(((BedWarsPlugin) this.plugin).getLang().raw("kick.arena_reset"), NamedTextColor.RED));
             }
 
             Bukkit.unloadWorld(world, true);
-            plugin.getLogger().info("Instância descarregada: " + instanceName);
+            plugin.getLogger().info(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.instance_unloaded", instanceName));
         }
     }
 
@@ -351,7 +352,7 @@ public class SlimeManager {
         }
 
         if (!target.exists() && !target.mkdirs()) {
-            plugin.getLogger().severe("Não foi possível criar diretório: " + target);
+            plugin.getLogger().severe(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.directory_create_error", target));
             return;
         }
 
@@ -372,7 +373,7 @@ public class SlimeManager {
                 try {
                     java.nio.file.Files.copy(file.toPath(), targetFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 } catch (Exception e) {
-                    plugin.getLogger().warning("Erro ao copiar arquivo " + file.getName() + ": " + e.getMessage());
+                    plugin.getLogger().warning(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.copy_error", file.getName(), e.getMessage()));
                 }
             }
         }

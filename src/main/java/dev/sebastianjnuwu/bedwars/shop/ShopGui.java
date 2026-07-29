@@ -52,7 +52,7 @@ public class ShopGui implements InventoryHolder {
         this.categories = shopManager.getCategories(shopName);
         this.currentPage = 0;
 
-        this.inventory = Bukkit.createInventory(this, 54, MM.deserialize("<red>Shop</red>"));
+        this.inventory = Bukkit.createInventory(this, 54, MM.deserialize(this.lang.raw("shop.title")));
 
         openGuis.put(player.getUniqueId(), this);
         openMain();
@@ -138,7 +138,7 @@ public class ShopGui implements InventoryHolder {
             // Mark the current category as selected
             if (cat == currentCategory) {
                 var meta = icon.getItemMeta();
-                meta.lore(List.of(MM.deserialize("<green>< Selected</green>")));
+                meta.lore(List.of(MM.deserialize(this.lang.raw("shop.selected"))));
                 icon.setItemMeta(meta);
             }
             inventory.setItem(catSlot, icon);
@@ -177,14 +177,14 @@ public class ShopGui implements InventoryHolder {
             if (currentPage > 0) {
                 ItemStack prev = new ItemStack(Material.ARROW);
                 ItemMeta prevMeta = prev.getItemMeta();
-                prevMeta.displayName(MM.deserialize("<green><< Previous</green>"));
+                prevMeta.displayName(MM.deserialize(this.lang.raw("shop.previous")));
                 prev.setItemMeta(prevMeta);
                 inventory.setItem(45, prev);
             }
             if (currentPage < totalPages - 1) {
                 ItemStack next = new ItemStack(Material.ARROW);
                 ItemMeta nextMeta = next.getItemMeta();
-                nextMeta.displayName(MM.deserialize("<green>Next >></green>"));
+                nextMeta.displayName(MM.deserialize(this.lang.raw("shop.next")));
                 next.setItemMeta(nextMeta);
                 inventory.setItem(53, next);
             }
@@ -193,7 +193,7 @@ public class ShopGui implements InventoryHolder {
         // Back button (goes to main category list, not to parent)
         ItemStack back = new ItemStack(Material.BARRIER);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.displayName(MM.deserialize("<red>Back to Categories</red>"));
+        backMeta.displayName(MM.deserialize(this.lang.raw("shop.back_categories")));
         back.setItemMeta(backMeta);
         inventory.setItem(49, back);
     }
@@ -290,18 +290,18 @@ public class ShopGui implements InventoryHolder {
 
         // Add price lore
         String currencyName = switch (item.getCurrency()) {
-            case IRON -> "Iron";
-            case GOLD -> "Gold";
-            case DIAMOND -> "Diamond";
-            case EMERALD -> "Emerald";
+            case IRON -> this.lang.raw("shop.currency_iron");
+            case GOLD -> this.lang.raw("shop.currency_gold");
+            case DIAMOND -> this.lang.raw("shop.currency_diamond");
+            case EMERALD -> this.lang.raw("shop.currency_emerald");
         };
 
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
         lore.add(Component.empty());
-        lore.add(MM.deserialize("<yellow>Price: " + item.getPrice() + " " + currencyName + "</yellow>"));
+        lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(item.getPrice()), currencyName)));
 
         if (item.getUpgrade() != null) {
-            lore.add(MM.deserialize("<aqua>Team Upgrade</aqua>"));
+            lore.add(MM.deserialize(this.lang.raw("shop.team_upgrade")));
         }
 
         meta.lore(lore);
@@ -384,7 +384,7 @@ public class ShopGui implements InventoryHolder {
         int has = countCurrency(player, currencyMaterial);
 
         if (has < price) {
-            player.sendMessage(MM.deserialize("<red>You don't have enough " + item.getCurrency().name().toLowerCase() + "!</red>"));
+            player.sendMessage(MM.deserialize(this.lang.raw("shop.not_enough", item.getCurrency().name().toLowerCase())));
             player.closeInventory();
             return;
         }
@@ -415,7 +415,7 @@ public class ShopGui implements InventoryHolder {
         );
         Bukkit.getPluginManager().callEvent(purchaseEvent);
 
-        player.sendMessage(MM.deserialize("<green>Purchased!</green>"));
+        player.sendMessage(MM.deserialize(this.lang.raw("shop.purchased")));
     }
 
     private void handleUpgrade(ShopItem item) {

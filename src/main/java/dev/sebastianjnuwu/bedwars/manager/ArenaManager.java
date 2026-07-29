@@ -7,6 +7,8 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
 import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
@@ -43,9 +45,11 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     private final File arenasFolder;
     private final File mapsFolder;
     private final WorldManager worldManager;
+    private final LangManager lang;
 
     public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder) {
         this.plugin = plugin;
+        this.lang = ((BedWarsPlugin) plugin).getLang();
         this.arenas = new HashMap<>();
         this.worldManager = worldManager;
         this.mapsFolder = mapsFolder;
@@ -67,7 +71,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             final String name = file.getName().replace(".yml", "");
             this.arenas.put(name, this.loadArenaFromFile(name, file));
         }
-        this.plugin.getLogger().info("Arenas carregadas: " + this.arenas.size());
+        this.plugin.getLogger().info(this.lang.raw("log.arena_manager.loaded", String.valueOf(this.arenas.size())));
     }
 
     /**
@@ -133,7 +137,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             this.showMarkerBlocks(this.get(name));
             return true;
         } catch (final IOException e) {
-            this.plugin.getLogger().severe("Erro ao resetar arena " + name + ": " + e.getMessage());
+            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.reset_error", name, e.getMessage()));
             return false;
         }
     }
@@ -235,7 +239,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             this.flush(arena.getName());
             return world;
         } catch (final IOException e) {
-            this.plugin.getLogger().severe("Erro ao carregar mundo da arena " + arena.getName() + ": " + e.getMessage());
+            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arena.getName(), e.getMessage()));
             return null;
         }
     }
@@ -325,15 +329,14 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         final File file = new File(this.arenasFolder, arenaName + ".yml");
 
         if (!this.arenasFolder.exists()) {
-            this.plugin.getLogger().severe("Pasta de arenas não existe: " + this.arenasFolder.getAbsolutePath());
+            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.folder_not_exist", this.arenasFolder.getAbsolutePath()));
             if (!this.arenasFolder.mkdirs()) {
-                this.plugin.getLogger().severe("Falha ao criar pasta de arenas: " + this.arenasFolder.getAbsolutePath());
+                this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.folder_create_fail", this.arenasFolder.getAbsolutePath()));
                 return;
             }
         }
         if (!this.arenasFolder.canWrite()) {
-            this.plugin.getLogger().severe("Sem permissão de escrita na pasta de arenas: "
-                    + this.arenasFolder.getAbsolutePath());
+            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.folder_no_permission", this.arenasFolder.getAbsolutePath()));
             return;
         }
 
@@ -433,7 +436,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         try {
             config.save(file);
         } catch (final IOException e) {
-            this.plugin.getLogger().severe("Erro ao salvar arena '" + arenaName + "': " + e.getMessage());
+            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.save_arena_error", arenaName, e.getMessage()));
         }
     }
 
@@ -612,7 +615,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                     final String dedupeKey = "forge:" + gen.getTeam().toLowerCase();
                     if (!seenLocations.add(dedupeKey)) {
                         this.plugin.getLogger().warning(
-                                "Arena " + name + ": forge duplicado para o time '" + gen.getTeam() + "' ignorado ao carregar.");
+                                this.lang.raw("log.arena_manager.forge_duplicate_load", name, gen.getTeam()));
                         continue;
                     }
                 }

@@ -3,6 +3,8 @@ package dev.sebastianjnuwu.bedwars.shop;
 import de.oliver.fancynpcs.api.FancyNpcsPlugin;
 import de.oliver.fancynpcs.api.Npc;
 import de.oliver.fancynpcs.api.NpcData;
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,6 +24,7 @@ import java.util.*;
 public class ShopNpcManager {
 
     private final JavaPlugin plugin;
+    private final LangManager lang;
     private final Map<String, List<Npc>> gameNpcs;
     private final Map<String, List<Npc>> editorNpcs;
 
@@ -32,6 +35,7 @@ public class ShopNpcManager {
      */
     public ShopNpcManager(final JavaPlugin plugin) {
         this.plugin = plugin;
+        this.lang = ((BedWarsPlugin) plugin).getLang();
         this.gameNpcs = new HashMap<>();
         this.editorNpcs = new HashMap<>();
     }
@@ -135,7 +139,7 @@ public class ShopNpcManager {
             Class.forName("de.oliver.fancynpcs.api.FancyNpcsPlugin");
             return true;
         } catch (final ClassNotFoundException e) {
-            plugin.getLogger().warning("FancyNPCs nao instalado, nao foi possivel spawnar NPCs da loja");
+            plugin.getLogger().warning(this.lang.raw("log.shop_npc.not_installed"));
             return false;
         }
     }
@@ -164,7 +168,7 @@ public class ShopNpcManager {
                 npc.spawnForAll();
                 npcs.add(npc);
             } catch (final Exception e) {
-                plugin.getLogger().warning("Falha ao spawnar NPC da loja " + i + " para " + arenaName + ": " + e.getMessage());
+                plugin.getLogger().warning(this.lang.raw("log.shop_npc.spawn_error", String.valueOf(i), arenaName, e.getMessage()));
             }
         }
 
@@ -177,7 +181,7 @@ public class ShopNpcManager {
                 FancyNpcsPlugin.get().getNpcManager().removeNpc(npc);
                 npc.removeForAll();
             } catch (final Exception e) {
-                plugin.getLogger().warning("Falha ao remover NPC da loja: " + e.getMessage());
+                plugin.getLogger().warning(this.lang.raw("log.shop_npc.remove_error", e.getMessage()));
             }
         }
     }

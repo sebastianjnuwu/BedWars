@@ -96,7 +96,7 @@ public class LangManager {
                 val = String.valueOf(actualArgs[idx]);
             } else {
                 this.plugin.getLogger().log(Level.WARNING,
-                        "Placeholder {" + idx + "} não encontrado em args para a chave \"" + text + "\"");
+                        "Placeholder {" + idx + "} não encontrado para a chave \"" + text + "\"");
                 val = matcher.group(0);
             }
             matcher.appendReplacement(sb, Matcher.quoteReplacement(val));
