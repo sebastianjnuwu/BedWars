@@ -23,8 +23,8 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import dev.sebastianjnuwu.bedwars.shop.ShopManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopListener;
+import dev.sebastianjnuwu.bedwars.shop.ShopManager;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
 
 public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
@@ -64,9 +64,9 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             Class.forName("de.oliver.fancynpcs.api.events.NpcInteractEvent");
             this.getServer().getPluginManager().registerEvents(
                     new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
-            this.getLogger().info("FancyNPCs hook registered!");
+            this.getLogger().info(this.lang.raw("startup.fancynpcs_hook"));
         } catch (ClassNotFoundException e) {
-            this.getLogger().info("FancyNPCs not found - NPC shop interaction disabled.");
+            this.getLogger().info(this.lang.raw("startup.fancynpcs_not_found"));
         }
 
         final BWCommand bwCommand = new BWCommand(
@@ -83,7 +83,19 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             command.setTabCompleter(bwCommand);
         }
 
-        this.getLogger().info("BedWars ativado!");
+        this.getLogger().info("\n\n" +
+                "██████╗ ███████╗██████╗ ██╗    ██╗ █████╗ ██████╗ ███████╗\n" +
+                "██╔══██╗██╔════╝██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔════╝\n" +
+                "██████╔╝█████╗  ██║  ██║██║ █╗ ██║███████║██████╔╝███████╗\n" +
+                "██╔══██╗██╔══╝  ██║  ██║██║███╗██║██╔══██║██╔══██╗╚════██║\n" +
+                "██████╔╝███████╗██████╔╝╚███╔███╔╝██║  ██║██║  ██║███████║\n" +
+                "╚═════╝ ╚══════╝╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝\n" +
+                "                                                           \n" +
+                "  - GitHub: " + this.lang.raw("startup.github") + "\n" +
+                "  - Author: " + this.lang.raw("startup.author") + "\n" +
+                "  - Version: " + this.lang.raw("startup.version", getDescription().getVersion()) +
+                "\n");
+
     }
 
     @Override

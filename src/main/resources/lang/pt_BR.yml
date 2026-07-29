@@ -208,6 +208,14 @@ edit:
   generator_removed: "Gerador de {0} removido!"
   session_ended: "§cSua sessao de edicao na arena '{0}' foi encerrada devido ao desligamento do servidor."
 
+# ── startup ───────────────────────────
+startup:
+  github: "https://github.com/sebastianjnuwu/bedwars"
+  author: "sebastianjnuwu <sebastianjnuwu@gmail.com>"
+  version: "v{0}"
+  fancynpcs_hook: "FancyNPCs hook registered!"
+  fancynpcs_not_found: "FancyNPCs not found - NPC shop interaction disabled."
+
 # ── ui ────────────────────────────────
 ui:
   team_selection:
