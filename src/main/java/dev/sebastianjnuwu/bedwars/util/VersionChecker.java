@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 public class VersionChecker {
 
-    private static final String JSON_URL = "https://raw.githubusercontent.com/sebastianjnuwu/BedWars/main/version.json";
+    private static final String JSON_URL = "https://raw.githubusercontent.com/sebastianjnuwu/BedWars/main/.github/version.json";
 
     private final String currentVersion;
     private final Logger logger;
