@@ -301,8 +301,8 @@ log:
 version_check:
   checking: "Verificando atualizações..."
   up_to_date: "Você está na versão mais recente ({0})."
-  new_version: "Nova versão disponível: {0} (atual: {1})"
-  download: "Baixe em: {2}"
+  new_version: "Nova versão disponível: v{0} (atual: v{1})"
+  download: "Baixe em: {0}"
   error: "Erro ao verificar atualizações: {0}"
   disabled: "Verificador de atualizações desativado."
 

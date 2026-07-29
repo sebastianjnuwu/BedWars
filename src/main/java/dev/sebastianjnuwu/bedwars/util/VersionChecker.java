@@ -52,9 +52,10 @@ public class VersionChecker {
                         return;
                     }
 
-                    if (this.currentVersion.equals(latestVersion)) {
+                    final int cmp = compareVersions(normalize(this.currentVersion), normalize(latestVersion));
+                    if (cmp == 0) {
                         this.logger.info(this.lang.raw("version_check.up_to_date", this.currentVersion));
-                    } else {
+                    } else if (cmp < 0) {
                         this.logger.warning(this.lang.raw("version_check.new_version", latestVersion, this.currentVersion));
                         this.logger.warning(this.lang.raw("version_check.download", "https://github.com/sebastianjnuwu/BedWars"));
                     }
@@ -63,6 +64,32 @@ public class VersionChecker {
                 this.logger.warning(this.lang.raw("version_check.error", e.getMessage()));
             }
         });
+    }
+
+    private static String normalize(final String v) {
+        String s = v.startsWith("v") ? v.substring(1) : v;
+        s = s.replace("-", ".");
+        return s;
+    }
+
+    static int compareVersions(final String a, final String b) {
+        final String[] partsA = a.split("\\.");
+        final String[] partsB = b.split("\\.");
+        final int len = Math.max(partsA.length, partsB.length);
+        for (int i = 0; i < len; i++) {
+            final int na = i < partsA.length ? parseInt(partsA[i]) : 0;
+            final int nb = i < partsB.length ? parseInt(partsB[i]) : 0;
+            if (na != nb) return Integer.compare(na, nb);
+        }
+        return 0;
+    }
+
+    private static int parseInt(final String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (final NumberFormatException e) {
+            return 0;
+        }
     }
 
     private String parseVersion(final String json) {
