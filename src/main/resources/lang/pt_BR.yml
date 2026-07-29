@@ -297,6 +297,15 @@ log:
   create_command:
     world_create_error: "Falha ao criar mundo de edição"
 
+# ── version_check ─────────────────────
+version_check:
+  checking: "Verificando atualizações..."
+  up_to_date: "Você está na versão mais recente ({0})."
+  new_version: "Nova versão disponível: {0} (atual: {1})"
+  download: "Baixe em: {2}"
+  error: "Erro ao verificar atualizações: {0}"
+  disabled: "Verificador de atualizações desativado."
+
 # ── startup ───────────────────────────
 startup:
   github: "https://github.com/sebastianjnuwu/bedwars"

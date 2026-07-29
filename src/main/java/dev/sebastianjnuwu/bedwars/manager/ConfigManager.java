@@ -185,6 +185,14 @@ public class ConfigManager {
         );
     }
 
+    public boolean isVersionCheckEnabled() {
+        return this.config.getBoolean("version-check.enabled", true);
+    }
+
+    public String getVersionCheckRepo() {
+        return this.config.getString("version-check.github", "sebastianjnuwu/bedwars");
+    }
+
     /**
      * Retorna o idioma configurado.
      *

@@ -25,6 +25,7 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopListener;
 import dev.sebastianjnuwu.bedwars.shop.ShopManager;
+import dev.sebastianjnuwu.bedwars.util.VersionChecker;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
 
 public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
@@ -95,6 +96,17 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
                 "  - Author: " + this.lang.raw("startup.author") + "\n" +
                 "  - Version: " + this.lang.raw("startup.version", getDescription().getVersion()) +
                 "\n");
+
+        if (this.configManager.isVersionCheckEnabled()) {
+            new VersionChecker(
+                    this.configManager.getVersionCheckRepo(),
+                    getDescription().getVersion(),
+                    this.getLogger(),
+                    this.lang
+            ).checkAsync();
+        } else {
+            this.getLogger().info(this.lang.raw("version_check.disabled"));
+        }
 
     }
 
