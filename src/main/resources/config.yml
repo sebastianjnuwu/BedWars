@@ -28,9 +28,7 @@ slimeworld:
 # ===================================================================
 # Verificador de atualizações no GitHub
 # ===================================================================
-version-check:
-  enabled: true
-  github: "sebastianjnuwu/bedwars"
+check: true
 
 # ===================================================================
 # Configurações de Edição

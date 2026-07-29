@@ -99,7 +99,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
         if (this.configManager.isVersionCheckEnabled()) {
             new VersionChecker(
-                    this.configManager.getVersionCheckRepo(),
                     getDescription().getVersion(),
                     this.getLogger(),
                     this.lang

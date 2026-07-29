@@ -10,31 +10,25 @@ import java.util.logging.Logger;
 
 public class VersionChecker {
 
-    private static final String API_URL = "https://api.github.com/repos/%s/releases/latest";
+    private static final String JSON_URL = "https://raw.githubusercontent.com/sebastianjnuwu/BedWars/main/version.json";
 
-    private final String github;
     private final String currentVersion;
     private final Logger logger;
     private final LangManager lang;
 
-    public VersionChecker(final String github, final String currentVersion, final Logger logger, final LangManager lang) {
-        this.github = github;
+    public VersionChecker(final String currentVersion, final Logger logger, final LangManager lang) {
         this.currentVersion = currentVersion;
         this.logger = logger;
         this.lang = lang;
     }
 
     public void checkAsync() {
-        if (this.github == null || this.github.isEmpty()) return;
-
         this.logger.info(this.lang.raw("version_check.checking"));
 
         Thread.startVirtualThread(() -> {
             try {
-                final URI uri = new URI(String.format(API_URL, this.github));
-                final HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
+                final HttpURLConnection conn = (HttpURLConnection) URI.create(JSON_URL).toURL().openConnection();
                 conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/vnd.github.v3+json");
                 conn.setRequestProperty("User-Agent", "BedWars");
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(5000);
@@ -46,24 +40,23 @@ public class VersionChecker {
                 }
 
                 try (final BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-                    final StringBuilder json = new StringBuilder();
+                    final StringBuilder body = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        json.append(line);
+                        body.append(line);
                     }
 
-                    final String latestVersion = parseTagName(json.toString());
+                    final String latestVersion = parseVersion(body.toString());
                     if (latestVersion == null) {
-                        this.logger.warning(this.lang.raw("version_check.error", "Resposta inválida da API"));
+                        this.logger.warning(this.lang.raw("version_check.error", "Resposta inválida"));
                         return;
                     }
 
                     if (this.currentVersion.equals(latestVersion)) {
                         this.logger.info(this.lang.raw("version_check.up_to_date", this.currentVersion));
                     } else {
-                        final String downloadUrl = String.format("https://github.com/%s/releases/latest", this.github);
                         this.logger.warning(this.lang.raw("version_check.new_version", latestVersion, this.currentVersion));
-                        this.logger.warning(this.lang.raw("version_check.download", downloadUrl));
+                        this.logger.warning(this.lang.raw("version_check.download", "https://github.com/sebastianjnuwu/BedWars"));
                     }
                 }
             } catch (final Exception e) {
@@ -72,8 +65,8 @@ public class VersionChecker {
         });
     }
 
-    private String parseTagName(final String json) {
-        final String key = "\"tag_name\":\"";
+    private String parseVersion(final String json) {
+        final String key = "\"version\":\"";
         final int start = json.indexOf(key);
         if (start == -1) return null;
         final int end = json.indexOf("\"", start + key.length());
