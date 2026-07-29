@@ -68,7 +68,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             final File mapsFolder
     ) {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
-        this.slimeManager = new SlimeManager(org.bukkit.Bukkit.getPluginManager().getPlugin("BedWars"));
+        this.slimeManager = new SlimeManager(org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class));
     }
 
     /**

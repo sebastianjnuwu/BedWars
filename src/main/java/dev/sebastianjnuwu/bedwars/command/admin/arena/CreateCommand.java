@@ -48,7 +48,7 @@ public class CreateCommand extends BaseCommand implements SubCommand {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
         
         // Inicializa SlimeManager
-        final var plugin = org.bukkit.Bukkit.getPluginManager().getPlugin("BedWars");
+        final var plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class);
         this.slimeManager = new SlimeManager(plugin);
         this.templateManager = new TemplateManager(this.slimeManager.getTemplatesFolder(), this.slimeManager);
         this.arenaCreator = new ArenaCreator(this.slimeManager, plugin.getDataFolder(), mapsFolder, this.slimeManager.getTemplatesFolder());

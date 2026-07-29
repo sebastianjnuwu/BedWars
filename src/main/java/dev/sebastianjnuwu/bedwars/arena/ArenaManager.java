@@ -44,7 +44,7 @@ public class ArenaManager {
      * @param slimeManager gerenciador de SlimeWorld
      */
     public ArenaManager(@Nullable File mapsFolder, @Nullable SlimeManager slimeManager) {
-        this.lang = ((BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars")).getLang();
+        this.lang = org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class).getLang();
         this.arenasFolder = new File("arenas");
         this.arenasFolder.mkdirs();
         this.mapsFolder = mapsFolder != null ? mapsFolder : new File("maps");

@@ -140,7 +140,7 @@ public class SimpleWorldManager implements
 
         // Teleporta jogadores para o lobby
         for (final Player player : world.getPlayers()) {
-            player.kick(Component.text(((BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars")).getLang().raw("kick.arena_reset")));
+            player.kick(Component.text(org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class).getLang().raw("kick.arena_reset")));
         }
 
         return Bukkit.unloadWorld(world, true);

@@ -38,7 +38,7 @@ public class UIListener implements Listener {
         final Block block = event.getClickedBlock();
         final Player player = event.getPlayer();
 
-        final BedWarsPlugin plugin = (BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars");
+        final BedWarsPlugin plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(BedWarsPlugin.class);
         final LangManager lang = plugin.getLang();
 
         if (this.gameManager.isInGame(player)) {
@@ -108,7 +108,7 @@ public class UIListener implements Listener {
             if (event.getInventory().getType() == InventoryType.PLAYER) {
                 final ItemStack clickedItem = event.getCurrentItem();
                 if (clickedItem != null && clickedItem.getType() == Material.IRON_DOOR) {
-                    final BedWarsPlugin plugin = (BedWarsPlugin) Bukkit.getPluginManager().getPlugin("BedWars");
+        final BedWarsPlugin plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(BedWarsPlugin.class);
                     final LangManager lang = plugin.getLang();
 
                     if (this.gameManager.isInGame(player)) {
