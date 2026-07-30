@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -63,6 +64,10 @@ public class StartCommand extends BaseCommand {
      *               (não nulo)
      */
     public void execute(final CommandSender sender, final @NotNull String @NotNull [] args) {
+        if (!(sender instanceof final Player player)) {
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "create.only_player"));
+            return;
+        }
         if (args.length < 2) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.start_usage"));
             return;
@@ -81,6 +86,9 @@ public class StartCommand extends BaseCommand {
             }
             return;
         }
-        this.gameManager.startGame(arenaName);
+        this.gameManager.joinGame(player, arenaName);
+        if (this.gameManager.isInGame(player)) {
+            this.gameManager.startGame(arenaName);
+        }
     }
 }

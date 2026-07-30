@@ -15,6 +15,7 @@ import dev.sebastianjnuwu.bedwars.api.model.Game;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.command.BWCommand;
+import dev.sebastianjnuwu.bedwars.command.SpawnCommand;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.libs.bstats.Metrics;
 import dev.sebastianjnuwu.bedwars.listener.ArenaListener;
@@ -109,6 +110,11 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         if (command != null) {
             command.setExecutor(bwCommand);
             command.setTabCompleter(bwCommand);
+        }
+
+        final var spawnCommand = this.getCommand("spawn");
+        if (spawnCommand != null) {
+            spawnCommand.setExecutor(new SpawnCommand(this.gameManager, this.configManager));
         }
 
     }
