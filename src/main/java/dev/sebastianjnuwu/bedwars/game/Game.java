@@ -394,6 +394,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.tick = 0;
         this.initGeneratorTicks();
         this.initForgeTicks();
+        this.startGameTick();
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prevState, GameState.PLAYING));
 
         this.restoreArenaSpawnBlock();
