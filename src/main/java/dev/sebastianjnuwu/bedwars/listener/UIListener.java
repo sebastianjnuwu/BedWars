@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
@@ -109,6 +110,18 @@ public class UIListener implements Listener {
             event.setCancelled(true);
             teamGui.onClick(event);
             return;
+        }
+
+        // Bloqueia interacao com slots de armadura durante lobby (WAITING/STARTING)
+        if (event.getView().getBottomInventory().equals(event.getClickedInventory())
+                && event.getSlot() >= 36 && event.getSlot() <= 39) {
+            if (this.gameManager.isInGame(player)) {
+                final Game game = (Game) this.gameManager.getPlayerGame(player);
+                if (game != null && game.getState() != GameState.PLAYING) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
         }
 
         // Clique no slot 8 (porta de saída no inventário do jogador)

@@ -14,12 +14,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
 
@@ -253,6 +255,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.setFoodLevel(20);
         player.getInventory().setItem(8, createExitDoorItem());
         player.getInventory().setItem(0, createTeamSelectorItem());
+        applyTeamArmor(player, team);
 
         for (final Player online : Bukkit.getOnlinePlayers()) {
             if (this == this.gameManager.getPlayerGame(online)) {
@@ -306,6 +309,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.teams.get(oldTeam).remove(player.getUniqueId());
         this.teams.get(newTeam).add(player.getUniqueId());
         gp.setTeam(newTeam);
+        applyTeamArmor(player, newTeam);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.switched_team", newTeam.getName()));
     }
 
@@ -1153,6 +1157,47 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         ));
         item.setItemMeta(meta);
         return item;
+    }
+
+    private static Color getArmorColor(final String dyeColor) {
+        if (dyeColor == null) {
+            return Color.WHITE;
+        }
+        return switch (dyeColor.toUpperCase()) {
+            case "RED", "VERMELHO" -> Color.fromRGB(255, 85, 85);
+            case "BLUE", "AZUL" -> Color.fromRGB(85, 85, 255);
+            case "GREEN", "VERDE" -> Color.fromRGB(85, 255, 85);
+            case "YELLOW", "AMARELO" -> Color.fromRGB(255, 255, 85);
+            case "PURPLE", "ROXO" -> Color.fromRGB(170, 85, 255);
+            case "PINK", "ROSA" -> Color.fromRGB(255, 170, 170);
+            case "ORANGE", "LARANJA" -> Color.fromRGB(255, 170, 85);
+            case "CYAN", "CIANO" -> Color.fromRGB(85, 255, 255);
+            case "LIME" -> Color.fromRGB(85, 255, 85);
+            case "LIGHT_BLUE", "AZUL_CLARO" -> Color.fromRGB(85, 170, 255);
+            case "GRAY", "CINZA" -> Color.fromRGB(170, 170, 170);
+            case "BLACK", "PRETO" -> Color.fromRGB(0, 0, 0);
+            default -> Color.WHITE;
+        };
+    }
+
+    private static ItemStack coloredLeather(final Material material, final Color color) {
+        final ItemStack item = new ItemStack(material);
+        final LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
+        meta.setColor(color);
+        meta.setUnbreakable(true);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private static void applyTeamArmor(final Player player, final ArenaTeam team) {
+        if (team == null || team.getColor() == null) {
+            return;
+        }
+        final Color color = getArmorColor(team.getColor());
+        player.getInventory().setHelmet(coloredLeather(Material.LEATHER_HELMET, color));
+        player.getInventory().setChestplate(coloredLeather(Material.LEATHER_CHESTPLATE, color));
+        player.getInventory().setLeggings(coloredLeather(Material.LEATHER_LEGGINGS, color));
+        player.getInventory().setBoots(coloredLeather(Material.LEATHER_BOOTS, color));
     }
 
     /**
