@@ -1,8 +1,9 @@
 package dev.sebastianjnuwu.bedwars.model;
 
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
+
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 
 /**
  * Representa um time dentro de uma arena de BedWars.

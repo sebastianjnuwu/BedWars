@@ -1,12 +1,12 @@
 package dev.sebastianjnuwu.bedwars.util;
 
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.logging.Logger;
+
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
 public class VersionChecker {
 
@@ -21,6 +21,7 @@ public class VersionChecker {
         this.logger = logger;
         this.lang = lang;
     }
+
     public void check() {
         this.logger.info(this.lang.raw("version_check.checking"));
 
@@ -76,7 +77,9 @@ public class VersionChecker {
         for (int i = 0; i < len; i++) {
             final int na = i < partsA.length ? parseInt(partsA[i]) : 0;
             final int nb = i < partsB.length ? parseInt(partsB[i]) : 0;
-            if (na != nb) return Integer.compare(na, nb);
+            if (na != nb) {
+                return Integer.compare(na, nb);
+            }
         }
         return 0;
     }
@@ -92,13 +95,21 @@ public class VersionChecker {
     private String parseVersion(final String json) {
         final String key = "\"version\"";
         final int start = json.indexOf(key);
-        if (start == -1) return null;
+        if (start == -1) {
+            return null;
+        }
         final int colon = json.indexOf(":", start + key.length());
-        if (colon == -1) return null;
+        if (colon == -1) {
+            return null;
+        }
         final int valueStart = json.indexOf("\"", colon + 1);
-        if (valueStart == -1) return null;
+        if (valueStart == -1) {
+            return null;
+        }
         final int valueEnd = json.indexOf("\"", valueStart + 1);
-        if (valueEnd == -1) return null;
+        if (valueEnd == -1) {
+            return null;
+        }
         return json.substring(valueStart + 1, valueEnd);
     }
 }

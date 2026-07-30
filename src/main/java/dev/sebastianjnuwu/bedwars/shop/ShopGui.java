@@ -1,13 +1,12 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
-import dev.sebastianjnuwu.bedwars.api.events.PlayerPurchaseEvent;
-import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
-import dev.sebastianjnuwu.bedwars.game.Game;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -18,7 +17,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
+import dev.sebastianjnuwu.bedwars.api.events.PlayerPurchaseEvent;
+import dev.sebastianjnuwu.bedwars.game.Game;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
 
 public class ShopGui implements InventoryHolder {
 
@@ -116,7 +121,9 @@ public class ShopGui implements InventoryHolder {
     private void renderCategoryList() {
         int slot = 0;
         for (ShopCategory cat : categories) {
-            if (slot >= CATEGORY_SLOTS) break;
+            if (slot >= CATEGORY_SLOTS) {
+                break;
+            }
             ItemStack icon = cat.createIconItem();
             inventory.setItem(slot, icon);
             slot++;
@@ -133,7 +140,9 @@ public class ShopGui implements InventoryHolder {
         // Show category navigation in top row
         int catSlot = 0;
         for (ShopCategory cat : categories) {
-            if (catSlot >= CATEGORY_SLOTS) break;
+            if (catSlot >= CATEGORY_SLOTS) {
+                break;
+            }
             ItemStack icon = cat.createIconItem();
             // Mark the current category as selected
             if (cat == currentCategory) {
@@ -158,7 +167,9 @@ public class ShopGui implements InventoryHolder {
         int itemIndex = 0;
         for (int i = 0; i < entries.size(); i++) {
             int page = i / ITEMS_PER_PAGE;
-            if (page != currentPage) continue;
+            if (page != currentPage) {
+                continue;
+            }
 
             Object entry = entries.get(i);
             if (entry instanceof ShopCategory cat) {
@@ -237,6 +248,8 @@ public class ShopGui implements InventoryHolder {
                             col = 0;
                             slotIndex = ITEMS_START + row * 9;
                             continue;
+                        default:
+                            break;
                     }
                 }
                 if (item.getPagebreak() != null) {
@@ -312,7 +325,9 @@ public class ShopGui implements InventoryHolder {
     public void handleClick(InventoryClickEvent event) {
         event.setCancelled(true);
         int slot = event.getRawSlot();
-        if (slot < 0 || slot >= 54) return;
+        if (slot < 0 || slot >= 54) {
+            return;
+        }
 
         // Back button
         if (slot == 49 && currentCategory != null) {
@@ -371,7 +386,9 @@ public class ShopGui implements InventoryHolder {
     }
 
     private void purchaseItem(ShopItem item) {
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         Material currencyMaterial = switch (item.getCurrency()) {
             case IRON -> Material.IRON_INGOT;

@@ -1,9 +1,9 @@
 package dev.sebastianjnuwu.bedwars.model;
 
+import java.util.UUID;
+
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 public class ArenaGenerator implements dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator {
 

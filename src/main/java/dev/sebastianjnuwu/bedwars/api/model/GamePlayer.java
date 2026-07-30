@@ -1,9 +1,5 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
 import java.util.UUID;
 
 /**

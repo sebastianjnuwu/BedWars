@@ -1,22 +1,24 @@
 package dev.sebastianjnuwu.bedwars.command.admin;
 
-import dev.sebastianjnuwu.bedwars.command.BaseCommand;
-import dev.sebastianjnuwu.bedwars.command.SubCommand;
-import dev.sebastianjnuwu.bedwars.command.admin.arena.LifecycleRouter;
-import dev.sebastianjnuwu.bedwars.command.admin.arena.SetLobbyCommand;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
+
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.command.BaseCommand;
+import dev.sebastianjnuwu.bedwars.command.SubCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.arena.LifecycleRouter;
+import dev.sebastianjnuwu.bedwars.command.admin.arena.SetLobbyCommand;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 /**
  * Comando administrativo do BedWars (<b>/bw admin</b>).

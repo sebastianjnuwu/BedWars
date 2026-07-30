@@ -11,6 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.WorldEdit;
@@ -28,7 +30,6 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
-import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Comando para salvar as alterações de uma arena.
@@ -142,7 +143,9 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                     arena.setPaste(pasteX, pasteY, pasteZ);
                     arena.setSchematicSize(w, h, l);
 
-                    org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.fawe_dimensions", name, String.valueOf(w), String.valueOf(h), String.valueOf(l), String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ)));
+                    org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.fawe_dimensions",
+                            name, String.valueOf(w), String.valueOf(h), String.valueOf(l),
+                            String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ)));
                 } catch (final IncompleteRegionException | NullPointerException e) {
                     sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.fawe_incomplete"));
                     return;
@@ -161,7 +164,11 @@ public class SaveCommand extends BaseCommand implements SubCommand {
 
             final File mapFile = new File(this.mapsFolder, name + ".schem");
             this.mapsFolder.mkdirs();
-            org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.saving_schematic", name, mapFile.getAbsolutePath(), String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ), String.valueOf(pasteX + w - 1), String.valueOf(pasteY + h - 1), String.valueOf(pasteZ + l - 1)));
+            org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.saving_schematic",
+                    name, mapFile.getAbsolutePath(),
+                    String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ),
+                    String.valueOf(pasteX + w - 1), String.valueOf(pasteY + h - 1),
+                    String.valueOf(pasteZ + l - 1)));
 
             try {
                 schematic.save(mapFile, world);

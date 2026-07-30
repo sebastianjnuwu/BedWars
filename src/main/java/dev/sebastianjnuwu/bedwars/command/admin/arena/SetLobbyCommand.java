@@ -6,6 +6,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
@@ -13,7 +15,6 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Comando para definir o lobby do servidor BedWars.

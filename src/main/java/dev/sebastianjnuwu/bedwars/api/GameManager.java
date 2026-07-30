@@ -1,12 +1,13 @@
 package dev.sebastianjnuwu.bedwars.api;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.Game;
+import java.util.List;
+
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.Game;
 
 public interface GameManager {
 

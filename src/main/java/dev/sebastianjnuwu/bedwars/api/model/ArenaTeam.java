@@ -1,6 +1,5 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 

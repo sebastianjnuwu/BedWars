@@ -1,8 +1,13 @@
 package dev.sebastianjnuwu.bedwars.world;
 
-import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import net.kyori.adventure.text.Component;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
@@ -11,13 +16,10 @@ import org.bukkit.generator.ChunkGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import net.kyori.adventure.text.Component;
+
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
 
 /**
  * Implementação simples de SlimeWorldManager usando cópia de diretórios de mundo.
@@ -25,6 +27,7 @@ import java.util.UUID;
  * <p>
  * Nota: Quando AdvancedSlimeWorldManager estiver disponível, essa classe pode ser
  * substituída por uma implementação que use SlimeWorld diretamente.
+ * </p>
  */
 @SuppressWarnings("deprecation")
 public class SimpleWorldManager implements
@@ -140,7 +143,7 @@ public class SimpleWorldManager implements
 
         // Teleporta jogadores para o lobby
         for (final Player player : world.getPlayers()) {
-            player.kick(Component.text(org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class).getLang().raw("kick.arena_reset")));
+            player.kick(Component.text(org.bukkit.plugin.java.JavaPlugin.getPlugin(BedWarsPlugin.class).getLang().raw("kick.arena_reset")));
         }
 
         return Bukkit.unloadWorld(world, true);
@@ -201,7 +204,9 @@ public class SimpleWorldManager implements
     }
 
     private void deleteFolder(@NotNull File path) {
-        if (!path.exists()) return;
+        if (!path.exists()) {
+            return;
+        }
 
         final File[] files = path.listFiles();
         if (files != null) {

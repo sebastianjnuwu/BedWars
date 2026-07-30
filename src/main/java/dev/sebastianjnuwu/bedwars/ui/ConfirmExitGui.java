@@ -1,8 +1,7 @@
 package dev.sebastianjnuwu.bedwars.ui;
 
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,7 +11,10 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.List;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
 public class ConfirmExitGui implements InventoryHolder {
 
@@ -67,7 +69,9 @@ public class ConfirmExitGui implements InventoryHolder {
 
     public boolean onClick(final InventoryClickEvent event) {
         final int slot = event.getRawSlot();
-        if (slot < 0 || slot >= this.inventory.getSize()) return false;
+        if (slot < 0 || slot >= this.inventory.getSize()) {
+            return false;
+        }
 
         switch (slot) {
             case 12 -> {
@@ -78,6 +82,8 @@ public class ConfirmExitGui implements InventoryHolder {
             case 14 -> {
                 this.player.closeInventory();
                 return true;
+            }
+            default -> {
             }
         }
         return false;

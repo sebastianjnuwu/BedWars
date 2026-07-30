@@ -1,11 +1,12 @@
 package dev.sebastianjnuwu.bedwars.api.events;
 
-import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
-import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
-import dev.sebastianjnuwu.bedwars.api.model.Game;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+
+import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
+import dev.sebastianjnuwu.bedwars.api.model.Game;
+import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 
 public class PlayerPurchaseEvent extends GameEvent {
 

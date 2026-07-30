@@ -1,15 +1,7 @@
 package dev.sebastianjnuwu.bedwars.command.admin.team;
 
-import dev.sebastianjnuwu.bedwars.command.BaseCommand;
-import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
+import java.io.File;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,7 +12,17 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.command.BaseCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
 
@@ -143,13 +145,19 @@ public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
     }
 
     private Location getBedFootLocation(final Block bedBlock) {
-        if (!(bedBlock.getBlockData() instanceof final Bed bed)) return bedBlock.getLocation();
-        if (bed.getPart() == Bed.Part.FOOT) return bedBlock.getLocation();
+        if (!(bedBlock.getBlockData() instanceof final Bed bed)) {
+            return bedBlock.getLocation();
+        }
+        if (bed.getPart() == Bed.Part.FOOT) {
+            return bedBlock.getLocation();
+        }
         return bedBlock.getRelative(bed.getFacing().getOppositeFace()).getLocation();
     }
 
     private Material getBedMaterial(final String dyeColor) {
-        if (dyeColor == null) return Material.WHITE_BED;
+        if (dyeColor == null) {
+            return Material.WHITE_BED;
+        }
         return switch (dyeColor.toUpperCase()) {
             case "BLUE", "AZUL" -> Material.BLUE_BED;
             case "RED", "VERMELHO" -> Material.RED_BED;
@@ -170,9 +178,15 @@ public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
 
     private BlockFace yawToFace(final float yaw) {
         final float dir = (yaw % 360 + 360) % 360;
-        if (dir < 45 || dir >= 315) return BlockFace.SOUTH;
-        if (dir < 135) return BlockFace.WEST;
-        if (dir < 225) return BlockFace.NORTH;
+        if (dir < 45 || dir >= 315) {
+            return BlockFace.SOUTH;
+        }
+        if (dir < 135) {
+            return BlockFace.WEST;
+        }
+        if (dir < 225) {
+            return BlockFace.NORTH;
+        }
         return BlockFace.EAST;
     }
 }

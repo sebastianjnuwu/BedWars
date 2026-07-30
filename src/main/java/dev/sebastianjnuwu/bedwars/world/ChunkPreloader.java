@@ -57,14 +57,14 @@ public class ChunkPreloader {
             @Override
             public void run() {
                 int loadedThisTick = 0;
-                
+
                 // Carregar chunks em espiral a partir do centro
                 for (int dx = -radius; dx <= radius && loadedThisTick < chunksPerTick; dx++) {
                     for (int dz = -radius; dz <= radius && loadedThisTick < chunksPerTick; dz++) {
                         if (dx * dx + dz * dz <= radius * radius) {
                             final int cx = centerX + dx;
                             final int cz = centerZ + dz;
-                            
+
                             if (!isChunkLoaded(cx, cz)) {
                                 world.getChunkAt(cx, cz);
                                 loadedChunks++;
@@ -73,7 +73,7 @@ public class ChunkPreloader {
                         }
                     }
                 }
-                
+
                 if (loadedChunks >= totalChunks) {
                     this.cancel();
                     onComplete.run();
@@ -88,7 +88,9 @@ public class ChunkPreloader {
     }
 
     public double getProgress() {
-        if (totalChunks == 0) return 1.0;
+        if (totalChunks == 0) {
+            return 1.0;
+        }
         return (double) loadedChunks / totalChunks;
     }
 

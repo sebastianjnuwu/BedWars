@@ -1,8 +1,9 @@
 package dev.sebastianjnuwu.bedwars.command.admin;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
 
 /**
  * Interface funcional para subcomandos de configuração de arena.

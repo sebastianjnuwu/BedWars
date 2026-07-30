@@ -1,27 +1,27 @@
 package dev.sebastianjnuwu.bedwars.arena;
 
-import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 import dev.sebastianjnuwu.bedwars.slime.TemplateLoader;
-import org.bukkit.Bukkit;
-import org.bukkit.Difficulty;
-import org.bukkit.GameRule;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Gerencia arenas usando SlimeWorld como sistema principal.
@@ -125,7 +125,6 @@ public class ArenaManager {
      * @return instância pronta ou null
      */
     public @Nullable ArenaInstance allocateInstance() {
-        // Tenta pegar uma instância pronta
         for (final ArenaInstance instance : instances.values()) {
             if (instance.getState() == ArenaState.READY) {
                 instance.setState(ArenaState.LOADING);
@@ -133,8 +132,6 @@ public class ArenaManager {
             }
         }
 
-        // Se não houver, tenta criar uma nova
-        // Nota: Isso é simplificado - em produção, use uma fila de espera
         return null;
     }
 
@@ -274,14 +271,12 @@ public class ArenaManager {
         final File mapFile = new File(mapsFolder, name + ".bwmap");
         mapFile.delete();
 
-        // Deleta template se existir
         if (slimeManager != null) {
             slimeManager.deleteInstance(name);
         } else {
             templateLoader.removeTemplate(name);
         }
 
-        // Deleta instâncias ativas
         if (slimeManager != null) {
             instances.values().stream()
                     .filter(i -> i.getTemplateName().equals(name))
@@ -347,7 +342,9 @@ public class ArenaManager {
         final Arena arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
         arena.setEnabled(config.getBoolean("enabled", false));
 
-        if (config.contains("lobby")) arena.setLobby(parseLocation(config.getString("lobby")));
+        if (config.contains("lobby")) {
+            arena.setLobby(parseLocation(config.getString("lobby")));
+        }
         if (config.contains("paste")) {
             final String[] parts = config.getString("paste").split(",");
             arena.setPaste(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
@@ -356,14 +353,24 @@ public class ArenaManager {
             final String[] parts = config.getString("schematic_size").split(",");
             arena.setSchematicSize(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
         }
-        if (config.contains("arena_spawn")) arena.setArenaSpawn(parseLocation(config.getString("arena_spawn")));
-        if (config.contains("spawn_block")) arena.setSpawnBlockData(config.getString("spawn_block"));
+        if (config.contains("arena_spawn")) {
+            arena.setArenaSpawn(parseLocation(config.getString("arena_spawn")));
+        }
+        if (config.contains("spawn_block")) {
+            arena.setSpawnBlockData(config.getString("spawn_block"));
+        }
         arena.setMinPlayers(config.getInt("min_players", 2));
         arena.setCountdown(config.getInt("countdown", 3));
 
-        if (config.contains("difficulty")) arena.setDifficulty(config.getString("difficulty"));
-        if (config.contains("time")) arena.setTime(config.getString("time"));
-        if (config.contains("weather")) arena.setWeather(config.getString("weather"));
+        if (config.contains("difficulty")) {
+            arena.setDifficulty(config.getString("difficulty"));
+        }
+        if (config.contains("time")) {
+            arena.setTime(config.getString("time"));
+        }
+        if (config.contains("weather")) {
+            arena.setWeather(config.getString("weather"));
+        }
         arena.setCycleDay(config.getBoolean("cycle_day", true));
         arena.setCycleWeather(config.getBoolean("cycle_weather", true));
         arena.setSpawnMobs(config.getBoolean("spawn_mobs", true));
@@ -373,10 +380,18 @@ public class ArenaManager {
             for (final String key : config.getConfigurationSection("teams").getKeys(false)) {
                 final String path = "teams." + key;
                 final ArenaTeam team = new dev.sebastianjnuwu.bedwars.model.ArenaTeam(key, config.getString(path + ".color"));
-                if (config.contains(path + ".spawn")) team.setSpawn(parseLocation(config.getString(path + ".spawn")));
-                if (config.contains(path + ".spawn_block")) team.setSpawnBlockData(config.getString(path + ".spawn_block"));
-                if (config.contains(path + ".bed")) team.setBed(parseLocation(config.getString(path + ".bed")));
-                if (config.contains(path + ".bed_facing")) team.setBedFacing(config.getString(path + ".bed_facing"));
+                if (config.contains(path + ".spawn")) {
+                    team.setSpawn(parseLocation(config.getString(path + ".spawn")));
+                }
+                if (config.contains(path + ".spawn_block")) {
+                    team.setSpawnBlockData(config.getString(path + ".spawn_block"));
+                }
+                if (config.contains(path + ".bed")) {
+                    team.setBed(parseLocation(config.getString(path + ".bed")));
+                }
+                if (config.contains(path + ".bed_facing")) {
+                    team.setBedFacing(config.getString(path + ".bed_facing"));
+                }
                 arena.addTeam(team);
             }
         }
@@ -389,11 +404,19 @@ public class ArenaManager {
                         config.getString(path + ".type"),
                         parseLocation(config.getString(path + ".location"))
                 );
-                if (config.contains(path + ".team")) gen.setTeam(config.getString(path + ".team"));
-                if (config.contains(path + ".origin_block")) gen.setOriginBlockData(config.getString(path + ".origin_block"));
-                if (config.contains(path + ".origin_block_above")) gen.setOriginBlockDataAbove(config.getString(path + ".origin_block_above"));
+                if (config.contains(path + ".team")) {
+                    gen.setTeam(config.getString(path + ".team"));
+                }
+                if (config.contains(path + ".origin_block")) {
+                    gen.setOriginBlockData(config.getString(path + ".origin_block"));
+                }
+                if (config.contains(path + ".origin_block_above")) {
+                    gen.setOriginBlockDataAbove(config.getString(path + ".origin_block_above"));
+                }
 
-                if (gen.getLocation() == null) continue;
+                if (gen.getLocation() == null) {
+                    continue;
+                }
 
                 if (gen.getType().equalsIgnoreCase("forge") && gen.getTeam() != null) {
                     final String dedupeKey = "forge:" + gen.getTeam().toLowerCase();
@@ -410,7 +433,9 @@ public class ArenaManager {
     }
 
     private String serializeLocation(@Nullable Location loc) {
-        if (loc == null) return null;
+        if (loc == null) {
+            return null;
+        }
         return loc.getWorld().getName()
                 + "," + loc.getBlockX()
                 + "," + loc.getBlockY()
@@ -420,13 +445,19 @@ public class ArenaManager {
     }
 
     private @Nullable Location parseLocation(@Nullable String str) {
-        if (str == null || str.isBlank()) return null;
+        if (str == null || str.isBlank()) {
+            return null;
+        }
 
         final String[] parts = str.split(",");
-        if (parts.length < 4) return null;
+        if (parts.length < 4) {
+            return null;
+        }
 
         final World world = Bukkit.getWorld(parts[0]);
-        if (world == null) return null;
+        if (world == null) {
+            return null;
+        }
 
         return new Location(
                 world,
@@ -439,6 +470,8 @@ public class ArenaManager {
     }
 
     private void setIfNotNull(YamlConfiguration config, String path, Object value) {
-        if (value != null) config.set(path, value);
+        if (value != null) {
+            config.set(path, value);
+        }
     }
 }

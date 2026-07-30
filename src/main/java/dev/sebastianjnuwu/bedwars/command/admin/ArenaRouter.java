@@ -1,5 +1,16 @@
 package dev.sebastianjnuwu.bedwars.command.admin;
 
+import java.io.File;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SetCountdownCommand;
@@ -9,26 +20,17 @@ import dev.sebastianjnuwu.bedwars.command.admin.config.SpawnCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.StatusCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.generator.GeneratorAddCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.generator.GeneratorRemoveCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.team.SetBedCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.team.TeamAddCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.team.TeamListCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.team.TeamRemoveCommand;
-import dev.sebastianjnuwu.bedwars.command.admin.team.SetBedCommand;
-import dev.sebastianjnuwu.bedwars.command.admin.team.SetSpawnCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.validator.ArenaEditorValidator;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Roteador de subcomandos para configuração de uma arena específica.
@@ -110,7 +112,9 @@ public class ArenaRouter extends BaseCommand implements SubCommand {
             return;
         }
         final Arena arena = this.validator.validate(player, args[1]);
-        if (arena == null) return;
+        if (arena == null) {
+            return;
+        }
 
         final ArenaSubCommand cmd = this.subcommands.get(args[2].toLowerCase());
         if (cmd == null) {

@@ -1,23 +1,25 @@
 package dev.sebastianjnuwu.bedwars.command;
 
-import dev.sebastianjnuwu.bedwars.command.admin.AdminCommand;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.command.admin.AdminCommand;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 /**
  * Comando principal do BedWars (<b>/bw</b>).
@@ -104,12 +106,22 @@ public class BWCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (args[0].toLowerCase()) {
-            case "admin" -> this.adminCommand.execute(sender, args);
-            case "join" -> this.joinCommand.execute(sender, args);
-            case "leave" -> this.leaveCommand.execute(sender);
-            case "start" -> this.startCommand.execute(sender, args);
-            default -> sender.sendMessage(
-                    this.lang.text(NamedTextColor.RED, "unknown_subcommand", args[0]));
+            case "admin":
+                this.adminCommand.execute(sender, args);
+                break;
+            case "join":
+                this.joinCommand.execute(sender, args);
+                break;
+            case "leave":
+                this.leaveCommand.execute(sender);
+                break;
+            case "start":
+                this.startCommand.execute(sender, args);
+                break;
+            default:
+                sender.sendMessage(
+                        this.lang.text(NamedTextColor.RED, "unknown_subcommand", args[0]));
+                break;
         }
         return true;
     }
@@ -161,8 +173,14 @@ public class BWCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 3 && args[0].equalsIgnoreCase("admin")) {
             final String sub = args[1].toLowerCase();
             switch (sub) {
-                case "delete", "save", "load", "edit" -> completions.addAll(this.arenaManager.getNames());
-                case "arena" -> completions.addAll(this.arenaManager.getNames());
+                case "delete", "save", "load", "edit":
+                    completions.addAll(this.arenaManager.getNames());
+                    break;
+                case "arena":
+                    completions.addAll(this.arenaManager.getNames());
+                    break;
+                default:
+                    break;
             }
         } else if (args.length == 4 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
             completions.addAll(List.of("spawn", "addteam", "removeteam", "setspawn", "setbed", "addgenerator", "teams", "status", "setminplayers", "setcountdown", "shop-npc"));

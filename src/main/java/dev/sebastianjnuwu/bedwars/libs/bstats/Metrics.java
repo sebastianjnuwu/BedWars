@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +26,9 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
+
 import javax.net.ssl.HttpsURLConnection;
+
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -63,7 +65,7 @@ public class Metrics {
       }
     }
     boolean enabled = config.getBoolean("enabled", true);
-    String serverUUID = config.getString("serverUuid");
+    String serverUuid = config.getString("serverUuid");
     boolean logErrors = config.getBoolean("logFailedRequests", false);
     boolean logSentData = config.getBoolean("logSentData", false);
     boolean logResponseStatusText = config.getBoolean("logResponseStatusText", false);
@@ -75,7 +77,7 @@ public class Metrics {
     metricsBase =
         new MetricsBase(
             "bukkit",
-            serverUUID,
+            serverUuid,
             serviceId,
             enabled,
             this::appendPlatformData,
@@ -250,7 +252,7 @@ public class Metrics {
       serviceJsonBuilder.appendField("id", serviceId);
       serviceJsonBuilder.appendField("customCharts", chartData);
       baseJsonBuilder.appendField("service", serviceJsonBuilder.build());
-      baseJsonBuilder.appendField("serverUUID", serverUuid);
+      baseJsonBuilder.appendField("serverUuid", serverUuid);
       baseJsonBuilder.appendField("metricsVersion", METRICS_VERSION);
       JsonObjectBuilder.JsonObject data = baseJsonBuilder.build();
       scheduler.execute(
@@ -270,7 +272,7 @@ public class Metrics {
         infoLogger.accept("Sent bStats metrics data: " + data.toString());
       }
       String url = String.format(REPORT_URL, platform);
-      HttpsURLConnection connection = (HttpsURLConnection) new java.net.URI(url).toURL().openConnection();
+      HttpsURLConnection connection = (HttpsURLConnection) new URI(url).toURL().openConnection();
       byte[] compressedData = compress(data.toString());
       connection.setRequestMethod("POST");
       connection.addRequestProperty("Accept", "application/json");

@@ -11,9 +11,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.Nullable;
+
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Gerencia sessões de edição de arenas.
@@ -98,7 +99,9 @@ public class EditorManager {
     public void endSession(final Player player) {
         final UUID uuid = player.getUniqueId();
         final String arena = this.playerArenas.remove(uuid);
-        if (arena == null) return;
+        if (arena == null) {
+            return;
+        }
 
         this.arenaEditors.remove(arena);
         this.cancelParticleTask(arena);
@@ -138,7 +141,9 @@ public class EditorManager {
 
     public @Nullable String getEditorName(final String arenaName) {
         final UUID uuid = this.arenaEditors.get(arenaName);
-        if (uuid == null) return null;
+        if (uuid == null) {
+            return null;
+        }
         final Player player = Bukkit.getPlayer(uuid);
         return player != null ? player.getName() : "desconhecido";
     }
@@ -163,7 +168,9 @@ public class EditorManager {
             final Player player    = Bukkit.getPlayer(uuid);
 
             if (player != null && player.isOnline()) {
-                if (lobby != null) player.teleport(lobby);
+                if (lobby != null) {
+                    player.teleport(lobby);
+                }
                 if (lang != null) {
                     player.sendMessage(lang.raw("edit.session_ended", arenaName));
                 }
@@ -171,14 +178,18 @@ public class EditorManager {
 
             if (arenaManager != null) {
                 final var arena = arenaManager.get(arenaName);
-                if (arena != null) arenaManager.save(arena);
+                if (arena != null) {
+                    arenaManager.save(arena);
+                }
             }
         }
 
         for (final org.bukkit.World world : Bukkit.getWorlds()) {
             if (world.getName().startsWith("bw_")) {
                 for (final Player p : world.getPlayers()) {
-                    if (lobby != null) p.teleport(lobby);
+                    if (lobby != null) {
+                        p.teleport(lobby);
+                    }
                 }
                 Bukkit.unloadWorld(world, false);
             }
@@ -191,7 +202,9 @@ public class EditorManager {
 
     private void cancelParticleTask(final String arenaName) {
         final BukkitTask task = this.particleTasks.remove(arenaName);
-        if (task != null) task.cancel();
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     private void save() {
@@ -213,7 +226,9 @@ public class EditorManager {
         }
         for (final String arena : this.config.getConfigurationSection("sessions").getKeys(false)) {
             final String uuidStr = this.config.getString("sessions." + arena);
-            if (uuidStr == null) continue;
+            if (uuidStr == null) {
+                continue;
+            }
             try {
                 final UUID   playerUuid   = UUID.fromString(uuidStr);
                 final Player onlinePlayer = Bukkit.getPlayer(playerUuid);

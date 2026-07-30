@@ -1,9 +1,9 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
+import java.util.UUID;
+
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 /**
  * Representa um gerador em uma arena de BedWars.

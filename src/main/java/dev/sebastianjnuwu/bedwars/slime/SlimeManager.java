@@ -1,25 +1,27 @@
 package dev.sebastianjnuwu.bedwars.slime;
 
-import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import com.infernalsuite.asp.api.AdvancedSlimePaperAPI;
-import com.infernalsuite.asp.api.world.SlimeWorld;
-import com.infernalsuite.asp.api.world.SlimeWorldInstance;
-import com.infernalsuite.asp.api.world.properties.SlimeProperties;
-import com.infernalsuite.asp.api.world.properties.SlimePropertyMap;
-import com.infernalsuite.asp.loaders.file.FileLoader;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import java.io.File;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import com.infernalsuite.asp.api.AdvancedSlimePaperAPI;
+import com.infernalsuite.asp.api.world.SlimeWorld;
+import com.infernalsuite.asp.api.world.SlimeWorldInstance;
+import com.infernalsuite.asp.api.world.properties.SlimeProperties;
+import com.infernalsuite.asp.api.world.properties.SlimePropertyMap;
+import com.infernalsuite.asp.loaders.file.FileLoader;
+
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
 
 /**
  * Gerencia mundos usando AdvancedSlimePaper/SlimeWorld como sistema principal.
@@ -319,6 +321,8 @@ public class SlimeManager {
                 case "SUNSET" -> world.setTime(12000);
                 case "NIGHT" -> world.setTime(13000);
                 case "MIDNIGHT" -> world.setTime(18000);
+                default -> {
+                }
             }
         }
 
@@ -335,6 +339,8 @@ public class SlimeManager {
                 case "THUNDER" -> {
                     world.setStorm(true);
                     world.setThundering(true);
+                }
+                default -> {
                 }
             }
         }

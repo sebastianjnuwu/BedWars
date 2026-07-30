@@ -1,10 +1,11 @@
 package dev.sebastianjnuwu.bedwars.api;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import java.util.Collection;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
 
 public interface ArenaManager {
 

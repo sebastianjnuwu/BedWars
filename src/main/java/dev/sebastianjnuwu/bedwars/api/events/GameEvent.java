@@ -1,10 +1,11 @@
 package dev.sebastianjnuwu.bedwars.api.events;
 
-import dev.sebastianjnuwu.bedwars.api.model.Game;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+
+import dev.sebastianjnuwu.bedwars.api.model.Game;
 
 /**
  * Classe base para todos os eventos de estado do jogo de BedWars.

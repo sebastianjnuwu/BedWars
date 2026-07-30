@@ -1,10 +1,10 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
 public class ShopCategory {
 
@@ -24,15 +24,37 @@ public class ShopCategory {
         this.items = new ArrayList<>();
     }
 
-    public String getName() { return name; }
-    public Material getIcon() { return icon; }
-    public String getDisplayName() { return displayName; }
-    public List<String> getLore() { return lore; }
-    public List<ShopCategory> getChildren() { return children; }
-    public List<ShopItem> getItems() { return items; }
+    public String getName() {
+        return name;
+    }
 
-    public void addChild(ShopCategory child) { children.add(child); }
-    public void addItem(ShopItem item) { items.add(item); }
+    public Material getIcon() {
+        return icon;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public List<String> getLore() {
+        return lore;
+    }
+
+    public List<ShopCategory> getChildren() {
+        return children;
+    }
+
+    public List<ShopItem> getItems() {
+        return items;
+    }
+
+    public void addChild(ShopCategory child) {
+        children.add(child);
+    }
+
+    public void addItem(ShopItem item) {
+        items.add(item);
+    }
 
     public ItemStack createIconItem() {
         Material mat = icon != null ? icon : Material.BARRIER;

@@ -1,16 +1,17 @@
 package dev.sebastianjnuwu.bedwars.session;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import java.util.Map;
+
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.Map;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 
 /**
  * Spawna partículas de poeira coloridas acima de cada ponto definido de uma arena
@@ -58,10 +59,14 @@ public class EditorParticleTask implements Runnable {
 
     @Override
     public void run() {
-        if (!this.editor.isOnline()) return;
+        if (!this.editor.isOnline()) {
+            return;
+        }
 
         final Arena arena = this.arenaManager.get(this.arenaName);
-        if (arena == null) return;
+        if (arena == null) {
+            return;
+        }
 
         // ── Arena spawn (green) ──────────────────────────────────────────
         spawnDust(arena.getArenaSpawn(), Color.GREEN);
@@ -88,9 +93,13 @@ public class EditorParticleTask implements Runnable {
     // ── helpers ─────────────────────────────────────────────────────────
 
     private void spawnDust(final Location loc, final Color color) {
-        if (loc == null) return;
+        if (loc == null) {
+            return;
+        }
         final World world = loc.getWorld();
-        if (world == null) return;
+        if (world == null) {
+            return;
+        }
 
         final Location center = loc.clone().add(0.5, PARTICLE_Y_OFFSET, 0.5);
         final Particle.DustOptions dust = new Particle.DustOptions(color, PARTICLE_SIZE);

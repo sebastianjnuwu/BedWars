@@ -1,13 +1,7 @@
 package dev.sebastianjnuwu.bedwars.ui;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.game.Game;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -17,7 +11,15 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.List;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.game.Game;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
 
 public class TeamSelectionGui implements InventoryHolder {
 
@@ -113,7 +115,9 @@ public class TeamSelectionGui implements InventoryHolder {
 
     public boolean onClick(final InventoryClickEvent event) {
         final int slot = event.getRawSlot();
-        if (slot < 0 || slot >= this.inventory.getSize()) return false;
+        if (slot < 0 || slot >= this.inventory.getSize()) {
+            return false;
+        }
 
         if (slot == 26) {
             this.player.closeInventory();

@@ -1,17 +1,19 @@
 package dev.sebastianjnuwu.bedwars.command.admin;
 
-import dev.sebastianjnuwu.bedwars.command.BaseCommand;
-import dev.sebastianjnuwu.bedwars.command.SubCommand;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
+import java.io.File;
+
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.command.BaseCommand;
+import dev.sebastianjnuwu.bedwars.command.SubCommand;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 /**
  * /bw admin reload

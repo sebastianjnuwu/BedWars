@@ -1,12 +1,13 @@
 package dev.sebastianjnuwu.bedwars.api.events;
 
-import dev.sebastianjnuwu.bedwars.game.Game;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.game.Game;
 
 /**
  * Disparado quando o berço de uma equipe é quebrado durante uma partida.

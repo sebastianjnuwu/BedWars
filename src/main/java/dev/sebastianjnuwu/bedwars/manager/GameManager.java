@@ -1,5 +1,17 @@
 package dev.sebastianjnuwu.bedwars.manager;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
+
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
@@ -7,16 +19,6 @@ import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Gerencia todas as partidas ativas de BedWars e o mapeamento de jogadores para partidas.
@@ -48,7 +50,9 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         return this.plugin;
     }
 
-    public ShopNpcManager getShopNpcManager() { return this.shopNpcManager; }
+    public ShopNpcManager getShopNpcManager() {
+        return this.shopNpcManager;
+    }
 
     public LangManager getLang() {
         return this.lang;
@@ -187,10 +191,16 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         Game game = this.games.get(arenaName);
         if (game == null) {
             final Arena arena = this.arenaManager.get(arenaName);
-            if (arena == null) return;
-            if (!this.arenaManager.ensureArenaReady(arena)) return;
+            if (arena == null) {
+                return;
+            }
+            if (!this.arenaManager.ensureArenaReady(arena)) {
+                return;
+            }
             final Arena refreshed = this.arenaManager.get(arenaName);
-            if (refreshed == null) return;
+            if (refreshed == null) {
+                return;
+            }
             game = new Game(this, refreshed, this.shopNpcManager);
             this.games.put(arenaName, game);
         }

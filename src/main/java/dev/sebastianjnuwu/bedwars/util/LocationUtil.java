@@ -1,11 +1,12 @@
 package dev.sebastianjnuwu.bedwars.util;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
 
 /**
  * Utilitários para teleporte seguro e resolução de posições de arena.

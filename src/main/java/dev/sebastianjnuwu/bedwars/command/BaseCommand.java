@@ -1,12 +1,12 @@
 package dev.sebastianjnuwu.bedwars.command;
 
+import java.io.File;
+
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-
-import java.io.File;
 
 /**
  * Classe base abstrata para todos os comandos do BedWars.

@@ -1,17 +1,17 @@
 package dev.sebastianjnuwu.bedwars.model;
 
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
-import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
-import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.bukkit.Location;
+import org.jetbrains.annotations.Nullable;
+
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
+import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 
 /**
  * Representa uma arena de BedWars. Contém todas as informações de configuração
@@ -303,26 +303,61 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.countdown = countdown;
     }
 
-    public @Nullable String getDifficulty() { return this.difficulty; }
-    public void setDifficulty(final @Nullable String difficulty) { this.difficulty = difficulty; }
+    public @Nullable String getDifficulty() {
+        return this.difficulty;
+    }
 
-    public @Nullable String getTime() { return this.time; }
-    public void setTime(final @Nullable String time) { this.time = time; }
+    public void setDifficulty(final @Nullable String difficulty) {
+        this.difficulty = difficulty;
+    }
 
-    public @Nullable String getWeather() { return this.weather; }
-    public void setWeather(final @Nullable String weather) { this.weather = weather; }
+    public @Nullable String getTime() {
+        return this.time;
+    }
 
-    public boolean isCycleDay() { return this.cycleDay; }
-    public void setCycleDay(final boolean cycleDay) { this.cycleDay = cycleDay; }
+    public void setTime(final @Nullable String time) {
+        this.time = time;
+    }
 
-    public boolean isCycleWeather() { return this.cycleWeather; }
-    public void setCycleWeather(final boolean cycleWeather) { this.cycleWeather = cycleWeather; }
+    public @Nullable String getWeather() {
+        return this.weather;
+    }
 
-    public boolean isSpawnMobs() { return this.spawnMobs; }
-    public void setSpawnMobs(final boolean spawnMobs) { this.spawnMobs = spawnMobs; }
+    public void setWeather(final @Nullable String weather) {
+        this.weather = weather;
+    }
 
-    public boolean isSpawnAnimals() { return this.spawnAnimals; }
-    public void setSpawnAnimals(final boolean spawnAnimals) { this.spawnAnimals = spawnAnimals; }
+    public boolean isCycleDay() {
+        return this.cycleDay;
+    }
+
+    public void setCycleDay(final boolean cycleDay) {
+        this.cycleDay = cycleDay;
+    }
+
+    public boolean isCycleWeather() {
+        return this.cycleWeather;
+    }
+
+    public void setCycleWeather(final boolean cycleWeather) {
+        this.cycleWeather = cycleWeather;
+    }
+
+    public boolean isSpawnMobs() {
+        return this.spawnMobs;
+    }
+
+    public void setSpawnMobs(final boolean spawnMobs) {
+        this.spawnMobs = spawnMobs;
+    }
+
+    public boolean isSpawnAnimals() {
+        return this.spawnAnimals;
+    }
+
+    public void setSpawnAnimals(final boolean spawnAnimals) {
+        this.spawnAnimals = spawnAnimals;
+    }
 
     /**
      * Retorna o BlockData original do bloco abaixo do spawn (antes de virar esmeralda).
@@ -342,45 +377,73 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.spawnBlockData = spawnBlockData;
     }
 
-    public @Nullable String getShop() { return shop; }
-    public void setShop(@Nullable String shop) { this.shop = shop; }
+    public @Nullable String getShop() {
+        return shop;
+    }
 
-    public Map<String, GeneratorConfig> getGeneratorConfigs() { return generatorConfigs; }
-    public void setGeneratorConfigs(Map<String, GeneratorConfig> configs) { this.generatorConfigs = configs; }
+    public void setShop(@Nullable String shop) {
+        this.shop = shop;
+    }
 
-    public int getForgeMaxLevel() { return forgeMaxLevel; }
-    public void setForgeMaxLevel(int maxLevel) { this.forgeMaxLevel = maxLevel; }
+    public Map<String, GeneratorConfig> getGeneratorConfigs() {
+        return generatorConfigs;
+    }
 
-    public List<ForgeLevel> getForgeLevels() { return forgeLevels; }
-    public void setForgeLevels(List<ForgeLevel> levels) { this.forgeLevels = levels; }
+    public void setGeneratorConfigs(Map<String, GeneratorConfig> configs) {
+        this.generatorConfigs = configs;
+    }
+
+    public int getForgeMaxLevel() {
+        return forgeMaxLevel;
+    }
+
+    public void setForgeMaxLevel(int maxLevel) {
+        this.forgeMaxLevel = maxLevel;
+    }
+
+    public List<ForgeLevel> getForgeLevels() {
+        return forgeLevels;
+    }
+
+    public void setForgeLevels(List<ForgeLevel> levels) {
+        this.forgeLevels = levels;
+    }
 
     /**
      * Retorna as localizações dos NPCs da loja desta arena.
      *
      * @return lista de localizações dos NPCs
      */
-    public List<Location> getShopNpcLocations() { return shopNpcLocations; }
+    public List<Location> getShopNpcLocations() {
+        return shopNpcLocations;
+    }
 
     /**
      * Define as localizações dos NPCs da loja desta arena.
      *
      * @param locations lista de localizações
      */
-    public void setShopNpcLocations(List<Location> locations) { this.shopNpcLocations = locations; }
+    public void setShopNpcLocations(List<Location> locations) {
+        this.shopNpcLocations = locations;
+    }
 
     /**
      * Retorna a skin configurada para os NPCs da loja.
      *
      * @return nome da skin ou null se não definida
      */
-    public @Nullable String getShopNpcSkin() { return shopNpcSkin; }
+    public @Nullable String getShopNpcSkin() {
+        return shopNpcSkin;
+    }
 
     /**
      * Define a skin dos NPCs da loja desta arena.
      *
      * @param skin nome da skin ou null para usar padrão
      */
-    public void setShopNpcSkin(@Nullable String skin) { this.shopNpcSkin = skin; }
+    public void setShopNpcSkin(@Nullable String skin) {
+        this.shopNpcSkin = skin;
+    }
 
     /**
      * Restaura o bloco original abaixo do spawn (remove a esmeralda).

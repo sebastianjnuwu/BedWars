@@ -1,16 +1,20 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
-import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
-import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
 public class ShopManager {
 
@@ -59,7 +63,9 @@ public class ShopManager {
 
     public List<ShopCategory> loadShop(String name) {
         List<ShopCategory> cached = shopCache.get(name);
-        if (cached != null) return cached;
+        if (cached != null) {
+            return cached;
+        }
 
         File file = new File(shopFolder, name + ".yml");
         if (!file.exists()) {
@@ -74,7 +80,9 @@ public class ShopManager {
         if (catsSection != null) {
             for (String key : catsSection.getKeys(false)) {
                 ConfigurationSection section = catsSection.getConfigurationSection(key);
-                if (section == null) continue;
+                if (section == null) {
+                    continue;
+                }
                 ShopCategory category = loadCategory(key, section);
                 if (category != null) {
                     categories.add(category);
@@ -88,7 +96,9 @@ public class ShopManager {
 
     public List<ShopCategory> getCategories(String shopName) {
         List<ShopCategory> cached = shopCache.get(shopName);
-        if (cached != null) return cached;
+        if (cached != null) {
+            return cached;
+        }
         return loadShop(shopName);
     }
 
@@ -185,6 +195,7 @@ public class ShopManager {
                         case "left" -> builder.column(0);
                         case "center" -> builder.column(4);
                         case "right" -> builder.column(8);
+                        default -> { }
                     }
                 } else {
                     builder.column(Integer.parseInt(col.toString()));
@@ -213,7 +224,9 @@ public class ShopManager {
     private void parseLongStack(Map<String, Object> stackMap, ShopItem.Builder builder) {
         if (stackMap.containsKey("type")) {
             Material mat = Material.matchMaterial(stackMap.get("type").toString());
-            if (mat != null) builder.material(mat);
+            if (mat != null) {
+                builder.material(mat);
+            }
         }
         if (stackMap.containsKey("amount")) {
             builder.amount(Integer.parseInt(stackMap.get("amount").toString()));
@@ -250,7 +263,9 @@ public class ShopManager {
         String[] parts = stack.split(";");
         if (parts.length > 0) {
             Material mat = Material.matchMaterial(parts[0].trim());
-            if (mat != null) builder.material(mat);
+            if (mat != null) {
+                builder.material(mat);
+            }
         }
         if (parts.length > 1) {
             builder.amount(Integer.parseInt(parts[1].trim()));
@@ -278,7 +293,9 @@ public class ShopManager {
     private ShopItem parseShortStack(String line) {
         try {
             String[] parts = line.split(" for ");
-            if (parts.length != 2) return null;
+            if (parts.length != 2) {
+                return null;
+            }
 
             ShopItem.Builder builder = new ShopItem.Builder();
             parseShortStackInternal(parts[0].trim(), builder);

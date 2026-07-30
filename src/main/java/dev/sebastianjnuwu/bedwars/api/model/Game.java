@@ -1,9 +1,9 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
+import java.util.Collection;
+
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
 
 public interface Game {
 

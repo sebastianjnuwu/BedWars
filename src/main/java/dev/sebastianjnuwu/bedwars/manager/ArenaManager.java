@@ -1,30 +1,5 @@
 package dev.sebastianjnuwu.bedwars.manager;
 
-import dev.sebastianjnuwu.bedwars.api.events.ArenaLoadEvent;
-import dev.sebastianjnuwu.bedwars.api.events.ArenaSaveEvent;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
-import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
-import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.world.Schematic;
-import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
-import dev.sebastianjnuwu.bedwars.world.WorldManager;
-import org.bukkit.Bukkit;
-import org.bukkit.Difficulty;
-import org.bukkit.GameRule;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-
-import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +10,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Difficulty;
+import org.bukkit.GameRule;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
+
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.events.ArenaLoadEvent;
+import dev.sebastianjnuwu.bedwars.api.events.ArenaSaveEvent;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
+import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.world.Schematic;
+import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
+import dev.sebastianjnuwu.bedwars.world.WorldManager;
 
 /**
  * Gerencia todas as arenas do servidor.
@@ -191,8 +191,10 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 case "NIGHT" -> world.setTime(13000);
                 case "MIDNIGHT" -> world.setTime(18000);
                 default -> {
-                    try { world.setTime(Long.parseLong(arena.getTime())); }
-                    catch (final NumberFormatException ignored) {}
+                    try {
+                        world.setTime(Long.parseLong(arena.getTime()));
+                    } catch (final NumberFormatException ignored) {
+                    }
                 }
             }
         }
@@ -209,6 +211,8 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 case "THUNDER" -> {
                     world.setStorm(true);
                     world.setThundering(true);
+                }
+                default -> {
                 }
             }
         }
@@ -312,7 +316,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     }
 
     private Material getTeamConcreteMaterial(final String dyeColor) {
-        if (dyeColor == null) return Material.WHITE_CONCRETE;
+        if (dyeColor == null) {
+            return Material.WHITE_CONCRETE;
+        }
         return switch (dyeColor.toUpperCase()) {
             case "RED", "VERMELHO"         -> Material.RED_CONCRETE;
             case "BLUE", "AZUL"            -> Material.BLUE_CONCRETE;
@@ -323,7 +329,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             case "ORANGE", "LARANJA"       -> Material.ORANGE_CONCRETE;
             case "CYAN", "CIANO"           -> Material.CYAN_CONCRETE;
             case "LIME", "VERDE_LIMA"      -> Material.LIME_CONCRETE;
-            case "LIGHT_BLUE", "AZUL_CLARO"-> Material.LIGHT_BLUE_CONCRETE;
+            case "LIGHT_BLUE", "AZUL_CLARO" -> Material.LIGHT_BLUE_CONCRETE;
             case "GRAY", "CINZA"           -> Material.GRAY_CONCRETE;
             case "BLACK", "PRETO"          -> Material.BLACK_CONCRETE;
             default                        -> Material.WHITE_CONCRETE;
@@ -377,29 +383,41 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         final YamlConfiguration config = new YamlConfiguration();
 
         config.set("enabled", arena.isEnabled());
-        if (arena.getLobby() != null)
+        if (arena.getLobby() != null) {
             config.set("lobby", this.serializeLocation(arena.getLobby()));
-        if (arena.getWorldName() != null)
+        }
+        if (arena.getWorldName() != null) {
             config.set("world", arena.getWorldName());
+        }
         config.set("paste", arena.getPasteX() + "," + arena.getPasteY() + "," + arena.getPasteZ());
         config.set("schematic_size",
                 arena.getSchematicWidth() + "," + arena.getSchematicHeight() + "," + arena.getSchematicLength());
-        if (arena.getArenaSpawn() != null)
+        if (arena.getArenaSpawn() != null) {
             config.set("arena_spawn", this.serializeLocation(arena.getArenaSpawn()));
-        if (arena.getSpawnBlockData() != null)
+        }
+        if (arena.getSpawnBlockData() != null) {
             config.set("spawn_block", arena.getSpawnBlockData());
+        }
         config.set("min_players", arena.getMinPlayers());
         config.set("countdown", arena.getCountdown());
 
-        if (arena.getDifficulty() != null) config.set("difficulty", arena.getDifficulty());
-        if (arena.getTime() != null) config.set("time", arena.getTime());
-        if (arena.getWeather() != null) config.set("weather", arena.getWeather());
+        if (arena.getDifficulty() != null) {
+            config.set("difficulty", arena.getDifficulty());
+        }
+        if (arena.getTime() != null) {
+            config.set("time", arena.getTime());
+        }
+        if (arena.getWeather() != null) {
+            config.set("weather", arena.getWeather());
+        }
         config.set("cycle_day", arena.isCycleDay());
         config.set("cycle_weather", arena.isCycleWeather());
         config.set("spawn_mobs", arena.isSpawnMobs());
         config.set("spawn_animals", arena.isSpawnAnimals());
 
-        if (arena.getShop() != null) config.set("shop", arena.getShop());
+        if (arena.getShop() != null) {
+            config.set("shop", arena.getShop());
+        }
 
         // Shop NPCs
         List<Location> npcLocs = arena.getShopNpcLocations();
@@ -433,14 +451,18 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         for (final ArenaTeam team : arena.getTeams()) {
             final String path = "teams." + team.getName();
             config.set(path + ".color", team.getColor());
-            if (team.getSpawn() != null)
+            if (team.getSpawn() != null) {
                 config.set(path + ".spawn", this.serializeLocation(team.getSpawn()));
-            if (team.getSpawnBlockData() != null)
+            }
+            if (team.getSpawnBlockData() != null) {
                 config.set(path + ".spawn_block", team.getSpawnBlockData());
-            if (team.getBed() != null)
+            }
+            if (team.getBed() != null) {
                 config.set(path + ".bed", this.serializeLocation(team.getBed()));
-            if (team.getBedFacing() != null)
+            }
+            if (team.getBedFacing() != null) {
                 config.set(path + ".bed_facing", team.getBedFacing());
+            }
         }
 
         // Generators — usa UUID como chave, ignora location null
@@ -451,12 +473,15 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             final String path = "generators." + gen.getUniqueId().toString();
             config.set(path + ".type", gen.getType());
             config.set(path + ".location", this.serializeLocation(gen.getLocation()));
-            if (gen.getTeam() != null)
+            if (gen.getTeam() != null) {
                 config.set(path + ".team", gen.getTeam());
-            if (gen.getOriginBlockData() != null)
+            }
+            if (gen.getOriginBlockData() != null) {
                 config.set(path + ".origin_block", gen.getOriginBlockData());
-            if (gen.getOriginBlockDataAbove() != null)
+            }
+            if (gen.getOriginBlockDataAbove() != null) {
                 config.set(path + ".origin_block_above", gen.getOriginBlockDataAbove());
+            }
         }
 
         // Evento pré-save
@@ -535,7 +560,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     }
 
     private void deleteDirectory(final File path) {
-        if (!path.exists()) return;
+        if (!path.exists()) {
+            return;
+        }
         final File[] files = path.listFiles();
         if (files != null) {
             for (final File file : files) {
@@ -601,9 +628,15 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
         arena.setMinPlayers(config.getInt("min_players", 2));
         arena.setCountdown(config.getInt("countdown", 3));
-        if (config.contains("difficulty")) arena.setDifficulty(config.getString("difficulty"));
-        if (config.contains("time")) arena.setTime(config.getString("time"));
-        if (config.contains("weather")) arena.setWeather(config.getString("weather"));
+        if (config.contains("difficulty")) {
+            arena.setDifficulty(config.getString("difficulty"));
+        }
+        if (config.contains("time")) {
+            arena.setTime(config.getString("time"));
+        }
+        if (config.contains("weather")) {
+            arena.setWeather(config.getString("weather"));
+        }
         arena.setCycleDay(config.getBoolean("cycle_day", true));
         arena.setCycleWeather(config.getBoolean("cycle_weather", true));
         arena.setSpawnMobs(config.getBoolean("spawn_mobs", true));
@@ -636,7 +669,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                     continue;
                 }
                 final String type = config.getString(path + ".type");
-                if (type == null) continue;
+                if (type == null) {
+                    continue;
+                }
 
                 // Determine UUID: use the YAML key if valid UUID, otherwise generate new
                 UUID genUuid;
@@ -669,14 +704,22 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             ConfigurationSection npcSection = config.getConfigurationSection("shop_npcs");
             if (npcSection != null) {
                 for (String key : npcSection.getKeys(false)) {
-                    if (key.equals("skin")) continue;
+                    if (key.equals("skin")) {
+                        continue;
+                    }
                     Location loc = this.parseLocation(config.getString("shop_npcs." + key + ".location"));
-                    if (loc != null) npcLocs.add(loc);
+                    if (loc != null) {
+                        npcLocs.add(loc);
+                    }
                 }
             }
-            if (!npcLocs.isEmpty()) arena.setShopNpcLocations(npcLocs);
+            if (!npcLocs.isEmpty()) {
+                arena.setShopNpcLocations(npcLocs);
+            }
             String skin = config.getString("shop_npcs.skin");
-            if (skin != null) arena.setShopNpcSkin(skin);
+            if (skin != null) {
+                arena.setShopNpcSkin(skin);
+            }
         }
 
         if (config.contains("generator_config")) {
@@ -721,7 +764,8 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                         if (!intervals.isEmpty()) {
                             levels.add(new ForgeLevel(level, intervals));
                         }
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
             if (!levels.isEmpty()) {

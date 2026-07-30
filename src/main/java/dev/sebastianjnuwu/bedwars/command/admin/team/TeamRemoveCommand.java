@@ -1,5 +1,15 @@
 package dev.sebastianjnuwu.bedwars.command.admin.team;
 
+import java.io.File;
+
+import org.bukkit.Location;
+import org.bukkit.block.data.type.Bed;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
@@ -9,14 +19,6 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Location;
-import org.bukkit.block.data.type.Bed;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
 
 /** Removes a configured team and its placed bed from an arena being edited. */
 public class TeamRemoveCommand extends BaseCommand implements ArenaSubCommand {
@@ -55,7 +57,9 @@ public class TeamRemoveCommand extends BaseCommand implements ArenaSubCommand {
 
     private void removeBed(final ArenaTeam team) {
         final Location head = team.getBed();
-        if (head == null || !(head.getBlock().getBlockData() instanceof Bed bed)) return;
+        if (head == null || !(head.getBlock().getBlockData() instanceof Bed bed)) {
+            return;
+        }
 
         head.getBlock().setType(org.bukkit.Material.AIR, false);
         final Location foot = head.clone().subtract(bed.getFacing().getDirection());

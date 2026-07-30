@@ -1,11 +1,12 @@
 package dev.sebastianjnuwu.bedwars.api.events;
 
-import dev.sebastianjnuwu.bedwars.game.Game;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.game.Game;
 
 /**
  * Disparado quando um jogo de BedWars termina, seja por uma equipe vencendo

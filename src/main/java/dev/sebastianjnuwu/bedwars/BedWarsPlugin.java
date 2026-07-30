@@ -16,6 +16,7 @@ import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.command.BWCommand;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.libs.bstats.Metrics;
 import dev.sebastianjnuwu.bedwars.listener.ArenaListener;
 import dev.sebastianjnuwu.bedwars.listener.GameListener;
 import dev.sebastianjnuwu.bedwars.listener.UIListener;
@@ -27,7 +28,6 @@ import dev.sebastianjnuwu.bedwars.shop.ShopListener;
 import dev.sebastianjnuwu.bedwars.shop.ShopManager;
 import dev.sebastianjnuwu.bedwars.util.VersionChecker;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
-import dev.sebastianjnuwu.bedwars.libs.bstats.Metrics;
 
 public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
@@ -87,7 +87,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.getServer().getPluginManager().registerEvents(new UIListener(this.arenaManager, this.gameManager), this);
         this.getServer().getPluginManager().registerEvents(new ShopListener(), this);
 
-        // Register FancyNPCs listener if available
         try {
             Class.forName("de.oliver.fancynpcs.api.events.NpcInteractEvent");
             this.getServer().getPluginManager().registerEvents(

@@ -1,18 +1,7 @@
 package dev.sebastianjnuwu.bedwars.listener;
 
-import dev.sebastianjnuwu.bedwars.api.model.Game;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.api.events.GamePlayerDamageByPlayerEvent;
-import dev.sebastianjnuwu.bedwars.api.events.GamePlayerKillEvent;
-import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStatChangeEvent;
-import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStreakEvent;
-import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
-import dev.sebastianjnuwu.bedwars.api.model.StatType;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.Title;
+import java.time.Duration;
+
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -33,7 +22,20 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
-import java.time.Duration;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
+
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerDamageByPlayerEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerKillEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStatChangeEvent;
+import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStreakEvent;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.model.Game;
+import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
+import dev.sebastianjnuwu.bedwars.api.model.StatType;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
 
 /**
  * Listener responsável pela lógica principal da partida de BedWars.
@@ -74,7 +76,9 @@ public class GameListener implements Listener {
     public void onPlayerDeath(final PlayerDeathEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         event.deathMessage(null);
         event.getDrops().clear();
@@ -115,10 +119,14 @@ public class GameListener implements Listener {
     public void onPlayerRespawn(final PlayerRespawnEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         final ArenaTeam team = game.getPlayerTeam(player);
-        if (team == null) return;
+        if (team == null) {
+            return;
+        }
 
         if (game.isBedless(team)) {
             event.setRespawnLocation(player.getWorld().getSpawnLocation());
@@ -145,10 +153,16 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onVoidDamage(final EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof final Player player)) return;
-        if (event.getCause() != EntityDamageEvent.DamageCause.VOID) return;
+        if (!(event.getEntity() instanceof final Player player)) {
+            return;
+        }
+        if (event.getCause() != EntityDamageEvent.DamageCause.VOID) {
+            return;
+        }
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         event.setCancelled(true);
         player.setHealth(0);
@@ -169,7 +183,9 @@ public class GameListener implements Listener {
     public void onBlockBreak(final BlockBreakEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         // Spectators e jogadores mortos não podem quebrar blocos
         if (!game.isPlaying(player)) {
@@ -178,7 +194,9 @@ public class GameListener implements Listener {
         }
 
         final Block block = event.getBlock();
-        if (!(block.getBlockData() instanceof final Bed bedData)) return;
+        if (!(block.getBlockData() instanceof final Bed bedData)) {
+            return;
+        }
 
         // Normalise to the foot block so we always compare against team.getBed()
         // The HEAD part has its type=HEAD; we need to find the foot location.
@@ -195,8 +213,12 @@ public class GameListener implements Listener {
 
         for (final ArenaTeam team : game.getArena().getTeams()) {
             final Location bedLoc = team.getBed();
-            if (bedLoc == null) continue;
-            if (!this.isSameBlock(bedLoc, footLoc)) continue;
+            if (bedLoc == null) {
+                continue;
+            }
+            if (!this.isSameBlock(bedLoc, footLoc)) {
+                continue;
+            }
 
             // Foot matched — check if the breaker is on this team
             final ArenaTeam playerTeam = game.getPlayerTeam(player);
@@ -224,12 +246,18 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onPlayerInteract(final PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
         final Block block = event.getClickedBlock();
-        if (block == null || !(block.getBlockData() instanceof Bed)) return;
+        if (block == null || !(block.getBlockData() instanceof Bed)) {
+            return;
+        }
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
         event.setCancelled(true);
     }
 
@@ -253,7 +281,9 @@ public class GameListener implements Listener {
         );
         for (final Player p : Bukkit.getOnlinePlayers()) {
             final ArenaTeam pTeam = game.getPlayerTeam(p);
-            if (pTeam == null) continue;
+            if (pTeam == null) {
+                continue;
+            }
             p.sendMessage(msg);
             if (pTeam.getName().equals(team.getName())) {
                 p.showTitle(title);
@@ -268,11 +298,17 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onEntityDamageByEntity(final EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof final Player victim)) return;
-        if (!(event.getDamager() instanceof final Player attacker)) return;
+        if (!(event.getEntity() instanceof final Player victim)) {
+            return;
+        }
+        if (!(event.getDamager() instanceof final Player attacker)) {
+            return;
+        }
 
         final Game game = this.gameManager.getPlayerGame(victim);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         // S permite PvP durante a partida (state PLAYING)
         if (game.getState() != dev.sebastianjnuwu.bedwars.api.model.GameState.PLAYING) {
@@ -312,10 +348,14 @@ public class GameListener implements Listener {
     public void onPlayerCommand(final PlayerCommandPreprocessEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         final String cmd = event.getMessage().toLowerCase();
-        if (cmd.startsWith("/bw") || cmd.startsWith("/bedwars")) return;
+        if (cmd.startsWith("/bw") || cmd.startsWith("/bedwars")) {
+            return;
+        }
 
         event.setCancelled(true);
         player.sendMessage(this.lang.text(NamedTextColor.RED, "game.commands_blocked"));
@@ -329,7 +369,9 @@ public class GameListener implements Listener {
     public void onPlayerDropItem(final PlayerDropItemEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
         event.setCancelled(true);
     }
 
@@ -342,7 +384,9 @@ public class GameListener implements Listener {
     public void onPlayerPickupItem(final org.bukkit.event.player.PlayerPickupItemEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
         if (!game.isPlaying(player)) {
             event.setCancelled(true);
         }
@@ -356,7 +400,9 @@ public class GameListener implements Listener {
     public void onBlockPlace(final BlockPlaceEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
         if (!game.isPlaying(player)) {
             event.setCancelled(true);
         }

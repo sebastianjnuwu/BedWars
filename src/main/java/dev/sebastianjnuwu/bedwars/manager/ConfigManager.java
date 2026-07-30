@@ -121,7 +121,9 @@ public class ConfigManager {
     }
 
     public void saveSpawn() {
-        if (this.spawnConfig == null) return;
+        if (this.spawnConfig == null) {
+            return;
+        }
         try {
             this.spawnConfig.save(this.spawnFile);
         } catch (final IOException e) {

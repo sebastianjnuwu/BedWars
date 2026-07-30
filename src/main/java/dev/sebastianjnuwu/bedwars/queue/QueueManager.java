@@ -1,15 +1,17 @@
 package dev.sebastianjnuwu.bedwars.queue;
 
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
 /**
  * Gerencia filas de entrada para arenas.

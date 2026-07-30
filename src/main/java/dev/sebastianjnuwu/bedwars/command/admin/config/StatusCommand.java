@@ -1,23 +1,23 @@
 package dev.sebastianjnuwu.bedwars.command.admin.config;
 
+import java.io.File;
+import java.util.List;
+
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
+
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.Material;
-import org.jetbrains.annotations.NotNull;
-
-import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
-import java.io.File;
-import java.util.List;
-import java.util.Map;
 
 public class StatusCommand extends BaseCommand implements ArenaSubCommand {
 

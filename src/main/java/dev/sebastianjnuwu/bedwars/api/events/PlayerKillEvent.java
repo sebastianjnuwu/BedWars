@@ -1,10 +1,11 @@
 package dev.sebastianjnuwu.bedwars.api.events;
 
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.game.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.game.Game;
 
 /**
  * Disparado quando um jogador é assassinado em um jogo de BedWars.

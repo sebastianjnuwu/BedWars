@@ -1,12 +1,13 @@
 package dev.sebastianjnuwu.bedwars.slime;
 
-import com.infernalsuite.asp.api.world.SlimeWorld;
-import com.infernalsuite.asp.api.world.SlimeWorldInstance;
+import java.util.concurrent.CompletableFuture;
+
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.concurrent.CompletableFuture;
+import com.infernalsuite.asp.api.world.SlimeWorld;
+import com.infernalsuite.asp.api.world.SlimeWorldInstance;
 
 /**
  * Representa uma instância de SlimeWorld carregada no servidor.

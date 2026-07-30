@@ -1,10 +1,10 @@
 package dev.sebastianjnuwu.bedwars.world;
 
+import java.io.IOException;
+
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
 
 /**
  * Gerencia templates e instâncias de mundos usando SlimeWorld.

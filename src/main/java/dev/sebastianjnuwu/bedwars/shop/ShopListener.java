@@ -10,7 +10,9 @@ public class ShopListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
         if (event.getInventory().getHolder() instanceof ShopGui shopGui) {
             shopGui.handleClick(event);
         }
@@ -18,7 +20,9 @@ public class ShopListener implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) return;
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
         if (event.getInventory().getHolder() instanceof ShopGui) {
             ShopGui.removeOpenGui(player);
         }

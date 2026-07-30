@@ -1,11 +1,5 @@
 package dev.sebastianjnuwu.bedwars.world;
 
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -15,7 +9,12 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
+
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class WorldManager {
 
@@ -101,7 +100,9 @@ public class WorldManager {
 
     public boolean unloadWorld(final String name) {
         final World world = Bukkit.getWorld(name);
-        if (world == null) return false;
+        if (world == null) {
+            return false;
+        }
 
         for (final Player p : world.getPlayers()) {
             p.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
@@ -116,7 +117,9 @@ public class WorldManager {
     }
 
     private void deleteWorldFile(final File path) {
-        if (!path.exists()) return;
+        if (!path.exists()) {
+            return;
+        }
         final File[] files = path.listFiles();
         if (files != null) {
             for (final File file : files) {
@@ -131,7 +134,9 @@ public class WorldManager {
     }
 
     private void copyWorld(final File source, final File target) throws IOException {
-        if (IGNORED_FILES.contains(source.getName())) return;
+        if (IGNORED_FILES.contains(source.getName())) {
+            return;
+        }
 
         if (source.isDirectory()) {
             if (!target.exists() && !target.mkdirs()) {

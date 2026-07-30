@@ -1,10 +1,11 @@
 package dev.sebastianjnuwu.bedwars.api.events;
 
-import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
-import dev.sebastianjnuwu.bedwars.api.model.StatType;
-import dev.sebastianjnuwu.bedwars.api.model.Game;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+
+import dev.sebastianjnuwu.bedwars.api.model.Game;
+import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
+import dev.sebastianjnuwu.bedwars.api.model.StatType;
 
 public class GamePlayerStatChangeEvent extends GameEvent {
 

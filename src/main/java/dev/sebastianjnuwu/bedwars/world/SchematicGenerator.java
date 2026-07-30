@@ -4,11 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
+
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
@@ -17,11 +21,6 @@ import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.session.ClipboardHolder;
-
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.NotNull;
 
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 
@@ -74,7 +73,7 @@ public class SchematicGenerator {
                         .to(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()))
                         .ignoreAirBlocks(false)
                         .build();
-                
+
                 // Executar a operação (FAWE já é rápido o suficiente)
                 Operations.complete(operation);
             } catch (WorldEditException e) {

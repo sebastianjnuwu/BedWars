@@ -1,5 +1,16 @@
 package dev.sebastianjnuwu.bedwars.listener;
 
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
@@ -7,19 +18,6 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.ui.ConfirmExitGui;
 import dev.sebastianjnuwu.bedwars.ui.TeamSelectionGui;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.type.Door;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 
 public class UIListener implements Listener {
 
@@ -33,7 +31,9 @@ public class UIListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(final PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
+            return;
+        }
 
         final Block block = event.getClickedBlock();
         final Player player = event.getPlayer();
@@ -43,11 +43,15 @@ public class UIListener implements Listener {
 
         if (this.gameManager.isInGame(player)) {
             final ItemStack hand = player.getInventory().getItemInMainHand();
-            if (hand == null) return;
+            if (hand == null) {
+                return;
+            }
 
             if (hand.getType() == Material.COMPASS) {
                 final Game game = (Game) this.gameManager.getPlayerGame(player);
-                if (game == null) return;
+                if (game == null) {
+                    return;
+                }
                 final var arena = game.getArena();
                 final TeamSelectionGui gui = new TeamSelectionGui(player, arena, lang, this.gameManager);
                 gui.open();
@@ -73,7 +77,9 @@ public class UIListener implements Listener {
             }
 
             final String worldName = player.getWorld().getName();
-            if (!worldName.startsWith("bw_")) return;
+            if (!worldName.startsWith("bw_")) {
+                return;
+            }
 
             final String arenaName = worldName.substring(3);
             final dev.sebastianjnuwu.bedwars.api.model.Arena arena = this.arenaManager.get(arenaName);
@@ -87,7 +93,9 @@ public class UIListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(final InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof final Player player)) return;
+        if (!(event.getWhoClicked() instanceof final Player player)) {
+            return;
+        }
 
         // Delega para o GUI de confirmação de saída
         if (event.getView().getTopInventory().getHolder() instanceof final ConfirmExitGui confirmGui) {
@@ -108,7 +116,7 @@ public class UIListener implements Listener {
             if (event.getInventory().getType() == InventoryType.PLAYER) {
                 final ItemStack clickedItem = event.getCurrentItem();
                 if (clickedItem != null && clickedItem.getType() == Material.IRON_DOOR) {
-        final BedWarsPlugin plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(BedWarsPlugin.class);
+                    final BedWarsPlugin plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(BedWarsPlugin.class);
                     final LangManager lang = plugin.getLang();
 
                     if (this.gameManager.isInGame(player)) {

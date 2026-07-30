@@ -1,11 +1,12 @@
 package dev.sebastianjnuwu.bedwars.arena;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import java.util.UUID;
+
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
 
 /**
  * Representa uma instância runtime de uma arena.

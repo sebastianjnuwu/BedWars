@@ -4,15 +4,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.jetbrains.annotations.NotNull;
+
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
-import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operation;
@@ -20,10 +24,6 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.session.ClipboardHolder;
-
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Representa um schematic usando FAWE/WorldEdit para colagem rápida.
@@ -100,7 +100,7 @@ public class Schematic {
                         .to(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()))
                         .ignoreAirBlocks(false)
                         .build();
-                
+
                 Operations.complete(operation);
             }
         }
@@ -159,12 +159,12 @@ public class Schematic {
         if (!file.exists()) {
             throw new IOException("Arquivo de mapa não encontrado: " + file.getName());
         }
-        
+
         ClipboardFormat format = ClipboardFormats.findByFile(file);
         if (format == null) {
             throw new IOException("Formato de schematic inválido: " + file.getName());
         }
-        
+
         try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
             Clipboard clipboard = reader.read();
             BlockVector3 min = clipboard.getMinimumPoint();

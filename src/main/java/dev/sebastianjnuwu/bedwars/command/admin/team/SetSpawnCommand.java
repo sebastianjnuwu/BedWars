@@ -1,22 +1,24 @@
 package dev.sebastianjnuwu.bedwars.command.admin.team;
 
-import dev.sebastianjnuwu.bedwars.command.BaseCommand;
-import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.format.NamedTextColor;
+import java.io.File;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.command.BaseCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
+import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
 
@@ -70,7 +72,9 @@ public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
      * Terracota é visualmente distinta e improvável de aparecer naturalmente em mapas de BedWars.
      */
     public static Material getSpawnMarkerMaterial(final String dyeColor) {
-        if (dyeColor == null) return Material.TERRACOTTA;
+        if (dyeColor == null) {
+            return Material.TERRACOTTA;
+        }
         return switch (dyeColor.toUpperCase()) {
             case "RED", "VERMELHO"         -> Material.RED_TERRACOTTA;
             case "BLUE", "AZUL"            -> Material.BLUE_TERRACOTTA;
@@ -81,7 +85,7 @@ public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
             case "ORANGE", "LARANJA"       -> Material.ORANGE_TERRACOTTA;
             case "CYAN", "CIANO"           -> Material.CYAN_TERRACOTTA;
             case "LIME", "VERDE_LIMA"      -> Material.LIME_TERRACOTTA;
-            case "LIGHT_BLUE", "AZUL_CLARO"-> Material.LIGHT_BLUE_TERRACOTTA;
+            case "LIGHT_BLUE", "AZUL_CLARO" -> Material.LIGHT_BLUE_TERRACOTTA;
             case "GRAY", "CINZA"           -> Material.GRAY_TERRACOTTA;
             case "BLACK", "PRETO"          -> Material.BLACK_TERRACOTTA;
             default                        -> Material.TERRACOTTA;
@@ -89,7 +93,9 @@ public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
     }
 
     public static Material getWoolMaterial(final String dyeColor) {
-        if (dyeColor == null) return Material.WHITE_WOOL;
+        if (dyeColor == null) {
+            return Material.WHITE_WOOL;
+        }
         return switch (dyeColor.toUpperCase()) {
             case "RED", "VERMELHO" -> Material.RED_WOOL;
             case "BLUE", "AZUL" -> Material.BLUE_WOOL;

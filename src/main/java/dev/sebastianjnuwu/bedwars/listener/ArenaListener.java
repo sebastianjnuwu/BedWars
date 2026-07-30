@@ -17,8 +17,9 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.Nullable;
+
+import net.kyori.adventure.text.format.NamedTextColor;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
@@ -27,8 +28,6 @@ import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Listener responsável por proteger arenas durante o modo edição e fora de partidas.
@@ -128,20 +127,34 @@ public class ArenaListener implements Listener {
             return;
         }
         final Arena arena = this.getArena(player);
-        if (arena == null) return;
-        if (!this.editorManager.isEditing(player, arena.getName())) return;
+        if (arena == null) {
+            return;
+        }
+        if (!this.editorManager.isEditing(player, arena.getName())) {
+            return;
+        }
 
         final Block block = event.getBlock();
-        if (this.tryRestoreArenaSpawn(arena, block, event)) return;
-        if (this.tryRestoreTeamSpawn(arena, block, event)) return;
-        if (this.tryRestoreBed(arena, block, event)) return;
+        if (this.tryRestoreArenaSpawn(arena, block, event)) {
+            return;
+        }
+        if (this.tryRestoreTeamSpawn(arena, block, event)) {
+            return;
+        }
+        if (this.tryRestoreBed(arena, block, event)) {
+            return;
+        }
         this.tryRestoreGenerator(arena, block, event);
     }
 
     private boolean tryRestoreArenaSpawn(final Arena arena, final Block block, final BlockBreakEvent event) {
-        if (arena.getArenaSpawn() == null || arena.getSpawnBlockData() == null) return false;
+        if (arena.getArenaSpawn() == null || arena.getSpawnBlockData() == null) {
+            return false;
+        }
         final Location spawnBlock = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0).getLocation();
-        if (!this.isSameBlock(spawnBlock, block.getLocation())) return false;
+        if (!this.isSameBlock(spawnBlock, block.getLocation())) {
+            return false;
+        }
         event.setCancelled(true);
         event.setDropItems(false);
         block.setBlockData(org.bukkit.Bukkit.createBlockData(arena.getSpawnBlockData()), false);
@@ -156,9 +169,13 @@ public class ArenaListener implements Listener {
 
     private boolean tryRestoreTeamSpawn(final Arena arena, final Block block, final BlockBreakEvent event) {
         for (final ArenaTeam team : arena.getTeams()) {
-            if (team.getSpawn() == null || team.getSpawnBlockData() == null) continue;
+            if (team.getSpawn() == null || team.getSpawnBlockData() == null) {
+                continue;
+            }
             final Location markerLoc = team.getSpawn().getBlock().getRelative(0, -1, 0).getLocation();
-            if (!this.isSameBlock(markerLoc, block.getLocation())) continue;
+            if (!this.isSameBlock(markerLoc, block.getLocation())) {
+                continue;
+            }
             event.setCancelled(true);
             event.setDropItems(false);
             block.setBlockData(org.bukkit.Bukkit.createBlockData(team.getSpawnBlockData()), false);
@@ -174,7 +191,9 @@ public class ArenaListener implements Listener {
     }
 
     private boolean tryRestoreBed(final Arena arena, final Block block, final BlockBreakEvent event) {
-        if (!(block.getBlockData() instanceof final Bed bedData)) return false;
+        if (!(block.getBlockData() instanceof final Bed bedData)) {
+            return false;
+        }
 
         // Normalise to foot location regardless of which part was broken
         final Location clickedLoc = block.getLocation();
@@ -188,8 +207,12 @@ public class ArenaListener implements Listener {
         }
 
         for (final ArenaTeam team : arena.getTeams()) {
-            if (team.getBed() == null) continue;
-            if (!this.isSameBlock(team.getBed(), footLoc)) continue;
+            if (team.getBed() == null) {
+                continue;
+            }
+            if (!this.isSameBlock(team.getBed(), footLoc)) {
+                continue;
+            }
 
             event.setCancelled(true);
             event.setDropItems(false);
@@ -220,18 +243,26 @@ public class ArenaListener implements Listener {
      */
     @EventHandler
     public void onPlayerInteract(final PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
         final Block block = event.getClickedBlock();
-        if (block == null || !(block.getBlockData() instanceof Bed)) return;
-        
+        if (block == null || !(block.getBlockData() instanceof Bed)) {
+            return;
+        }
+
         final Player player = event.getPlayer();
         final Arena arena = this.getArena(player);
-        if (arena == null) return;
-        
+        if (arena == null) {
+            return;
+        }
+
         // Se estiver em modo edição e a cama pertence a algum time da arena, cancela
         if (this.editorManager.isEditing(player, arena.getName())) {
             for (final ArenaTeam team : arena.getTeams()) {
-                if (team.getBed() == null) continue;
+                if (team.getBed() == null) {
+                    continue;
+                }
                 final Location footLoc = this.getBedFootLocation(block);
                 if (footLoc != null && this.isSameBlock(team.getBed(), footLoc)) {
                     event.setCancelled(true);
@@ -243,7 +274,9 @@ public class ArenaListener implements Listener {
     }
 
     private Location getBedFootLocation(final Block bedBlock) {
-        if (!(bedBlock.getBlockData() instanceof final Bed bedData)) return null;
+        if (!(bedBlock.getBlockData() instanceof final Bed bedData)) {
+            return null;
+        }
         final Location clickedLoc = bedBlock.getLocation();
         if (bedData.getPart() == Bed.Part.HEAD) {
             final org.bukkit.block.BlockFace facing = bedData.getFacing();
@@ -257,7 +290,9 @@ public class ArenaListener implements Listener {
         for (int i = 0; i < gens.size(); i++) {
             final ArenaGenerator gen = gens.get(i);
             final Location loc = gen.getLocation();
-            if (loc == null) continue;
+            if (loc == null) {
+                continue;
+            }
             final Location below = loc.getBlock().getRelative(0, -1, 0).getLocation();
             if (this.isSameBlock(loc, block.getLocation()) || this.isSameBlock(below, block.getLocation())) {
                 event.setCancelled(true);

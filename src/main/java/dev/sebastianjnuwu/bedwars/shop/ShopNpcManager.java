@@ -1,14 +1,21 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
-import de.oliver.fancynpcs.api.FancyNpcsPlugin;
-import de.oliver.fancynpcs.api.Npc;
-import de.oliver.fancynpcs.api.NpcData;
-import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
-import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+
+import de.oliver.fancynpcs.api.FancyNpcsPlugin;
+import de.oliver.fancynpcs.api.Npc;
+import de.oliver.fancynpcs.api.NpcData;
 
 /**
  * Gerencia o ciclo de vida dos NPCs da loja para as arenas do BedWars.
@@ -104,8 +111,12 @@ public class ShopNpcManager {
      */
     public @org.jetbrains.annotations.Nullable Npc spawnSingleNpc(final String arenaName, final int index,
                                                                    final Location location, final String skin) {
-        if (location == null || location.getWorld() == null) return null;
-        if (!checkFancyNpcs()) return null;
+        if (location == null || location.getWorld() == null) {
+            return null;
+        }
+        if (!checkFancyNpcs()) {
+            return null;
+        }
 
         final String npcName = "bw-shop-" + arenaName + "-" + index;
         final NpcData data = new NpcData(npcName, UUID.randomUUID(), location);
@@ -146,14 +157,20 @@ public class ShopNpcManager {
 
     private @org.jetbrains.annotations.Nullable List<Npc> spawnNpcs(final String arenaName, final List<Location> locations,
                                                                       final String skin, final String context) {
-        if (locations == null || locations.isEmpty()) return null;
-        if (!checkFancyNpcs()) return null;
+        if (locations == null || locations.isEmpty()) {
+            return null;
+        }
+        if (!checkFancyNpcs()) {
+            return null;
+        }
 
         final List<Npc> npcs = new ArrayList<>();
 
         for (int i = 0; i < locations.size(); i++) {
             final Location loc = locations.get(i);
-            if (loc == null || loc.getWorld() == null) continue;
+            if (loc == null || loc.getWorld() == null) {
+                continue;
+            }
 
             try {
                 final String npcName = "bw-shop-" + arenaName + "-" + context + "-" + i;

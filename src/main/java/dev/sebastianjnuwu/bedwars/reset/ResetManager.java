@@ -1,11 +1,12 @@
 package dev.sebastianjnuwu.bedwars.reset;
 
+import java.util.concurrent.CompletableFuture;
+
+import org.jetbrains.annotations.NotNull;
+
 import dev.sebastianjnuwu.bedwars.arena.ArenaInstance;
 import dev.sebastianjnuwu.bedwars.arena.ArenaState;
 import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Gerencia o reset de arenas.

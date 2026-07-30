@@ -1,13 +1,13 @@
 package dev.sebastianjnuwu.bedwars.api;
 
-import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.Game;
-import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
+import java.util.Collection;
+
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
+import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 
 /**
  * Interface principal da API do BedWars.

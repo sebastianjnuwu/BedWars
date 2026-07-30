@@ -1,12 +1,12 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
-import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
-import org.bukkit.Material;
-
-import org.bukkit.inventory.ItemStack;
-
 import java.util.List;
 import java.util.Map;
+
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+
+import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
 
 public class ShopItem {
 
@@ -46,21 +46,65 @@ public class ShopItem {
         this.absolute = builder.absolute;
     }
 
-    public Material getMaterial() { return material; }
-    public int getAmount() { return amount; }
-    public String getDisplayName() { return displayName; }
-    public List<String> getLore() { return lore; }
-    public Map<String, Integer> getEnchants() { return enchants; }
-    public String getTag() { return tag; }
-    public int getPrice() { return price; }
-    public CurrencyType getCurrency() { return currency; }
-    public String getUpgrade() { return upgrade; }
-    public int getSkip() { return skip; }
-    public Integer getColumn() { return column; }
-    public Integer getRow() { return row; }
-    public String getLinebreak() { return linebreak; }
-    public String getPagebreak() { return pagebreak; }
-    public Integer getAbsolute() { return absolute; }
+    public Material getMaterial() {
+        return material;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public List<String> getLore() {
+        return lore;
+    }
+
+    public Map<String, Integer> getEnchants() {
+        return enchants;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public CurrencyType getCurrency() {
+        return currency;
+    }
+
+    public String getUpgrade() {
+        return upgrade;
+    }
+
+    public int getSkip() {
+        return skip;
+    }
+
+    public Integer getColumn() {
+        return column;
+    }
+
+    public Integer getRow() {
+        return row;
+    }
+
+    public String getLinebreak() {
+        return linebreak;
+    }
+
+    public String getPagebreak() {
+        return pagebreak;
+    }
+
+    public Integer getAbsolute() {
+        return absolute;
+    }
 
     @SuppressWarnings("deprecation")
     public ItemStack createItemStack() {
@@ -96,7 +140,7 @@ public class ShopItem {
                 try {
                     var compound = org.bukkit.Color.fromRGB(0);
                     stack = org.bukkit.inventory.ItemStack.of(stack.getType());
-                } catch (Exception ignored2) {}
+                } catch (Exception ignored) {}
             }
         }
         return stack;
@@ -119,22 +163,83 @@ public class ShopItem {
         private String pagebreak;
         private Integer absolute;
 
-        public Builder material(Material material) { this.material = material; return this; }
-        public Builder amount(int amount) { this.amount = amount; return this; }
-        public Builder displayName(String displayName) { this.displayName = displayName; return this; }
-        public Builder lore(List<String> lore) { this.lore = lore; return this; }
-        public Builder enchants(Map<String, Integer> enchants) { this.enchants = enchants; return this; }
-        public Builder tag(String tag) { this.tag = tag; return this; }
-        public Builder price(int price) { this.price = price; return this; }
-        public Builder currency(CurrencyType currency) { this.currency = currency; return this; }
-        public Builder upgrade(String upgrade) { this.upgrade = upgrade; return this; }
-        public Builder skip(int skip) { this.skip = skip; return this; }
-        public Builder column(Integer column) { this.column = column; return this; }
-        public Builder row(Integer row) { this.row = row; return this; }
-        public Builder linebreak(String linebreak) { this.linebreak = linebreak; return this; }
-        public Builder pagebreak(String pagebreak) { this.pagebreak = pagebreak; return this; }
-        public Builder absolute(Integer absolute) { this.absolute = absolute; return this; }
+        public Builder material(Material material) {
+            this.material = material;
+            return this;
+        }
 
-        public ShopItem build() { return new ShopItem(this); }
+        public Builder amount(int amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        public Builder displayName(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
+
+        public Builder lore(List<String> lore) {
+            this.lore = lore;
+            return this;
+        }
+
+        public Builder enchants(Map<String, Integer> enchants) {
+            this.enchants = enchants;
+            return this;
+        }
+
+        public Builder tag(String tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        public Builder price(int price) {
+            this.price = price;
+            return this;
+        }
+
+        public Builder currency(CurrencyType currency) {
+            this.currency = currency;
+            return this;
+        }
+
+        public Builder upgrade(String upgrade) {
+            this.upgrade = upgrade;
+            return this;
+        }
+
+        public Builder skip(int skip) {
+            this.skip = skip;
+            return this;
+        }
+
+        public Builder column(Integer column) {
+            this.column = column;
+            return this;
+        }
+
+        public Builder row(Integer row) {
+            this.row = row;
+            return this;
+        }
+
+        public Builder linebreak(String linebreak) {
+            this.linebreak = linebreak;
+            return this;
+        }
+
+        public Builder pagebreak(String pagebreak) {
+            this.pagebreak = pagebreak;
+            return this;
+        }
+
+        public Builder absolute(Integer absolute) {
+            this.absolute = absolute;
+            return this;
+        }
+
+        public ShopItem build() {
+            return new ShopItem(this);
+        }
     }
 }

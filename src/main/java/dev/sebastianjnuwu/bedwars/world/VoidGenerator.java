@@ -1,10 +1,10 @@
 package dev.sebastianjnuwu.bedwars.world;
 
+import java.util.Random;
+
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.generator.WorldInfo;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Random;
 
 /**
  * Gerador de mundo vazio (void).
@@ -58,4 +58,3 @@ public class VoidGenerator extends ChunkGenerator {
         return false;
     }
 }
-

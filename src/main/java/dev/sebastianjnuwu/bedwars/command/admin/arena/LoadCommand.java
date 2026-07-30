@@ -10,6 +10,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
@@ -20,7 +22,6 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
-import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Comando para carregar uma arena no mundo do servidor.

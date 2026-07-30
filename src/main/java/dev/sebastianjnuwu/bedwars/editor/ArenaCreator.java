@@ -1,14 +1,15 @@
 package dev.sebastianjnuwu.bedwars.editor;
 
-import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
+import java.io.File;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.util.UUID;
+import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 
 /**
  * Cria mundos de edição para arenas.

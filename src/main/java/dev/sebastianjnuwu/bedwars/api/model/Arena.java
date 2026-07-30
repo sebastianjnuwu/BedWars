@@ -1,11 +1,10 @@
 package dev.sebastianjnuwu.bedwars.api.model;
 
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 import java.util.Map;
+
+import org.bukkit.Location;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Representa uma arena no jogo BedWars.
