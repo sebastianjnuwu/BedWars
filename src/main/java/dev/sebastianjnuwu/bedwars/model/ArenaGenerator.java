@@ -3,22 +3,31 @@ package dev.sebastianjnuwu.bedwars.model;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Representa um gerador de itens dentro de uma arena. Cada gerador tem
- * um tipo (bronze, ferro, ouro), uma localização e os dados originais do bloco
- * para restauração de bloco.
- */
+import java.util.UUID;
+
 public class ArenaGenerator implements dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator {
 
+    private final UUID uniqueId;
     private final String type;
-    private final Location location;
+    private Location location;
     private String team;
     private String originBlockData;
     private String originBlockDataAbove;
 
     public ArenaGenerator(final String type, final Location location) {
+        this.uniqueId = UUID.randomUUID();
         this.type = type;
         this.location = location;
+    }
+
+    public ArenaGenerator(final UUID uniqueId, final String type, final Location location) {
+        this.uniqueId = uniqueId;
+        this.type = type;
+        this.location = location;
+    }
+
+    public UUID getUniqueId() {
+        return this.uniqueId;
     }
 
     public String getType() {
@@ -27,6 +36,10 @@ public class ArenaGenerator implements dev.sebastianjnuwu.bedwars.api.model.Aren
 
     public Location getLocation() {
         return this.location;
+    }
+
+    public void setLocation(final Location location) {
+        this.location = location;
     }
 
     public @Nullable String getTeam() {

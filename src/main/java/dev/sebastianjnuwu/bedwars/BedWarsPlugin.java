@@ -54,14 +54,14 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
                 + "                                                           \n"
                 + "  - GitHub: " + this.lang.raw("startup.github") + "\n"
                 + "  - Author: " + this.lang.raw("startup.author") + "\n"
-                + "  - Version: " + this.lang.raw("startup.version", getDescription().getVersion())
+                + "  - Version: " + this.lang.raw("startup.version", getPluginMeta().getVersion())
                 +                 "\n");
 
         new Metrics(this, 33001);
 
         if (this.configManager.isVersionCheckEnabled()) {
             final VersionChecker checker = new VersionChecker(
-                    getDescription().getVersion(),
+                    getPluginMeta().getVersion(),
                     this.getLogger(),
                     this.lang
             );

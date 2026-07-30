@@ -113,6 +113,10 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public void joinGame(final Player player, final String arenaName, final @Nullable String teamName) {
+        this.joinGame(player, arenaName, teamName, true);
+    }
+
+    public void joinGame(final Player player, final String arenaName, final @Nullable String teamName, final boolean teleport) {
         if (this.isInGame(player)) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_game"));
             return;
@@ -162,7 +166,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             return;
         }
 
-        game.join(player, teamName);
+        game.join(player, teamName, teleport);
         this.playerGames.put(player.getUniqueId(), game);
     }
 

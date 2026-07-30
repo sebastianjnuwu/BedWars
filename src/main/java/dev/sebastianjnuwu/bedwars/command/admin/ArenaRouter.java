@@ -8,6 +8,7 @@ import dev.sebastianjnuwu.bedwars.command.admin.config.ShopNpcCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SpawnCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.StatusCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.generator.GeneratorAddCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.generator.GeneratorRemoveCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.team.TeamAddCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.team.TeamListCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.team.TeamRemoveCommand;
@@ -80,6 +81,7 @@ public class ArenaRouter extends BaseCommand implements SubCommand {
         this.register("setbed", new SetBedCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("teams", new TeamListCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("addgenerator", new GeneratorAddCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
+        this.register("removegenerator", new GeneratorRemoveCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("shop-npc", new ShopNpcCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
     }
 

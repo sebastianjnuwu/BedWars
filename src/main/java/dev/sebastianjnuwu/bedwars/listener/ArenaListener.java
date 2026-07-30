@@ -257,6 +257,7 @@ public class ArenaListener implements Listener {
         for (int i = 0; i < gens.size(); i++) {
             final ArenaGenerator gen = gens.get(i);
             final Location loc = gen.getLocation();
+            if (loc == null) continue;
             final Location below = loc.getBlock().getRelative(0, -1, 0).getLocation();
             if (this.isSameBlock(loc, block.getLocation()) || this.isSameBlock(below, block.getLocation())) {
                 event.setCancelled(true);

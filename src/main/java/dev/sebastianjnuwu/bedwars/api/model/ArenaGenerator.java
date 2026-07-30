@@ -3,11 +3,13 @@ package dev.sebastianjnuwu.bedwars.api.model;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 /**
  * Representa um gerador em uma arena de BedWars.
  * <p>
  * Geradores são estruturas que adicionam elementos ao mapa do jogo, como,
- * cofres, pódios de produtores, portais ou outros blocos funcionais que
+ * fornalhas, produtores de minerios ou outros blocos funcionais que
  * influenciam a jogabilidade.
  * </p>
  * <p>
@@ -23,10 +25,22 @@ import org.jetbrains.annotations.Nullable;
 public interface ArenaGenerator {
 
     /**
+     * Obtém o UUID único deste gerador.
+     * <p>
+     * Cada gerador possui um identificador único universal (UUID) gerado
+     * no momento da criação. Este UUID é usado como chave no arquivo YAML
+     * da arena e para operações de remoção.
+     * </p>
+     * @return o UUID único do gerador
+     */
+    UUID getUniqueId();
+
+    /**
      * Obtém o tipo do gerador.
      * <p>
-     * Define que tipo de bloco funcional este gerador cria, como "CHEST",
-     * "BREAKER", "PORTER", etc. Este tipo determina o comportamento do gerador.
+     * Define que tipo de bloco funcional este gerador cria, como "iron",
+     * "gold", "diamond", "emerald" ou "forge". Este tipo determina o
+     * comportamento do gerador durante a partida.
      * </p>
      * @return o tipo do gerador
      */
@@ -41,6 +55,13 @@ public interface ArenaGenerator {
      * @return a Location do gerador
      */
     Location getLocation();
+
+    /**
+     * Define a localização deste gerador no mapa.
+     *
+     * @param location a nova Location do gerador
+     */
+    void setLocation(Location location);
 
     /**
      * Obtém os dados do bloco de origem para preservação.

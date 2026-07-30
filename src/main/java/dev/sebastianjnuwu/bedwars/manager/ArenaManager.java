@@ -27,12 +27,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Gerencia todas as arenas do servidor.
@@ -103,6 +105,40 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         return refreshed != null;
     }
 
+    private void updateWorldReferences(final Arena arena, final World newWorld) {
+        if (arena.getArenaSpawn() != null) {
+            final Location old = arena.getArenaSpawn();
+            arena.setArenaSpawn(new Location(newWorld, old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch()));
+        }
+        if (arena.getLobby() != null) {
+            final Location old = arena.getLobby();
+            arena.setLobby(new Location(newWorld, old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch()));
+        }
+        for (final ArenaTeam team : arena.getTeams()) {
+            if (team.getSpawn() != null) {
+                final Location old = team.getSpawn();
+                team.setSpawn(new Location(newWorld, old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch()));
+            }
+            if (team.getBed() != null) {
+                final Location old = team.getBed();
+                team.setBed(new Location(newWorld, old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch()));
+            }
+        }
+        for (final ArenaGenerator gen : arena.getGenerators()) {
+            if (gen.getLocation() != null) {
+                final Location old = gen.getLocation();
+                gen.setLocation(new Location(newWorld, old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch()));
+            }
+        }
+        if (arena.getShopNpcLocations() != null) {
+            final List<Location> updated = new ArrayList<>();
+            for (final Location loc : arena.getShopNpcLocations()) {
+                updated.add(new Location(newWorld, loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch()));
+            }
+            arena.setShopNpcLocations(updated);
+        }
+    }
+
     public boolean resetArenaMap(final @org.jetbrains.annotations.NotNull String name) {
         final Arena arena = this.get(name);
         if (arena == null) {
@@ -128,12 +164,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             schematic.paste(world, pasteLocation, mapFile);
             world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
             this.applyWorldSettings(world, arena);
-            this.reload(name);
-            final Arena refreshed = this.get(name);
-            if (refreshed != null) {
-                refreshed.setWorldName(worldName);
-            }
-            this.flush(name);
+            arena.setWorldName(worldName);
+            this.updateWorldReferences(arena, world);
+            this.flush(arena.getName());
             this.showMarkerBlocks(this.get(name));
             return true;
         } catch (final IOException e) {
@@ -235,6 +268,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             final Arena refreshed = this.get(arena.getName());
             if (refreshed != null) {
                 refreshed.setWorldName(worldName);
+                this.updateWorldReferences(refreshed, world);
             }
             this.flush(arena.getName());
             return world;
@@ -409,14 +443,14 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 config.set(path + ".bed_facing", team.getBedFacing());
         }
 
-        // Generators
-        final List<ArenaGenerator> generators = arena.getGenerators();
-        for (int i = 0; i < generators.size(); i++) {
-            final ArenaGenerator gen = generators.get(i);
-            final String path = "generators." + i;
+        // Generators — usa UUID como chave, ignora location null
+        for (final ArenaGenerator gen : arena.getGenerators()) {
+            if (gen.getLocation() == null) {
+                continue;
+            }
+            final String path = "generators." + gen.getUniqueId().toString();
             config.set(path + ".type", gen.getType());
-            if (gen.getLocation() != null)
-                config.set(path + ".location", this.serializeLocation(gen.getLocation()));
+            config.set(path + ".location", this.serializeLocation(gen.getLocation()));
             if (gen.getTeam() != null)
                 config.set(path + ".team", gen.getTeam());
             if (gen.getOriginBlockData() != null)
@@ -594,13 +628,25 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             }
         }
         if (config.contains("generators")) {
-            final java.util.Set<String> seenLocations = new java.util.HashSet<>();
             for (final String key : config.getConfigurationSection("generators").getKeys(false)) {
                 final String path = "generators." + key;
-                final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(
-                        config.getString(path + ".type"),
-                        this.parseLocation(config.getString(path + ".location"))
-                );
+                final Location loc = this.parseLocation(config.getString(path + ".location"));
+                // Skip entries with null location (corrupted)
+                if (loc == null) {
+                    continue;
+                }
+                final String type = config.getString(path + ".type");
+                if (type == null) continue;
+
+                // Determine UUID: use the YAML key if valid UUID, otherwise generate new
+                UUID genUuid;
+                try {
+                    genUuid = UUID.fromString(key);
+                } catch (final IllegalArgumentException e) {
+                    genUuid = UUID.randomUUID();
+                }
+
+                final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(genUuid, type, loc);
                 if (config.contains(path + ".team")) {
                     gen.setTeam(config.getString(path + ".team"));
                 }
@@ -609,15 +655,6 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 }
                 if (config.contains(path + ".origin_block_above")) {
                     gen.setOriginBlockDataAbove(config.getString(path + ".origin_block_above"));
-                }
-                // Deduplicate: skip forge generators that share the same team as one already loaded
-                if (gen.getType().equalsIgnoreCase("forge") && gen.getTeam() != null) {
-                    final String dedupeKey = "forge:" + gen.getTeam().toLowerCase();
-                    if (!seenLocations.add(dedupeKey)) {
-                        this.plugin.getLogger().warning(
-                                this.lang.raw("log.arena_manager.forge_duplicate_load", name, gen.getTeam()));
-                        continue;
-                    }
                 }
                 arena.addGenerator(gen);
             }

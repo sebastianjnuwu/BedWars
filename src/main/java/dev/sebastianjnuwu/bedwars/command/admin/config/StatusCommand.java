@@ -14,6 +14,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +42,15 @@ public class StatusCommand extends BaseCommand implements ArenaSubCommand {
                 .filter(generator -> generator.getType().equalsIgnoreCase("forge"))
                 .count();
         sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_forges", String.valueOf(forgeCount)));
-        for (int level = 1; level <= this.configManager.getForgeMaxLevel(); level++) {
-            final Map<Material, Long> intervals = this.configManager.getForgeIntervals(level);
-            if (intervals.isEmpty()) continue;
-            final String entries = intervals.entrySet().stream()
-                    .map(entry -> this.displayName(entry.getKey()) + ": " + entry.getValue() + "t")
-                    .reduce((left, right) -> left + ", " + right)
-                    .orElse("");
-            sender.sendMessage(this.lang.text(NamedTextColor.GRAY, "admin.arena.status_forge_level", String.valueOf(level), entries));
+        final List<ForgeLevel> arenaLevels = arena.getForgeLevels();
+        if (arenaLevels != null) {
+            for (final ForgeLevel fl : arenaLevels) {
+                final String entries = fl.intervals().entrySet().stream()
+                        .map(entry -> this.displayName(entry.getKey()) + ": " + entry.getValue() + "t")
+                        .reduce((left, right) -> left + ", " + right)
+                        .orElse("");
+                sender.sendMessage(this.lang.text(NamedTextColor.GRAY, "admin.arena.status_forge_level", String.valueOf(fl.level()), entries));
+            }
         }
         if (missing.isEmpty()) {
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.status_ready"));

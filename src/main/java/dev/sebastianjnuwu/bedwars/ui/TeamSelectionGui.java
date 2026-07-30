@@ -130,7 +130,7 @@ public class TeamSelectionGui implements InventoryHolder {
             if (game != null && game.getGamePlayer(this.player) != null) {
                 game.switchTeam(this.player, team.getName());
             } else {
-                this.gameManager.joinGame(this.player, this.arena.getName(), team.getName());
+                this.gameManager.joinGame(this.player, this.arena.getName(), team.getName(), false);
             }
             this.player.sendMessage(this.lang.text(NamedTextColor.GREEN, "ui.team_selection.team_selected", team.getName()));
             this.player.closeInventory();

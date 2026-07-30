@@ -2,6 +2,7 @@ package dev.sebastianjnuwu.bedwars.shop;
 
 import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
 import org.bukkit.Material;
+
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -61,6 +62,7 @@ public class ShopItem {
     public String getPagebreak() { return pagebreak; }
     public Integer getAbsolute() { return absolute; }
 
+    @SuppressWarnings("deprecation")
     public ItemStack createItemStack() {
         Material mat = material != null ? material : Material.BARRIER;
         ItemStack stack = new ItemStack(mat, amount);

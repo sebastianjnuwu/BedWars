@@ -1,0 +1,196 @@
+# ── Arena de exemplo para BedWars ──
+# Copie este arquivo para <nome>.yml e ajuste os valores.
+#
+# Para criar uma arena do zero:
+#   1. /bw admin arena create <nome>
+#   2. /bw admin arena <nome> addteam azul
+#   3. /bw admin arena <nome> addteam vermelho
+#   4. /bw admin arena <nome> addgenerator forge azul
+#   5. /bw admin arena <nome> addgenerator forge vermelho
+#   6. /bw admin arena <nome> addgenerator ferro
+#   7. /bw admin arena <nome> addgenerator ouro
+#   8. /bw admin arena <nome> addgenerator diamante
+#   9. /bw admin arena <nome> addgenerator esmeralda
+#  10. /bw admin arena <nome> spawn
+#  11. /bw admin arena <nome> setspawn azul
+#  12. /bw admin arena <nome> setbed azul  (fique em cima da cama)
+#  13. /bw admin arena <nome> setspawn vermelho
+#  14. /bw admin arena <nome> setbed vermelho
+#  15. /bw admin arena <nome> shop-npc add <skin>
+#
+# ── Geradores ──
+# Cada gerador tem uma chave UUID única. Geradores com location: null
+# são ignorados automaticamente ao carregar.
+
+enabled: false
+world: "bw_example"
+paste: "0,64,0"
+schematic_size: "25,10,25"
+min_players: 2
+countdown: 15
+cycle_day: true
+cycle_weather: true
+spawn_mobs: true
+spawn_animals: true
+difficulty: "EASY"
+time: "DAY"
+
+# ── Geradores de recursos (UUID como chave) ──
+generators:
+  # Ferro
+  550e8400-e29b-41d4-a716-446655440001:
+    type: "iron"
+    location: "bw_example,10,65,10,0,0"
+    origin_block: "minecraft:stone"
+    origin_block_above: "minecraft:air"
+  # Ouro
+  550e8400-e29b-41d4-a716-446655440002:
+    type: "gold"
+    location: "bw_example,12,65,10,0,0"
+    origin_block: "minecraft:stone"
+    origin_block_above: "minecraft:air"
+  # Diamante (meio do mapa)
+  550e8400-e29b-41d4-a716-446655440003:
+    type: "diamond"
+    location: "bw_example,0,70,0,0,0"
+    origin_block: "minecraft:obsidian"
+    origin_block_above: "minecraft:air"
+  # Esmeralda (meio do mapa)
+  550e8400-e29b-41d4-a716-446655440004:
+    type: "emerald"
+    location: "bw_example,1,70,0,0,0"
+    origin_block: "minecraft:obsidian"
+    origin_block_above: "minecraft:air"
+  # Fornalha do time azul
+  550e8400-e29b-41d4-a716-446655440005:
+    type: "forge"
+    team: "azul"
+    location: "bw_example,5,65,5,0,0"
+    origin_block: "minecraft:stone"
+    origin_block_above: "minecraft:air"
+  # Fornalha do time vermelho
+  550e8400-e29b-41d4-a716-446655440006:
+    type: "forge"
+    team: "vermelho"
+    location: "bw_example,-5,65,-5,0,0"
+    origin_block: "minecraft:stone"
+    origin_block_above: "minecraft:air"
+
+# ── Configuração de intervalos dos geradores ──
+generator_config:
+  iron:
+    material: "IRON_INGOT"
+    interval: 40
+  gold:
+    material: "GOLD_INGOT"
+    interval: 120
+  diamond:
+    material: "DIAMOND"
+    interval: 600
+  emerald:
+    material: "EMERALD"
+    interval: 1200
+
+# ── Níveis da fornalha ──
+forge:
+  max-level: 10
+  levels:
+    1:
+      iron_ingot:
+        interval: 20
+    2:
+      iron_ingot:
+        interval: 18
+      gold_ingot:
+        interval: 100
+    3:
+      iron_ingot:
+        interval: 16
+      gold_ingot:
+        interval: 90
+    4:
+      iron_ingot:
+        interval: 14
+      gold_ingot:
+        interval: 80
+      diamond:
+        interval: 1200
+    5:
+      iron_ingot:
+        interval: 12
+      gold_ingot:
+        interval: 70
+      diamond:
+        interval: 1000
+    6:
+      iron_ingot:
+        interval: 10
+      gold_ingot:
+        interval: 60
+      diamond:
+        interval: 800
+      emerald:
+        interval: 2400
+    7:
+      iron_ingot:
+        interval: 8
+      gold_ingot:
+        interval: 50
+      diamond:
+        interval: 700
+      emerald:
+        interval: 2000
+    8:
+      iron_ingot:
+        interval: 6
+      gold_ingot:
+        interval: 40
+      diamond:
+        interval: 600
+      emerald:
+        interval: 1600
+    9:
+      iron_ingot:
+        interval: 5
+      gold_ingot:
+        interval: 30
+      diamond:
+        interval: 500
+      emerald:
+        interval: 1400
+    10:
+      iron_ingot:
+        interval: 4
+      gold_ingot:
+        interval: 20
+      diamond:
+        interval: 400
+      emerald:
+        interval: 1200
+
+# ── Times ──
+teams:
+  azul:
+    color: "blue"
+    spawn: "bw_example,5,65,5,0,0"
+    spawn_block: "minecraft:stone"
+    bed: "bw_example,5,64,5,0,0"
+    bed_facing: "NORTH"
+  vermelho:
+    color: "red"
+    spawn: "bw_example,-5,65,-5,0,0"
+    spawn_block: "minecraft:stone"
+    bed: "bw_example,-5,64,-5,0,0"
+    bed_facing: "SOUTH"
+
+# ── Spawn da arena / lobby ──
+arena_spawn: "bw_example,0,65,0,0,0"
+spawn_block: "minecraft:obsidian"
+lobby: "world,0,64,0,0,0"
+
+# ── Shop NPCs ──
+shop: "default"
+shop_npcs:
+  0:
+    location: "bw_example,3,65,3,0,0"
+  skin: "Keeper"

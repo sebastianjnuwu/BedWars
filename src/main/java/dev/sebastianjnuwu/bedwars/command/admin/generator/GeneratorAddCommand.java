@@ -67,6 +67,7 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
             }
             final boolean alreadyHasForge = arena.getGenerators().stream()
                     .anyMatch(generator -> generator.getType().equalsIgnoreCase("forge")
+                            && generator.getLocation() != null
                             && team.getName().equalsIgnoreCase(generator.getTeam()));
             if (alreadyHasForge) {
                 player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_forge_duplicate", team.getName()));

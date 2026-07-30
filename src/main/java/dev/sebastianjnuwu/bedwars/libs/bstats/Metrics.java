@@ -49,16 +49,14 @@ public class Metrics {
       config.addDefault("logFailedRequests", false);
       config.addDefault("logSentData", false);
       config.addDefault("logResponseStatusText", false);
-      config
-          .options()
-          .header(
-              "bStats (https://bStats.org) collects some basic information for plugin authors, like how\n"
-                  + "many people use their plugin and their total player count. It's recommended to keep bStats\n"
-                  + "enabled, but if you're not comfortable with this, you can turn this setting off. There is no\n"
-                  + "performance penalty associated with having metrics enabled, and data sent to bStats is fully\n"
-                  + "anonymous.\n"
-                  + "Learn more here: https://bstats.org/docs/server-owners")
-          .copyDefaults(true);
+      config.options().setHeader(java.util.List.of(
+              "bStats (https://bStats.org) collects some basic information for plugin authors, like how",
+              "many people use their plugin and their total player count. It's recommended to keep bStats",
+              "enabled, but if you're not comfortable with this, you can turn this setting off. There is no",
+              "performance penalty associated with having metrics enabled, and data sent to bStats is fully",
+              "anonymous.",
+              "Learn more here: https://bstats.org/docs/server-owners"));
+      config.options().copyDefaults(true);
       try {
         config.save(configFile);
       } catch (IOException ignored) {
@@ -115,7 +113,7 @@ public class Metrics {
   }
 
   private void appendServiceData(JsonObjectBuilder builder) {
-    builder.appendField("pluginVersion", plugin.getDescription().getVersion());
+    builder.appendField("pluginVersion", plugin.getPluginMeta().getVersion());
   }
 
   private int getPlayerAmount() {
@@ -272,7 +270,7 @@ public class Metrics {
         infoLogger.accept("Sent bStats metrics data: " + data.toString());
       }
       String url = String.format(REPORT_URL, platform);
-      HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
+      HttpsURLConnection connection = (HttpsURLConnection) new java.net.URI(url).toURL().openConnection();
       byte[] compressedData = compress(data.toString());
       connection.setRequestMethod("POST");
       connection.addRequestProperty("Accept", "application/json");
