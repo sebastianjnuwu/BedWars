@@ -144,14 +144,14 @@ Por padrão, cada arena já possui configurações para os tipos **ferro**, **ou
 Instale o **FancyNPCs** no servidor. Durante a edição da arena, posicione-se onde o NPC deverá ficar e execute:
 
 ```bash
-/bw admin arena <nome_da_arena> shopnpc add [skin]
+/bw admin arena <nome_da_arena> shop-npc add [skin]
 ```
 
 > O NPC será spawnado automaticamente quando a partida iniciar e removido ao final. Use `list` para ver os NPCs adicionados e `remove <id>` para remover.
 
 ```bash
-/bw admin arena <nome_da_arena> shopnpc list
-/bw admin arena <nome_da_arena> shopnpc remove 0
+/bw admin arena <nome_da_arena> shop-npc list
+/bw admin arena <nome_da_arena> shop-npc remove 0
 ```
 
 ### 12. Salvar a arena
@@ -219,14 +219,14 @@ Se não definir `shop`, a arena usa `default.yml`.
 Instale o **FancyNPCs** no servidor. Os NPCs são spawnados automaticamente quando a partida inicia e removidos ao final. Para configurar as posições durante a edição da arena:
 
 ```bash
-/bw admin arena <nome_da_arena> shopnpc add [skin]
+/bw admin arena <nome_da_arena> shop-npc add [skin]
 ```
 
 Para gerenciar:
 
 ```bash
-/bw admin arena <nome_da_arena> shopnpc list
-/bw admin arena <nome_da_arena> shopnpc remove <id>
+/bw admin arena <nome_da_arena> shop-npc list
+/bw admin arena <nome_da_arena> shop-npc remove <id>
 ```
 
 > O nome do NPC será `bw-shop-<arena>-<id>` — o plugin reconhece automaticamente NPCs com nome `shop` ou prefixo `bw-shop-` e abre a loja ao interagir.

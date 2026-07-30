@@ -1,6 +1,7 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -140,6 +141,31 @@ public class ShopNpcManager {
         }
         for (final String key : new HashSet<>(editorNpcs.keySet())) {
             removeEditorNpcs(key);
+        }
+    }
+
+    /**
+     * Remove todos os NPCs do BedWars que tenham sobrado de sessoes anteriores
+     * no registro do FancyNpcs. Deve ser chamado no onEnable() para evitar
+     * que NPCs de mundos ja descarregados tentem carregar.
+     */
+    public void removeAllBedWarsNpcs() {
+        if (!checkFancyNpcs()) {
+            return;
+        }
+        try {
+            final Collection<Npc> all = FancyNpcsPlugin.get().getNpcManager().getAllNpcs();
+            if (all == null) {
+                return;
+            }
+            for (final Npc npc : all) {
+                if (npc.getData().getName().toLowerCase().startsWith("bw-shop-")) {
+                    FancyNpcsPlugin.get().getNpcManager().removeNpc(npc);
+                    npc.removeForAll();
+                }
+            }
+        } catch (final Exception e) {
+            plugin.getLogger().warning("Failed to clean up leftover shop NPCs: " + e.getMessage());
         }
     }
 

@@ -91,6 +91,7 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             Class.forName("de.oliver.fancynpcs.api.events.NpcInteractEvent");
             this.getServer().getPluginManager().registerEvents(
                     new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
+            this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
             this.getLogger().info(this.lang.raw("startup.fancynpcs_hook"));
         } catch (ClassNotFoundException e) {
             this.getLogger().info(this.lang.raw("startup.fancynpcs_not_found"));
