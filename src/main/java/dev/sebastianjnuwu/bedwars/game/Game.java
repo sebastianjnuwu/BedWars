@@ -18,6 +18,7 @@ import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -666,11 +667,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private void handleForgeTicks() {
+        int spawned = 0;
+        int skipped = 0;
         for (final Map.Entry<String, long[]> entry : this.forgeTicks.entrySet()) {
             final long[] data = entry.getValue();
             final long lastSpawn = data[0];
             final long interval = data[1];
             if (this.tick - lastSpawn < interval) {
+                skipped++;
                 continue;
             }
             data[0] = this.tick;
@@ -690,7 +694,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 continue;
             }
             final Location dropLocation = forge.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
-            final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
+            final World world = dropLocation.getWorld();
+            if (world == null) {
+                continue;
+            }
+            final long nearbyCount = world.getNearbyEntities(dropLocation, 2, 2, 2).stream()
                     .filter(e -> e instanceof org.bukkit.entity.Item)
                     .filter(e -> ((org.bukkit.entity.Item) e).getItemStack().getType() == material)
                     .count();
@@ -703,10 +711,16 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             if (spawnEvent.isCancelled()) {
                 continue;
             }
-            dropLocation.getWorld().dropItem(dropLocation, spawnEvent.getItem(), item -> {
+            world.dropItem(dropLocation, spawnEvent.getItem(), item -> {
                 item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
                 item.setPickupDelay(0);
             });
+            spawned++;
+        }
+        if (this.tick % 100 == 0 && !this.forgeTicks.isEmpty()) {
+            Bukkit.getLogger().info("[BedWars] handleForgeTicks tick=" + this.tick
+                    + " entries=" + this.forgeTicks.size()
+                    + " skipped=" + skipped + " spawned=" + spawned);
         }
     }
 
