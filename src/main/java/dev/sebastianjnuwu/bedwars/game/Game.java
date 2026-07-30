@@ -373,7 +373,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             this.cancelCountdown();
         }
 
-        this.checkWinCondition();
+        if (this.bedlessTeams.contains(team) && this.getAliveCount(team) == 0) {
+            this.eliminateTeam(team);
+        } else {
+            this.checkWinCondition();
+        }
     }
 
     public void start() {
@@ -888,12 +892,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     private void checkWinCondition() {
         ArenaTeam winner = null;
+        int aliveTeams = 0;
         for (final var entry : this.teams.entrySet()) {
             final ArenaTeam team = entry.getKey();
             if (this.eliminatedTeams.contains(team)) {
                 continue;
             }
             if (this.getAliveCount(team) > 0) {
+                aliveTeams++;
                 if (winner == null) {
                     winner = team;
                 } else {
@@ -904,6 +910,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         if (winner != null) {
             this.endGame(winner);
+        } else if (aliveTeams == 0 && this.state == GameState.PLAYING) {
+            this.forceEnd();
         }
     }
 
