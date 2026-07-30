@@ -140,7 +140,7 @@ public class ShopItem {
                 try {
                     var compound = org.bukkit.Color.fromRGB(0);
                     stack = org.bukkit.inventory.ItemStack.of(stack.getType());
-                } catch (Exception ignored) {}
+                } catch (Exception ignoredEx) {}
             }
         }
         return stack;
