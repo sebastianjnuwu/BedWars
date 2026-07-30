@@ -48,9 +48,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Represents a single BedWars game instance. Manages the state machine,
- * player joins/leaves, deaths/respawns, bed breaks, team elimination,
- * win condition, and auto-start countdown.
+ * Representa uma única instância de partida de BedWars. Gerencia a máquina de estados,
+ * entrada/saída de jogadores, mortes/renascimentos, quebra de berços, eliminação de equipes,
+ * condição de vitória e contagem regressiva de início automático.
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
@@ -68,12 +68,15 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Set<ArenaTeam> eliminatedTeams;
     private final Set<ArenaTeam> bedlessTeams;
     private final Set<UUID> spectators;
-    private final Map<UUID, BukkitTask> respawnTasks;
+    private final Map<UUID, ItemStack[]> savedInventories;
+    private final Map<UUID, ItemStack[]> savedArmor;
     private final Map<ArenaGenerator, Integer> forgeLevels;
-    private final Map<ArenaGenerator, List<BukkitTask>> forgeTasks;
-    private final Map<ArenaGenerator, BukkitTask> generatorTasks;
+    private final Map<ArenaGenerator, long[]> generatorTicks;
+    private final Map<String, long[]> forgeTicks;
+    private final Map<UUID, Integer> respawnTicks;
     private GameState state;
-    private BukkitTask countdownTask;
+    private BukkitTask gameTickTask;
+    private int tick;
     private int countdownSeconds;
 
     /**
@@ -97,10 +100,12 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.eliminatedTeams = new HashSet<>();
         this.bedlessTeams = new HashSet<>();
         this.spectators = new HashSet<>();
-        this.respawnTasks = new HashMap<>();
         this.forgeLevels = new HashMap<>();
-        this.forgeTasks = new HashMap<>();
-        this.generatorTasks = new HashMap<>();
+        this.generatorTicks = new HashMap<>();
+        this.forgeTicks = new HashMap<>();
+        this.respawnTicks = new HashMap<>();
+        this.savedInventories = new HashMap<>();
+        this.savedArmor = new HashMap<>();
         this.state = GameState.WAITING;
         for (final ArenaTeam team : arena.getTeams()) {
             this.teams.put(team, new ArrayList<>());
@@ -133,14 +138,28 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
         this.spectators.add(player.getUniqueId());
+
+        // Salva inventario antes de limpar
+        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
+        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+
         player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
         player.getInventory().setItem(8, createExitDoorItem());
+        player.getInventory().setItem(0, createTeamSelectorItem());
         final Location spawn = this.arena.getArenaSpawn();
         if (spawn != null) {
             LocationUtil.safeTeleport(player, spawn);
         }
         player.setGameMode(GameMode.SPECTATOR);
         player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.spectating"));
+
+        // Esconde jogadores de outras partidas
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.hidePlayer(this.gameManager.getPlugin(), online);
+            online.hidePlayer(this.gameManager.getPlugin(), player);
+        }
     }
 
     public boolean isBedless(final ArenaTeam team) {
@@ -167,6 +186,36 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public void join(final Player player) {
         this.join(player, null);
+    }
+
+    public void switchTeam(final Player player, final String teamName) {
+        if (this.state != GameState.WAITING && this.state != GameState.STARTING) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.in_progress"));
+            return;
+        }
+        final GamePlayer gp = this.players.get(player.getUniqueId());
+        if (gp == null) {
+            this.join(player, teamName);
+            return;
+        }
+        final ArenaTeam oldTeam = gp.getTeam();
+        if (oldTeam.getName().equalsIgnoreCase(teamName)) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_team"));
+            return;
+        }
+        final ArenaTeam newTeam = this.findNamedTeam(teamName);
+        if (newTeam == null) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.team_not_found", teamName));
+            return;
+        }
+        if (this.teams.get(newTeam).size() >= this.maxTeamSlots()) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.team_full"));
+            return;
+        }
+        this.teams.get(oldTeam).remove(player.getUniqueId());
+        this.teams.get(newTeam).add(player.getUniqueId());
+        gp.setTeam(newTeam);
+        player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.switched_team", newTeam.getName()));
     }
 
     public void join(final Player player, final @Nullable String teamName) {
@@ -204,23 +253,40 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         Bukkit.getPluginManager().callEvent(new PlayerJoinGameEvent(this, player));
 
+        // Salva inventario do mundo normal antes de limpar
+        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
+        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+
         final Location spawn = this.arena.getArenaSpawn();
         if (spawn != null) {
             LocationUtil.safeTeleport(player, spawn);
         }
         player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
         player.setGameMode(GameMode.ADVENTURE);
         player.setHealth(20);
         player.setFoodLevel(20);
         player.getInventory().setItem(8, createExitDoorItem());
+        player.getInventory().setItem(0, createTeamSelectorItem());
+
+        // Esconde jogadores de outras partidas
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.hidePlayer(this.gameManager.getPlugin(), online);
+            online.hidePlayer(this.gameManager.getPlugin(), player);
+        }
 
         final int count = this.players.size();
         final int max = this.arena.getTeams().size();
         final Component msg = this.lang.text(NamedTextColor.GREEN, "game.join_broadcast",
                 player.getName(), String.valueOf(count), String.valueOf(max));
-        Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(msg));
+        // Envia mensagem apenas para jogadores desta partida
+        for (final var entry : this.players.entrySet()) {
+            final Player p = Bukkit.getPlayer(entry.getKey());
+            if (p != null) p.sendMessage(msg);
+        }
 
-        if (this.state == GameState.WAITING && this.countdownTask == null
+            if (this.state == GameState.WAITING && this.gameTickTask == null
                 && count >= this.arena.getMinPlayers()) {
             this.startCountdown();
         }
@@ -238,13 +304,12 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
             }
             player.setGameMode(GameMode.SURVIVAL);
+            // Restaura inventario do mundo normal
+            restoreInventory(player);
             return;
         }
 
-        final BukkitTask task = this.respawnTasks.remove(player.getUniqueId());
-        if (task != null) {
-            task.cancel();
-        }
+        this.respawnTicks.remove(player.getUniqueId());
 
         final GamePlayer gp = this.players.remove(player.getUniqueId());
         if (gp == null) return;
@@ -252,7 +317,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final ArenaTeam team = gp.getTeam();
         this.teams.get(team).remove(player.getUniqueId());
 
-        player.getInventory().clear();
+        // Restaura inventario do mundo normal
+        restoreInventory(player);
+
         final Location lobby = this.gameManager.getConfigManager().getLobby();
         if (lobby != null) {
             player.teleport(lobby);
@@ -261,36 +328,40 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
         player.setGameMode(GameMode.SURVIVAL);
 
+        // Mostra jogadores de outras partidas novamente
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.showPlayer(this.gameManager.getPlugin(), online);
+            online.showPlayer(this.gameManager.getPlugin(), player);
+        }
+
         final Component msg = this.lang.text(NamedTextColor.YELLOW, "game.leave_broadcast", player.getName());
-        Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(msg));
+        // Envia mensagem apenas para jogadores desta partida
+        for (final var entry : this.players.entrySet()) {
+            final Player p = Bukkit.getPlayer(entry.getKey());
+            if (p != null) p.sendMessage(msg);
+        }
 
         Bukkit.getPluginManager().callEvent(new PlayerLeaveGameEvent(this, player));
 
-        if (this.countdownTask != null && this.players.size() < this.arena.getMinPlayers()) {
+        if (this.state == GameState.STARTING && this.players.size() < this.arena.getMinPlayers()) {
             this.cancelCountdown();
         }
 
         this.checkWinCondition();
     }
 
-    private void stopCountdown() {
-        if (this.countdownTask != null) {
-            this.countdownTask.cancel();
-            this.countdownTask = null;
-        }
-    }
-
     public void start() {
         if (this.state != GameState.WAITING && this.state != GameState.STARTING) return;
-        this.stopCountdown();
         final GameState prevState = this.state;
         this.state = GameState.PLAYING;
+        this.tick = 0;
+        this.initGeneratorTicks();
+        this.initForgeTicks();
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prevState, GameState.PLAYING));
 
         this.restoreArenaSpawnBlock();
         this.restoreTeamSpawnBlocks();
-        this.startForges();
-        this.startGlobalGenerators();
 
         for (final var entry : this.teams.entrySet()) {
             final ArenaTeam team = entry.getKey();
@@ -329,8 +400,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
 
-        // Spawn shop NPCs
-        this.shopNpcManager.spawnShopNpcs(
+        this.shopNpcManager.spawnGameNpcs(
                 this.arena.getName(),
                 this.arena.getShopNpcLocations(),
                 this.arena.getShopNpcSkin()
@@ -351,92 +421,46 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
     }
 
-    /** Returns the current level of a forge in this match, or zero when it is not active. */
     public int getForgeLevel(final ArenaGenerator forge) {
         return this.forgeLevels.getOrDefault(forge, 0);
     }
 
-    /**
-     * Upgrades an active forge by one level. This is intentionally independent of a shop;
-     * a future shop can charge the player and then invoke this method.
-     *
-     * @return true when the forge was upgraded, false when it is invalid or at the maximum level
-     */
     public boolean upgradeForge(final ArenaGenerator forge) {
         final Integer level = this.forgeLevels.get(forge);
         if (level == null || level >= this.getForgeMaxLevel()) return false;
         this.forgeLevels.put(forge, level + 1);
         Bukkit.getPluginManager().callEvent(new GeneratorUpgradeEvent(this, forge, level, level + 1));
-        this.scheduleForge(forge);
+        this.rescheduleForge(forge);
         return true;
     }
 
-    private void startGlobalGenerators() {
+    private void initGeneratorTicks() {
+        this.generatorTicks.clear();
         for (final ArenaGenerator generator : this.arena.getGenerators()) {
-            if (generator.getType().equalsIgnoreCase("forge")) {
-                continue;
-            }
-            this.scheduleGlobalGenerator(generator);
+            if (generator.getType().equalsIgnoreCase("forge")) continue;
+            if (generator.getLocation() == null) continue;
+            final String type = generator.getType().toLowerCase();
+            final var genConfigs = this.arena.getGeneratorConfigs();
+            final GeneratorConfig config = genConfigs != null ? genConfigs.get(type) : null;
+            final Material material = config != null ? config.material() : this.gameManager.getConfigManager().getGeneratorMaterial(type);
+            final long interval = config != null ? config.interval() : this.gameManager.getConfigManager().getGeneratorInterval(type);
+            if (material == null || interval <= 0L) continue;
+        this.generatorTicks.put(generator, new long[]{0L, interval, 0L});
         }
     }
 
-    private void scheduleGlobalGenerator(final ArenaGenerator generator) {
-        final BukkitTask oldTask = this.generatorTasks.remove(generator);
-        if (oldTask != null) {
-            oldTask.cancel();
-        }
-
-        final String type = generator.getType().toLowerCase();
-        final var genConfigs = this.arena.getGeneratorConfigs();
-        final GeneratorConfig config = genConfigs != null ? genConfigs.get(type) : null;
-        final Material material = config != null ? config.material() : this.gameManager.getConfigManager().getGeneratorMaterial(type);
-        final long interval = config != null ? config.interval() : this.gameManager.getConfigManager().getGeneratorInterval(type);
-        if (material == null || interval <= 0L || generator.getLocation() == null) {
-            return;
-        }
-
-        final BukkitTask task = Bukkit.getScheduler().runTaskTimer(this.gameManager.getPlugin(), () -> {
-            if (this.state != GameState.PLAYING) {
-                return;
-            }
-            final Location dropLocation = generator.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
-            final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
-                    .filter(entity -> entity instanceof org.bukkit.entity.Item)
-                    .filter(entity -> ((org.bukkit.entity.Item) entity).getItemStack().getType() == material)
-                    .count();
-            if (nearbyCount >= 32) {
-                return;
-            }
-            final ItemStack stack = new ItemStack(material);
-            final GeneratorSpawnEvent spawnEvent = new GeneratorSpawnEvent(generator, stack);
-            Bukkit.getPluginManager().callEvent(spawnEvent);
-            if (spawnEvent.isCancelled()) return;
-            dropLocation.getWorld().dropItem(dropLocation, spawnEvent.getItem(), item -> {
-                item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
-                item.setPickupDelay(0);
-            });
-        }, interval, interval);
-        this.generatorTasks.put(generator, task);
-    }
-
-    private void stopGlobalGenerators() {
-        this.generatorTasks.values().forEach(BukkitTask::cancel);
-        this.generatorTasks.clear();
-    }
-
-    private void startForges() {
-        for (final ArenaGenerator generator : this.arena.getGenerators()) {
-            if (!generator.getType().equalsIgnoreCase("forge")) continue;
-            this.forgeLevels.put(generator, 1);
-            this.scheduleForge(generator);
+    private void initForgeTicks() {
+        this.forgeTicks.clear();
+        this.forgeLevels.clear();
+        for (final ArenaGenerator forge : this.arena.getGenerators()) {
+            if (!forge.getType().equalsIgnoreCase("forge")) continue;
+            if (forge.getLocation() == null) continue;
+            this.forgeLevels.put(forge, 1);
+            this.putForgeTicks(forge, 1);
         }
     }
 
-    private void scheduleForge(final ArenaGenerator forge) {
-        final List<BukkitTask> oldTasks = this.forgeTasks.remove(forge);
-        if (oldTasks != null) oldTasks.forEach(BukkitTask::cancel);
-
-        final int level = this.forgeLevels.getOrDefault(forge, 1);
+    private void putForgeTicks(final ArenaGenerator forge, final int level) {
         Map<Material, Long> intervals = null;
         var forgeLevels = this.arena.getForgeLevels();
         if (forgeLevels != null) {
@@ -450,32 +474,19 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         if (intervals == null || intervals.isEmpty()) {
             intervals = this.gameManager.getConfigManager().getForgeIntervals(level);
         }
-        final List<BukkitTask> tasks = new ArrayList<>();
         for (final var entry : intervals.entrySet()) {
             final Material material = entry.getKey();
             final long interval = entry.getValue();
-            tasks.add(Bukkit.getScheduler().runTaskTimer(this.gameManager.getPlugin(), () -> {
-                if (this.state != GameState.PLAYING) return;
-                final Location dropLocation = forge.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
-
-                // Cap: don't spawn if there are already 32+ of this material nearby
-                final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
-                        .filter(e -> e instanceof org.bukkit.entity.Item)
-                        .filter(e -> ((org.bukkit.entity.Item) e).getItemStack().getType() == material)
-                        .count();
-                if (nearbyCount >= 32) return;
-
-                final ItemStack stack = new ItemStack(material);
-                final GeneratorSpawnEvent spawnEvent = new GeneratorSpawnEvent(forge, stack);
-                Bukkit.getPluginManager().callEvent(spawnEvent);
-                if (spawnEvent.isCancelled()) return;
-                dropLocation.getWorld().dropItem(dropLocation, spawnEvent.getItem(), item -> {
-                    item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
-                    item.setPickupDelay(0);
-                });
-            }, interval, interval));
+            final String key = forgeKey(forge) + ":" + material.name();
+            this.forgeTicks.put(key, new long[]{0L, interval, 0L});
         }
-        this.forgeTasks.put(forge, tasks);
+    }
+
+    private void rescheduleForge(final ArenaGenerator forge) {
+        final int level = this.forgeLevels.getOrDefault(forge, 1);
+        final String prefix = forgeKey(forge) + ":";
+        this.forgeTicks.keySet().removeIf(k -> k.startsWith(prefix));
+        this.putForgeTicks(forge, level);
     }
 
     private int getForgeMaxLevel() {
@@ -484,11 +495,139 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.gameManager.getConfigManager().getForgeMaxLevel();
     }
 
-    private void stopForges() {
-        this.forgeTasks.values().forEach(tasks -> tasks.forEach(BukkitTask::cancel));
-        this.forgeTasks.clear();
-        this.forgeLevels.clear();
-        this.stopGlobalGenerators();
+    private void stopGameTick() {
+        if (this.gameTickTask != null) {
+            this.gameTickTask.cancel();
+            this.gameTickTask = null;
+        }
+    }
+
+    private void startGameTick() {
+        if (this.gameTickTask != null) return;
+        this.gameTickTask = Bukkit.getScheduler().runTaskTimer(this.gameManager.getPlugin(), this::gameTick, 1L, 1L);
+    }
+
+    private void gameTick() {
+        this.tick++;
+        switch (this.state) {
+            case STARTING -> this.handleCountdownTick();
+            case PLAYING -> {
+                this.handleGeneratorTicks();
+                this.handleForgeTicks();
+                this.handleRespawnTicks();
+            }
+        }
+    }
+
+    private void handleCountdownTick() {
+        if (this.tick % 20 != 0) return;
+        if (this.countdownSeconds <= 0) {
+            this.start();
+            return;
+        }
+        for (final Player p : Bukkit.getOnlinePlayers()) {
+            if (this.players.containsKey(p.getUniqueId())) {
+                p.sendTitle("§e" + this.countdownSeconds, this.lang.raw("game.countdown_preparing"), 0, 20, 10);
+            }
+        }
+        this.countdownSeconds--;
+    }
+
+    private void handleGeneratorTicks() {
+        for (final Map.Entry<ArenaGenerator, long[]> entry : this.generatorTicks.entrySet()) {
+            final ArenaGenerator generator = entry.getKey();
+            if (generator.getLocation() == null) continue;
+            final long[] data = entry.getValue();
+            final long lastSpawn = data[0];
+            final long interval = data[1];
+            if (this.tick - lastSpawn < interval) continue;
+            data[0] = this.tick;
+            final String type = generator.getType().toLowerCase();
+            final var genConfigs = this.arena.getGeneratorConfigs();
+            final GeneratorConfig config = genConfigs != null ? genConfigs.get(type) : null;
+            final Material material = config != null ? config.material() : this.gameManager.getConfigManager().getGeneratorMaterial(type);
+            if (material == null) continue;
+            final Location dropLocation = generator.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
+            final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
+                    .filter(entity -> entity instanceof org.bukkit.entity.Item)
+                    .filter(entity -> ((org.bukkit.entity.Item) entity).getItemStack().getType() == material)
+                    .count();
+            if (nearbyCount >= 32) continue;
+            final ItemStack stack = new ItemStack(material);
+            final GeneratorSpawnEvent spawnEvent = new GeneratorSpawnEvent(generator, stack);
+            Bukkit.getPluginManager().callEvent(spawnEvent);
+            if (spawnEvent.isCancelled()) continue;
+            dropLocation.getWorld().dropItem(dropLocation, spawnEvent.getItem(), item -> {
+                item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+                item.setPickupDelay(0);
+            });
+        }
+    }
+
+    private void handleForgeTicks() {
+        for (final Map.Entry<String, long[]> entry : this.forgeTicks.entrySet()) {
+            final long[] data = entry.getValue();
+            final long lastSpawn = data[0];
+            final long interval = data[1];
+            if (this.tick - lastSpawn < interval) continue;
+            data[0] = this.tick;
+            final String key = entry.getKey();
+            final int colon = key.indexOf(':');
+            if (colon == -1) continue;
+            final String locKey = key.substring(0, colon);
+            final String matName = key.substring(colon + 1);
+            final Material material = Material.matchMaterial(matName);
+            if (material == null) continue;
+            final ArenaGenerator forge = findForgeByKey(locKey);
+            if (forge == null || forge.getLocation() == null) continue;
+            final Location dropLocation = forge.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
+            final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
+                    .filter(e -> e instanceof org.bukkit.entity.Item)
+                    .filter(e -> ((org.bukkit.entity.Item) e).getItemStack().getType() == material)
+                    .count();
+            if (nearbyCount >= 32) continue;
+            final ItemStack stack = new ItemStack(material);
+            final GeneratorSpawnEvent spawnEvent = new GeneratorSpawnEvent(forge, stack);
+            Bukkit.getPluginManager().callEvent(spawnEvent);
+            if (spawnEvent.isCancelled()) continue;
+            dropLocation.getWorld().dropItem(dropLocation, spawnEvent.getItem(), item -> {
+                item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+                item.setPickupDelay(0);
+            });
+        }
+    }
+
+    private void handleRespawnTicks() {
+        if (this.respawnTicks.isEmpty()) return;
+        final var iter = this.respawnTicks.entrySet().iterator();
+        while (iter.hasNext()) {
+            final var entry = iter.next();
+            final int remaining = entry.getValue() - 1;
+            if (remaining <= 0) {
+                iter.remove();
+                final Player player = Bukkit.getPlayer(entry.getKey());
+                if (player != null) {
+                    final ArenaTeam team = this.getPlayerTeam(player);
+                    if (team != null) this.tryRespawn(player, team);
+                }
+            } else {
+                entry.setValue(remaining);
+            }
+        }
+    }
+
+    private static String forgeKey(final ArenaGenerator forge) {
+        final Location loc = forge.getLocation();
+        return loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
+    }
+
+    private @Nullable ArenaGenerator findForgeByKey(final String locKey) {
+        for (final ArenaGenerator gen : this.arena.getGenerators()) {
+            if (!gen.getType().equalsIgnoreCase("forge")) continue;
+            if (gen.getLocation() == null) continue;
+            if (forgeKey(gen).equals(locKey)) return gen;
+        }
+        return null;
     }
 
     @SuppressWarnings("deprecation")
@@ -496,34 +635,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.state = GameState.STARTING;
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.WAITING, GameState.STARTING));
         this.countdownSeconds = this.arena.getCountdown();
-
-        this.countdownTask = Bukkit.getScheduler().runTaskTimer(
-                this.gameManager.getPlugin(),
-                () -> {
-                    if (this.countdownSeconds <= 0) {
-                        this.start();
-                        return;
-                    }
-                    if (this.state != GameState.STARTING) {
-                        this.cancelCountdown();
-                        return;
-                    }
-                    for (final Player p : Bukkit.getOnlinePlayers()) {
-                        if (this.players.containsKey(p.getUniqueId())) {
-                            p.sendTitle("§e" + this.countdownSeconds, "§7Preparando...", 0, 20, 10);
-                        }
-                    }
-                    this.countdownSeconds--;
-                },
-                0L,
-                20L
-        );
+        this.startGameTick();
     }
 
     private void cancelCountdown() {
-        this.stopCountdown();
         if (this.state != GameState.STARTING) return;
         this.state = GameState.WAITING;
+        this.stopGameTick();
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.STARTING, GameState.WAITING));
         final Component langMsg = this.lang.text(NamedTextColor.RED, "game.countdown_cancelled");
         Bukkit.getOnlinePlayers().forEach(p -> {
@@ -556,16 +674,12 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
-        final BukkitTask task = Bukkit.getScheduler().runTaskLater(
-                this.gameManager.getPlugin(),
-                () -> this.tryRespawn(player, team),
-                RESPAWN_DELAY
-        );
-        this.respawnTasks.put(player.getUniqueId(), task);
+        this.respawnTicks.put(player.getUniqueId(), RESPAWN_DELAY);
+        this.startGameTick();
     }
 
     private void tryRespawn(final Player player, final ArenaTeam team) {
-        this.respawnTasks.remove(player.getUniqueId());
+        this.respawnTicks.remove(player.getUniqueId());
         if (this.state != GameState.PLAYING) return;
         if (this.players.get(player.getUniqueId()) == null) return;
         if (this.bedlessTeams.contains(team)) {
@@ -610,9 +724,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new BedBreakEvent(this, team, null));
 
         for (final UUID uuid : this.teams.get(team)) {
-            final BukkitTask task = this.respawnTasks.remove(uuid);
-            if (task != null) {
-                task.cancel();
+            final Integer rem = this.respawnTicks.remove(uuid);
+            if (rem != null) {
                 final GamePlayer gp = this.players.get(uuid);
                 if (gp != null) {
                     Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, gp, null));
@@ -683,8 +796,12 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private void endGame(final ArenaTeam winner) {
         final GameState prevState = this.state;
         this.state = GameState.ENDING;
+        this.stopGameTick();
+        this.respawnTicks.clear();
+        this.generatorTicks.clear();
+        this.forgeTicks.clear();
+        this.forgeLevels.clear();
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prevState, GameState.ENDING));
-        this.stopForges();
 
         final Component msg = this.lang.text(NamedTextColor.GOLD, "game.team_wins", winner.getName().toUpperCase());
         final Title winTitle = Title.title(
@@ -708,11 +825,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         });
 
         Bukkit.getPluginManager().callEvent(new GameEndEvent(this, winner));
-
-        for (final BukkitTask task : this.respawnTasks.values()) {
-            task.cancel();
-        }
-        this.respawnTasks.clear();
 
         Bukkit.getScheduler().runTaskLater(
                 this.gameManager.getPlugin(),
@@ -748,7 +860,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                             this.gameManager.removePlayerMapping(player);
                         }
                     }
-                    this.shopNpcManager.removeShopNpcs(this.arena.getName());
+                    this.shopNpcManager.removeGameNpcs(this.arena.getName());
                     this.players.clear();
                     this.teams.values().forEach(List::clear);
                     this.eliminatedTeams.clear();
@@ -825,55 +937,51 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public void forceEnd() {
         if (this.state == GameState.ENDING) return;
-        this.stopForges();
-        final ArenaTeam winner = this.determineWinner();
-        if (winner != null) {
-            this.endGame(winner);
-        } else {
-            final GameState prev = this.state;
-            this.state = GameState.ENDING;
-            Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prev, GameState.ENDING));
-            for (final BukkitTask task : this.respawnTasks.values()) {
-                task.cancel();
-            }
-            this.respawnTasks.clear();
-            for (final var entry : this.teams.entrySet()) {
-                for (final UUID uuid : entry.getValue()) {
-                    final Player player = Bukkit.getPlayer(uuid);
-                    if (player == null) continue;
-                    player.getInventory().clear();
-                    final Location lobby = this.gameManager.getConfigManager().getLobby();
-                    if (lobby != null && lobby.getWorld() != null) {
-                        player.teleport(lobby);
-                    } else if (!Bukkit.getWorlds().isEmpty()) {
-                        player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
-                    }
-                    player.setGameMode(GameMode.SURVIVAL);
-                    player.clearTitle();
-                    this.gameManager.removePlayerMapping(player);
-                }
-            }
-            final Location lobby = this.gameManager.getConfigManager().getLobby();
-            for (final UUID uuid : this.spectators) {
+        this.stopGameTick();
+        this.respawnTicks.clear();
+        this.generatorTicks.clear();
+        this.forgeTicks.clear();
+        this.forgeLevels.clear();
+        final GameState prev = this.state;
+        this.state = GameState.ENDING;
+        Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prev, GameState.ENDING));
+        for (final var entry : this.teams.entrySet()) {
+            for (final UUID uuid : entry.getValue()) {
                 final Player player = Bukkit.getPlayer(uuid);
                 if (player == null) continue;
+                restoreInventory(player);
+                final Location lobby = this.gameManager.getConfigManager().getLobby();
                 if (lobby != null && lobby.getWorld() != null) {
                     player.teleport(lobby);
                 } else if (!Bukkit.getWorlds().isEmpty()) {
                     player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
                 }
                 player.setGameMode(GameMode.SURVIVAL);
+                player.clearTitle();
                 this.gameManager.removePlayerMapping(player);
             }
-            this.shopNpcManager.removeShopNpcs(this.arena.getName());
-            this.spectators.clear();
-            this.players.clear();
-            this.teams.values().forEach(List::clear);
-            this.eliminatedTeams.clear();
-            this.bedlessTeams.clear();
-            this.gameManager.removeGame(this.arena.getName());
-            this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
         }
+        final Location lobby = this.gameManager.getConfigManager().getLobby();
+        for (final UUID uuid : this.spectators) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player == null) continue;
+            restoreInventory(player);
+            if (lobby != null && lobby.getWorld() != null) {
+                player.teleport(lobby);
+            } else if (!Bukkit.getWorlds().isEmpty()) {
+                player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
+            }
+            player.setGameMode(GameMode.SURVIVAL);
+            this.gameManager.removePlayerMapping(player);
+        }
+        this.shopNpcManager.removeGameNpcs(this.arena.getName());
+        this.spectators.clear();
+        this.players.clear();
+        this.teams.values().forEach(List::clear);
+        this.eliminatedTeams.clear();
+        this.bedlessTeams.clear();
+        this.gameManager.removeGame(this.arena.getName());
+        this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
     }
 
     private @Nullable ArenaTeam determineWinner() {
@@ -890,11 +998,44 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private ItemStack createExitDoorItem() {
         final ItemStack item = new ItemStack(Material.IRON_DOOR);
         final ItemMeta meta = item.getItemMeta();
-        meta.displayName(MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel")));
+        meta.displayName(MM.deserialize(this.lang.raw("ui.exit_door.name")));
         meta.lore(List.of(
-                MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel_desc"))
+                MM.deserialize(this.lang.raw("ui.exit_door.lore"))
         ));
         item.setItemMeta(meta);
         return item;
+    }
+
+    private ItemStack createTeamSelectorItem() {
+        final ItemStack item = new ItemStack(Material.COMPASS);
+        final ItemMeta meta = item.getItemMeta();
+        meta.displayName(MM.deserialize(this.lang.raw("ui.team_selector.name")));
+        meta.lore(List.of(
+                MM.deserialize(this.lang.raw("ui.team_selector.lore"))
+        ));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    /**
+     * Restaura o inventario salvo do mundo normal do jogador.
+     */
+    private void restoreInventory(final Player player) {
+        final UUID uuid = player.getUniqueId();
+        final ItemStack[] contents = this.savedInventories.remove(uuid);
+        final ItemStack[] armor = this.savedArmor.remove(uuid);
+        player.getInventory().clear();
+        if (contents != null) {
+            player.getInventory().setContents(contents);
+        }
+        if (armor != null) {
+            player.getInventory().setArmorContents(armor);
+        }
+        // Mostra jogadores de outras partidas novamente
+        for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (this == this.gameManager.getPlayerGame(online)) continue;
+            player.showPlayer(this.gameManager.getPlugin(), online);
+            online.showPlayer(this.gameManager.getPlugin(), player);
+        }
     }
 }

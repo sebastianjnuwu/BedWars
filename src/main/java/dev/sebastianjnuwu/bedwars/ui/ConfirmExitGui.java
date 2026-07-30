@@ -30,31 +30,18 @@ public class ConfirmExitGui implements InventoryHolder {
     }
 
     private void setupItems() {
-        // Fundo escuro
         final ItemStack darkGlass = createItem(Material.GRAY_STAINED_GLASS_PANE, " ");
         for (int i = 0; i < 27; i++) {
             this.inventory.setItem(i, darkGlass);
         }
 
-        // Mensagem de confirmação
-        this.inventory.setItem(10, createItem(
-                Material.RED_CONCRETE,
-                MM.deserialize(this.lang.raw("ui.confirm_exit.warning")),
-                List.of(
-                        MM.deserialize(this.lang.raw("ui.confirm_exit.confirm_exit")),
-                        MM.deserialize(this.lang.raw("ui.confirm_exit.lose_progress"))
-                )
-        ));
-
-        // Botão SIM
-        this.inventory.setItem(13, createItem(
+        this.inventory.setItem(12, createItem(
                 Material.LIME_WOOL,
                 MM.deserialize(this.lang.raw("ui.confirm_exit.yes_exit")),
                 List.of(MM.deserialize(this.lang.raw("ui.confirm_exit.yes_exit_desc")))
         ));
 
-        // Botão NÃO
-        this.inventory.setItem(16, createItem(
+        this.inventory.setItem(14, createItem(
                 Material.RED_WOOL,
                 MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel")),
                 List.of(MM.deserialize(this.lang.raw("ui.confirm_exit.no_cancel_desc")))
@@ -83,14 +70,12 @@ public class ConfirmExitGui implements InventoryHolder {
         if (slot < 0 || slot >= this.inventory.getSize()) return false;
 
         switch (slot) {
-            case 13 -> {
-                // SIM - SAIR
+            case 12 -> {
                 this.player.closeInventory();
                 this.player.performCommand("bw leave");
                 return true;
             }
-            case 16 -> {
-                // NÃO - CANCELAR
+            case 14 -> {
                 this.player.closeInventory();
                 return true;
             }

@@ -5,7 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.sebastianjnuwu</groupId>
-    <artifactId>BedWars</artifactId>
+    <artifactId>sBedWars</artifactId>
+    <name>sBedWars</name>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 

@@ -16,9 +16,9 @@ import java.io.File;
 /**
  * /bw admin reload
  *
- * Reloads all arena .yml files from disk and the lang file.
- * Safe to use while the server is running — does not affect
- * active games or open editor sessions.
+ * Recarrega todos os arquivos .yml de arena do disco e o arquivo de idioma.
+ * Seguro para usar enquanto o servidor está em execução — não afeta
+ * partidas ativas ou sessões de edição abertas.
  */
 public class ReloadCommand extends BaseCommand implements SubCommand {
 

@@ -4,9 +4,9 @@ import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Represents an item generator inside an arena. Each generator has
- * a type (bronze, iron, gold), a location, and the original block data
- * for block restoration.
+ * Representa um gerador de itens dentro de uma arena. Cada gerador tem
+ * um tipo (bronze, ferro, ouro), uma localização e os dados originais do bloco
+ * para restauração de bloco.
  */
 public class ArenaGenerator implements dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator {
 

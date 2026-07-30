@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Manages all active BedWars games and player-to-game mappings.
- * Handles game creation, joining, leaving, and cleanup.
+ * Gerencia todas as partidas ativas de BedWars e o mapeamento de jogadores para partidas.
+ * Lida com criação, entrada, saída e limpeza de partidas.
  */
 public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
@@ -172,6 +172,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         if (game != null) {
             game.leave(player);
             if (game.getPlayers().isEmpty()) {
+                this.shopNpcManager.removeGameNpcs(game.getArena().getName());
                 this.games.remove(game.getArena().getName());
             }
         }
@@ -179,12 +180,17 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public void startGame(final String arenaName) {
-        final Game game = this.games.get(arenaName);
+        Game game = this.games.get(arenaName);
         if (game == null) {
-            return;
+            final Arena arena = this.arenaManager.get(arenaName);
+            if (arena == null) return;
+            if (!this.arenaManager.ensureArenaReady(arena)) return;
+            final Arena refreshed = this.arenaManager.get(arenaName);
+            if (refreshed == null) return;
+            game = new Game(this, refreshed, this.shopNpcManager);
+            this.games.put(arenaName, game);
         }
-        final Arena arena = game.getArena();
-        final List<String> missing = this.validateArena(arena);
+        final List<String> missing = this.validateArena(game.getArena());
         if (!missing.isEmpty()) {
             return;
         }
@@ -200,7 +206,17 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     public void removeGame(final String arenaName) {
         final Game game = this.games.remove(arenaName);
         if (game != null) {
+            this.shopNpcManager.removeGameNpcs(arenaName);
             this.playerGames.values().removeIf(g -> g == game);
         }
+    }
+
+    public void forceEndAll() {
+        for (final Game game : this.games.values()) {
+            game.forceEnd();
+        }
+        this.games.clear();
+        this.playerGames.clear();
+        this.shopNpcManager.removeAll();
     }
 }

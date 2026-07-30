@@ -23,9 +23,11 @@ import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
-import dev.sebastianjnuwu.bedwars.shop.ShopManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopListener;
+import dev.sebastianjnuwu.bedwars.shop.ShopManager;
+import dev.sebastianjnuwu.bedwars.util.VersionChecker;
 import dev.sebastianjnuwu.bedwars.world.WorldManager;
+import dev.sebastianjnuwu.bedwars.libs.bstats.Metrics;
 
 public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
@@ -42,13 +44,38 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.editorManager = new EditorManager(this);
         this.lang = new LangManager(this, this.configManager.getLang());
 
+        this.getLogger().info("\n\n"
+                + "██████╗ ███████╗██████╗ ██╗    ██╗ █████╗ ██████╗ ███████╗\n"
+                + "██╔══██╗██╔════╝██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔════╝\n"
+                + "██████╔╝█████╗  ██║  ██║██║ █╗ ██║███████║██████╔╝███████╗\n"
+                + "██╔══██╗██╔══╝  ██║  ██║██║███╗██║██╔══██║██╔══██╗╚════██║\n"
+                + "██████╔╝███████╗██████╔╝╚███╔███╔╝██║  ██║██║  ██║███████║\n"
+                + "╚═════╝ ╚══════╝╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝\n"
+                + "                                                           \n"
+                + "  - GitHub: " + this.lang.raw("startup.github") + "\n"
+                + "  - Author: " + this.lang.raw("startup.author") + "\n"
+                + "  - Version: " + this.lang.raw("startup.version", getDescription().getVersion())
+                +                 "\n");
+
+        new Metrics(this, 33001);
+
+        if (this.configManager.isVersionCheckEnabled()) {
+            final VersionChecker checker = new VersionChecker(
+                    getDescription().getVersion(),
+                    this.getLogger(),
+                    this.lang
+            );
+            this.getServer().getScheduler().runTaskLater(this, checker::check, 1L);
+        } else {
+            this.getLogger().info(this.lang.raw("version_check.disabled"));
+        }
+
         final WorldManager worldManager = new WorldManager(this);
         final File mapsFolder = new File(this.getDataFolder(), "maps");
         mapsFolder.mkdirs();
 
         this.arenaManager = new ArenaManager(this, worldManager, mapsFolder);
         this.arenaManager.load();
-        this.arenaManager.startSaveTask();
 
         this.gameManager = new GameManager(this, this.arenaManager, this.configManager, this.lang, this.editorManager);
 
@@ -65,9 +92,9 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             Class.forName("de.oliver.fancynpcs.api.events.NpcInteractEvent");
             this.getServer().getPluginManager().registerEvents(
                     new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
-            this.getLogger().info("FancyNPCs hook registered!");
+            this.getLogger().info(this.lang.raw("startup.fancynpcs_hook"));
         } catch (ClassNotFoundException e) {
-            this.getLogger().info("FancyNPCs not found - NPC shop interaction disabled.");
+            this.getLogger().info(this.lang.raw("startup.fancynpcs_not_found"));
         }
 
         final BWCommand bwCommand = new BWCommand(
@@ -84,7 +111,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             command.setTabCompleter(bwCommand);
         }
 
-        this.getLogger().info("BedWars ativado!");
     }
 
     @Override
@@ -94,8 +120,11 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             this.editorManager.shutdown(this.configManager, this.arenaManager, this.lang);
         }
 
+        if (this.gameManager != null) {
+            this.gameManager.forceEndAll();
+        }
+
         if (this.arenaManager != null) {
-            this.arenaManager.stopSaveTask();
             this.arenaManager.flush();
         }
 
@@ -201,7 +230,8 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
     }
 
     @Override
-    public @NotNull Collection<Player> getPlayersInArena(@NotNull String arenaName) {
+    public @NotNull
+    Collection<Player> getPlayersInArena(@NotNull String arenaName) {
         Game game = this.gameManager.getGame(arenaName);
         return game != null ? game.getPlayers() : Collections.emptyList();
     }

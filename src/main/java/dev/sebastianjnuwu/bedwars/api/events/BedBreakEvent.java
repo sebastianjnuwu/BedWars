@@ -9,7 +9,7 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Called when a team's bed is broken during a game.
+ * Disparado quando o berço de uma equipe é quebrado durante uma partida.
  */
 public class BedBreakEvent extends Event implements Cancellable {
 

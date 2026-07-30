@@ -68,7 +68,10 @@ public class JoinCommand extends BaseCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.join_usage"));
             return;
         }
-        final String teamName = args.length >= 3 ? args[2] : null;
-        this.gameManager.joinGame(player, args[1], teamName);
+        if (args.length >= 3) {
+            this.gameManager.joinGame(player, args[1], args[2]);
+        } else {
+            this.gameManager.joinGame(player, args[1], null);
+        }
     }
 }

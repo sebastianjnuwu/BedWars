@@ -73,7 +73,7 @@ public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
     }
 
     /**
-     * Searches nearby blocks for any bed block (FOOT or HEAD).
+     * Procura blocos próximos por qualquer bloco de cama (FOOT ou HEAD).
      */
     private Block findNearbyBed(final Location center, final int radius) {
         final int cx = center.getBlockX();
@@ -100,7 +100,7 @@ public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
     }
 
     /**
-     * Recolors an existing bed (both halves) to the target bed material.
+     * Recolore uma cama existente (ambas as metades) para o material de cama alvo.
      */
     private void recolorBed(final Block bedBlock, final Material bedMaterial) {
         final Bed bedData = (Bed) bedBlock.getBlockData();
@@ -133,7 +133,7 @@ public class SetBedCommand extends BaseCommand implements ArenaSubCommand {
     }
 
     /**
-     * Gets the facing direction of a bed block.
+     * Obtém a direção para a qual uma cama está virada.
      */
     private BlockFace getBedFacing(final Block bedBlock) {
         if (bedBlock.getBlockData() instanceof final Bed bed) {

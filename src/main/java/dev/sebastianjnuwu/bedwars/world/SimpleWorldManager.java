@@ -1,5 +1,6 @@
 package dev.sebastianjnuwu.bedwars.world;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -139,7 +140,7 @@ public class SimpleWorldManager implements
 
         // Teleporta jogadores para o lobby
         for (final Player player : world.getPlayers()) {
-            player.kick(Component.text("Arena being reset."));
+            player.kick(Component.text(org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class).getLang().raw("kick.arena_reset")));
         }
 
         return Bukkit.unloadWorld(world, true);

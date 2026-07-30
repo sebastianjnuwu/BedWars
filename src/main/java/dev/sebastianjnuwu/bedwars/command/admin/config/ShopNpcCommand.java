@@ -1,5 +1,6 @@
 package dev.sebastianjnuwu.bedwars.command.admin.config;
 
+import de.oliver.fancynpcs.api.Npc;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
@@ -8,6 +9,7 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -16,18 +18,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Comando para gerenciar NPCs da loja em uma arena.
  * <p>
  * Subcomandos:
  * <ul>
- *   <li><b>add [skin]</b> — adiciona um NPC na posição atual do jogador</li>
- *   <li><b>remove &lt;id&gt;</b> — remove um NPC pelo índice</li>
+ *   <li><b>add [skin]</b> — adiciona um NPC na posicao atual do jogador</li>
+ *   <li><b>remove &lt;id&gt;</b> — remove um NPC pelo indice</li>
  *   <li><b>list</b> — lista todos os NPCs configurados</li>
  * </ul>
  */
 public class ShopNpcCommand extends BaseCommand implements ArenaSubCommand {
+
+    private final ShopNpcManager shopNpcManager;
 
     public ShopNpcCommand(
             final ArenaManager arenaManager,
@@ -38,6 +43,7 @@ public class ShopNpcCommand extends BaseCommand implements ArenaSubCommand {
             final File mapsFolder
     ) {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
+        this.shopNpcManager = gameManager.getShopNpcManager();
     }
 
     @Override
@@ -48,62 +54,73 @@ public class ShopNpcCommand extends BaseCommand implements ArenaSubCommand {
         }
 
         if (args.length < 4) {
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "Uso: /bw admin arena <arena> shop-npc add <skin>"));
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "Uso: /bw admin arena <arena> shop-npc remove <id>"));
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "Uso: /bw admin arena <arena> shop-npc list"));
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.shop_npc.usage_add"));
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.shop_npc.usage_remove"));
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.shop_npc.usage_list"));
             return;
         }
 
-        String action = args[3].toLowerCase();
+        final String action = args[3].toLowerCase();
 
         switch (action) {
             case "add" -> {
-                String skin = args.length > 4 ? args[4] : "NPC";
-                Location loc = player.getLocation();
-                var locations = new ArrayList<>(arena.getShopNpcLocations());
+                final String skin = args.length > 4 ? args[4] : "NPC";
+                final Location loc = player.getLocation();
+                final List<Location> locations = new ArrayList<>(arena.getShopNpcLocations());
+                final int index = locations.size();
                 locations.add(loc);
                 arena.setShopNpcLocations(locations);
                 arena.setShopNpcSkin(skin);
                 this.arenaManager.save(arena);
-                sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "Shop NPC adicionado na arena " + arena.getName()));
+
+                final Npc npc = this.shopNpcManager.spawnSingleNpc(arena.getName(), index, loc, skin);
+                if (npc != null) {
+                    sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.shop_npc.added", arena.getName()));
+                } else {
+                    sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.shop_npc.added_no_npcs"));
+                }
             }
             case "remove" -> {
-                var locations = new ArrayList<>(arena.getShopNpcLocations());
+                final List<Location> locations = new ArrayList<>(arena.getShopNpcLocations());
                 if (args.length > 4) {
                     try {
-                        int id = Integer.parseInt(args[4]);
+                        final int id = Integer.parseInt(args[4]);
                         if (id >= 0 && id < locations.size()) {
                             locations.remove(id);
                             arena.setShopNpcLocations(locations);
                             this.arenaManager.save(arena);
-                            sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "Shop NPC " + id + " removido"));
+                            this.shopNpcManager.removeEditorNpcs(arena.getName());
+                            this.shopNpcManager.spawnEditorNpcs(arena.getName(), arena.getShopNpcLocations(), arena.getShopNpcSkin());
+                            sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.shop_npc.removed", id));
                         } else {
-                            sender.sendMessage(this.lang.text(NamedTextColor.RED, "ID invalido"));
+                            sender.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.shop_npc.invalid_id"));
                         }
-                    } catch (NumberFormatException e) {
-                        sender.sendMessage(this.lang.text(NamedTextColor.RED, "ID invalido"));
+                    } catch (final NumberFormatException e) {
+                        sender.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.shop_npc.invalid_id"));
                     }
                 } else if (!locations.isEmpty()) {
                     locations.remove(locations.size() - 1);
                     arena.setShopNpcLocations(locations);
                     this.arenaManager.save(arena);
-                    sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "Ultimo Shop NPC removido"));
+                    this.shopNpcManager.removeEditorNpcs(arena.getName());
+                    this.shopNpcManager.spawnEditorNpcs(arena.getName(), arena.getShopNpcLocations(), arena.getShopNpcSkin());
+                    sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.shop_npc.removed_last"));
                 }
             }
             case "list" -> {
-                var locations = arena.getShopNpcLocations();
+                final List<Location> locations = arena.getShopNpcLocations();
                 if (locations.isEmpty()) {
-                    sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "Nenhum Shop NPC configurado"));
+                    sender.sendMessage(this.lang.text(NamedTextColor.YELLOW, "admin.arena.shop_npc.none"));
                 } else {
-                    sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "Shop NPCs da arena " + arena.getName() + ":"));
+                    sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.shop_npc.header", arena.getName()));
                     for (int i = 0; i < locations.size(); i++) {
-                        Location l = locations.get(i);
-                        sender.sendMessage(this.lang.text(NamedTextColor.GRAY, "  " + i + ": " + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ()));
+                        final Location l = locations.get(i);
+                        sender.sendMessage(this.lang.text(NamedTextColor.GRAY, "admin.arena.shop_npc.entry", i, l.getBlockX(), l.getBlockY(), l.getBlockZ()));
                     }
-                    sender.sendMessage(this.lang.text(NamedTextColor.GRAY, "Skin: " + arena.getShopNpcSkin()));
+                    sender.sendMessage(this.lang.text(NamedTextColor.GRAY, "admin.arena.shop_npc.skin_label", arena.getShopNpcSkin()));
                 }
             }
-            default -> sender.sendMessage(this.lang.text(NamedTextColor.RED, "Acao invalida. Use: add, remove, list"));
+            default -> sender.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.shop_npc.unknown_action"));
         }
     }
 }

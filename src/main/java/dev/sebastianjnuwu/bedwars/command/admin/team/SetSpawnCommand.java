@@ -66,8 +66,8 @@ public class SetSpawnCommand extends BaseCommand implements ArenaSubCommand {
     }
 
     /**
-     * Returns the terracotta block used as a team-spawn marker below the player's feet.
-     * Terracotta is visually distinct and unlikely to appear naturally in BedWars maps.
+     * Retorna o bloco de terracota usado como marcador de spawn da equipe abaixo dos pés do jogador.
+     * Terracota é visualmente distinta e improvável de aparecer naturalmente em mapas de BedWars.
      */
     public static Material getSpawnMarkerMaterial(final String dyeColor) {
         if (dyeColor == null) return Material.TERRACOTTA;

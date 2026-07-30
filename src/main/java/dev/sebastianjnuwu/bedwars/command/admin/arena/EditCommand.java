@@ -133,6 +133,13 @@ public class EditCommand extends BaseCommand implements SubCommand {
         this.editorManager.startSession(player, name);
         this.editorManager.startParticleTask(player, name, this.arenaManager);
 
+        // Spawn shop NPCs for editor view
+        this.gameManager.getShopNpcManager().spawnEditorNpcs(
+                arena.getName(),
+                arena.getShopNpcLocations(),
+                arena.getShopNpcSkin()
+        );
+
         // Teleport to the arena spawn if already set, otherwise fall back to world spawn
         final Location destination = arena.getArenaSpawn() != null
                 ? arena.getArenaSpawn().clone()

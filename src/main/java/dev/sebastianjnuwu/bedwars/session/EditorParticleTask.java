@@ -13,17 +13,17 @@ import org.bukkit.entity.Player;
 import java.util.Map;
 
 /**
- * Spawns coloured dust particles above every defined point of an arena
- * while a player is in editor mode.
+ * Spawna partículas de poeira coloridas acima de cada ponto definido de uma arena
+ * enquanto um jogador está no modo de edição.
  *
- * Particle legend:
- *   Arena spawn  → green
- *   Team spawns  → team colour (matches the wool block used as marker)
- *   Team beds    → red
- *   Generators   → yellow (iron/gold) | cyan (diamond) | purple (emerald) | orange (forge)
+ * Legenda das partículas:
+ *   Spawn da arena  → verde
+ *   Spawns dos times → cor do time (combina com o bloco de lã usado como marcador)
+ *   Camas dos times → vermelho
+ *   Geradores       → amarelo (ferro/ouro) | ciano (diamante) | roxo (esmeralda) | laranja (forja)
  *
- * The task is scheduled as a repeating BukkitTask and cancelled automatically
- * when the editor session ends.
+ * A tarefa é agendada como uma BukkitTask repetitiva e cancelada automaticamente
+ * quando a sessão de edição termina.
  */
 public class EditorParticleTask implements Runnable {
 
@@ -32,7 +32,7 @@ public class EditorParticleTask implements Runnable {
     private static final double PARTICLE_SPREAD   = 0.15;
     private static final int    PARTICLE_COUNT    = 4;
 
-    /** Maps team colour names (lower-case) to dust colours. */
+    /** Mapeia nomes de cores de times (minúsculas) para cores de poeira. */
     private static final Map<String, Color> TEAM_COLORS = Map.of(
             "azul",      Color.BLUE,
             "vermelho",  Color.RED,

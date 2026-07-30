@@ -68,7 +68,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             final File mapsFolder
     ) {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
-        this.slimeManager = new SlimeManager(org.bukkit.Bukkit.getPluginManager().getPlugin("BedWars"));
+        this.slimeManager = new SlimeManager(org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class));
     }
 
     /**
@@ -142,22 +142,16 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                     arena.setPaste(pasteX, pasteY, pasteZ);
                     arena.setSchematicSize(w, h, l);
 
-                    org.bukkit.Bukkit.getLogger().info(
-                            "Dimensões lidas da seleção FAWE para arena '" + name + "': "
-                                    + w + "x" + h + "x" + l + " (paste em "
-                                    + pasteX + "," + pasteY + "," + pasteZ + ")");
+                    org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.fawe_dimensions", name, String.valueOf(w), String.valueOf(h), String.valueOf(l), String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ)));
                 } catch (final IncompleteRegionException | NullPointerException e) {
-                    sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error",
-                            "Seleção do FAWE incompleta. Use //pos1 e //pos2 primeiro."));
+                    sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.fawe_incomplete"));
                     return;
                 }
             }
 
             if (w <= 0 || h <= 0 || l <= 0) {
-                org.bukkit.Bukkit.getLogger().severe(
-                        "Dimensões inválidas do schematic para arena '" + name + "': " + w + "x" + h + "x" + l);
-                sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error",
-                        "Dimensões do schematic inválidas. Use //pos1 e //pos2 para selecionar a área."));
+                org.bukkit.Bukkit.getLogger().severe(this.lang.raw("log.save_command.invalid_dimensions", name, String.valueOf(w), String.valueOf(h), String.valueOf(l)));
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.invalid_dimensions"));
                 return;
             }
 
@@ -167,37 +161,29 @@ public class SaveCommand extends BaseCommand implements SubCommand {
 
             final File mapFile = new File(this.mapsFolder, name + ".schem");
             this.mapsFolder.mkdirs();
-            org.bukkit.Bukkit.getLogger().info("Salvando schematic da arena '" + name + "' em "
-                    + mapFile.getAbsolutePath()
-                    + " (região: " + pasteX + "," + pasteY + "," + pasteZ + " a "
-                    + (pasteX + w - 1) + "," + (pasteY + h - 1) + "," + (pasteZ + l - 1) + ")");
+            org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.saving_schematic", name, mapFile.getAbsolutePath(), String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ), String.valueOf(pasteX + w - 1), String.valueOf(pasteY + h - 1), String.valueOf(pasteZ + l - 1)));
 
             try {
                 schematic.save(mapFile, world);
-                org.bukkit.Bukkit.getLogger().info("Schematic salvo com sucesso: " + mapFile.getAbsolutePath()
-                        + " (" + w + "x" + h + "x" + l + " blocos)");
+                org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.schematic_saved", mapFile.getAbsolutePath(), String.valueOf(w), String.valueOf(h), String.valueOf(l)));
             } catch (final IOException e) {
-                org.bukkit.Bukkit.getLogger().log(Level.SEVERE,
-                        "Falha ao salvar schematic da arena '" + name + "': " + e.getMessage(), e);
-                sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error",
-                        "Falha ao salvar o arquivo do mapa: " + e.getMessage()));
+                org.bukkit.Bukkit.getLogger().log(Level.SEVERE, this.lang.raw("log.save_command.schematic_save_error", name, e.getMessage()), e);
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.map_save_fail", e.getMessage()));
                 return;
             }
 
             if (this.slimeManager.isAvailable()) {
                 this.slimeManager.saveTemplate(name, world)
-                        .thenRun(() -> org.bukkit.Bukkit.getLogger().info(
-                                "Template Slime salvo: " + name))
+                        .thenRun(() -> org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.slime_template_saved", name)))
                         .exceptionally(ex -> {
-                            org.bukkit.Bukkit.getLogger().log(Level.WARNING,
-                                    "Falha ao salvar template Slime para arena '" + name + "': "
-                                            + ex.getMessage(), ex);
+                            org.bukkit.Bukkit.getLogger().log(Level.WARNING, this.lang.raw("log.save_command.slime_template_error", name, ex.getMessage()), ex);
                             return null;
                         });
             }
 
             this.arenaManager.save(arena);
             this.arenaManager.flush(arena.getName());
+            this.gameManager.getShopNpcManager().removeEditorNpcs(arena.getName());
             this.editorManager.endSession(name);
 
             // ── YML validation report ────────────────────────────────────
@@ -223,8 +209,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                 }
             }
         } catch (final Exception e) {
-            org.bukkit.Bukkit.getLogger().log(Level.SEVERE,
-                    "Erro inesperado ao salvar arena '" + name + "': " + e.getMessage(), e);
+            org.bukkit.Bukkit.getLogger().log(Level.SEVERE, this.lang.raw("log.save_command.save_unexpected_error", name, e.getMessage()), e);
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.error", e.getMessage()));
         }
     }
@@ -241,7 +226,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             }
         }
         for (final var gen : arena.getGenerators()) {
-            if (gen.getOriginBlockData() != null) {
+            if (gen.getOriginBlockData() != null && gen.getLocation() != null) {
                 final var b = gen.getLocation().getBlock().getRelative(0, -1, 0);
                 b.setBlockData(Bukkit.createBlockData(gen.getOriginBlockData()), false);
             }

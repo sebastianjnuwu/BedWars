@@ -16,6 +16,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+
 /**
  * Gerencia configurações globais do plugin (não por arena). Salva em config.yml
  * na pasta do plugin.
@@ -32,6 +35,7 @@ public class ConfigManager {
     private YamlConfiguration config;
     private YamlConfiguration spawnConfig;
     private Location cachedLobby;
+    private LangManager lang;
 
     /**
      * Cria o gerenciador de configuração global.
@@ -40,6 +44,7 @@ public class ConfigManager {
      */
     public ConfigManager(final JavaPlugin plugin) {
         this.plugin = plugin;
+        this.lang = ((BedWarsPlugin) plugin).getLang();
         this.file = new File(plugin.getDataFolder(), "config.yml");
         this.spawnFile = new File(plugin.getDataFolder(), "spawn.yml");
         this.load();
@@ -71,7 +76,7 @@ public class ConfigManager {
             try {
                 this.spawnFile.createNewFile();
             } catch (IOException e) {
-                this.plugin.getLogger().warning("Could not create spawn.yml: " + e.getMessage());
+                this.plugin.getLogger().warning(this.lang.raw("log.config_manager.create_spawn_error", e.getMessage()));
             }
         }
         this.spawnConfig = YamlConfiguration.loadConfiguration(this.spawnFile);
@@ -95,11 +100,11 @@ public class ConfigManager {
                         this.setLobby(oldLobby);
                         this.config.set("lobby", null);
                         this.save();
-                        this.plugin.getLogger().info("Migrated lobby from config.yml to spawn.yml");
+                        this.plugin.getLogger().info(this.lang.raw("log.config_manager.migrate_lobby"));
                     }
                 }
             } catch (Exception e) {
-                this.plugin.getLogger().warning("Could not migrate lobby: " + e.getMessage());
+                this.plugin.getLogger().warning(this.lang.raw("log.config_manager.migrate_lobby_error", e.getMessage()));
             }
         }
     }
@@ -111,7 +116,7 @@ public class ConfigManager {
         try {
             this.config.save(this.file);
         } catch (final IOException e) {
-            this.plugin.getLogger().severe("Erro ao salvar config.yml: " + e.getMessage());
+            this.plugin.getLogger().severe(this.lang.raw("log.config_manager.save_config_error", e.getMessage()));
         }
     }
 
@@ -120,7 +125,7 @@ public class ConfigManager {
         try {
             this.spawnConfig.save(this.spawnFile);
         } catch (final IOException e) {
-            this.plugin.getLogger().severe("Erro ao salvar spawn.yml: " + e.getMessage());
+            this.plugin.getLogger().severe(this.lang.raw("log.config_manager.save_spawn_error", e.getMessage()));
         }
     }
 
@@ -180,6 +185,10 @@ public class ConfigManager {
         );
     }
 
+    public boolean isVersionCheckEnabled() {
+        return this.config.getBoolean("check", true);
+    }
+
     /**
      * Retorna o idioma configurado.
      *
@@ -190,15 +199,15 @@ public class ConfigManager {
     }
 
     /**
-     * Returns the configured maximum forge level, with a safe minimum of one.
+     * Retorna o nível máximo configurado para forjas, com um mínimo seguro de um.
      */
     public int getForgeMaxLevel() {
         return Math.max(1, this.config.getInt("forge.max-level", 1));
     }
 
     /**
-     * Returns the item intervals, in ticks, for a forge level. Invalid entries
-     * are ignored.
+     * Retorna os intervalos de itens, em ticks, para um nível de forja. Entradas
+     * inválidas são ignoradas.
      */
     public Map<Material, Long> getForgeIntervals(final int level) {
         final Map<Material, Long> intervals = new EnumMap<>(Material.class);
@@ -219,14 +228,14 @@ public class ConfigManager {
     }
 
     /**
-     * Returns the drop interval in ticks for a global generator type.
+     * Retorna o intervalo de queda em ticks para um tipo de gerador global.
      */
     public long getGeneratorInterval(final String type) {
         return this.config.getLong("generators." + type + ".interval", 0L);
     }
 
     /**
-     * Returns the material configured for a global generator type.
+     * Retorna o material configurado para um tipo de gerador global.
      */
     public @Nullable Material getGeneratorMaterial(final String type) {
         final String materialName = this.config.getString("generators." + type + ".material");
@@ -237,8 +246,8 @@ public class ConfigManager {
     }
 
     /**
-     * Adds new forge options to existing configuration files without
-     * overwriting custom values.
+     * Adiciona novas opções de forja a arquivos de configuração existentes sem
+     * sobrescrever valores personalizados.
      */
     private boolean addMissingForgeDefaults() {
         boolean changed = false;
