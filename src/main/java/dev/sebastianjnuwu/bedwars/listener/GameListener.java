@@ -33,6 +33,7 @@ import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStreakEvent;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.Game;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
+import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
@@ -165,7 +166,33 @@ public class GameListener implements Listener {
         }
 
         event.setCancelled(true);
+
+        if (game.getState() != GameState.PLAYING) {
+            final Location spawn = game.getArena().getArenaSpawn();
+            player.teleport(spawn != null ? spawn : player.getWorld().getSpawnLocation());
+            player.setHealth(20);
+            player.setFoodLevel(20);
+            return;
+        }
+
         player.setHealth(0);
+    }
+
+    @EventHandler
+    public void onEntityDamage(final EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof final Player player)) {
+            return;
+        }
+        if (event.getCause() == EntityDamageEvent.DamageCause.VOID) {
+            return;
+        }
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) {
+            return;
+        }
+        if (game.getState() != GameState.PLAYING) {
+            event.setCancelled(true);
+        }
     }
 
     /**
@@ -311,7 +338,7 @@ public class GameListener implements Listener {
         }
 
         // S permite PvP durante a partida (state PLAYING)
-        if (game.getState() != dev.sebastianjnuwu.bedwars.api.model.GameState.PLAYING) {
+        if (game.getState() != GameState.PLAYING) {
             event.setCancelled(true);
             return;
         }

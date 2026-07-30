@@ -73,11 +73,12 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
         final Location loc = player.getLocation().getBlock().getRelative(0, -1, 0).getLocation();
 
         // Remove gerador existente na mesma posição ou fornalha do mesmo time (sobrescreve)
+        final String targetTeam = teamName;
         final var existing = arena.getGenerators().stream()
                 .filter(g -> {
                     if (type.equals("forge") && g.getType().equalsIgnoreCase("forge")
-                            && teamName != null && g.getTeam() != null
-                            && g.getTeam().equalsIgnoreCase(teamName)) {
+                            && targetTeam != null && g.getTeam() != null
+                            && g.getTeam().equalsIgnoreCase(targetTeam)) {
                         return true;
                     }
                     return g.getLocation() != null && g.getLocation().equals(loc);
