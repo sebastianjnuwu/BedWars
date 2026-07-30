@@ -511,15 +511,30 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private void initForgeTicks() {
         this.forgeTicks.clear();
         this.forgeLevels.clear();
+        int forgeCount = 0;
         for (final ArenaGenerator forge : this.arena.getGenerators()) {
             if (!forge.getType().equalsIgnoreCase("forge")) {
                 continue;
             }
             if (forge.getLocation() == null) {
+                Bukkit.getLogger().warning("[BedWars] Forge " + forge.getUniqueId() + " skipped (location null)");
                 continue;
             }
+            forgeCount++;
             this.forgeLevels.put(forge, 1);
             this.putForgeTicks(forge, 1);
+        }
+        Bukkit.getLogger().info("[BedWars] initForgeTicks: " + forgeCount + " forges found, "
+                + this.forgeLevels.size() + " levels set, "
+                + this.forgeTicks.size() + " tick entries");
+        var fl = this.arena.getForgeLevels();
+        Bukkit.getLogger().info("[BedWars]   forgeLevels from arena: "
+                + (fl == null ? "null" : fl.size() + " levels"));
+        if (fl != null) {
+            for (var f : fl) {
+                Bukkit.getLogger().info("[BedWars]   level " + f.level() + " -> "
+                        + (f.intervals() == null ? "null" : f.intervals().size() + " materials"));
+            }
         }
     }
 
@@ -535,6 +550,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
         }
         if (intervals == null || intervals.isEmpty()) {
+            Bukkit.getLogger().warning("[BedWars] putForgeTicks(" + forge.getUniqueId() + ", level=" + level
+                    + "): intervals null or empty, forgeLevels="
+                    + (forgeLevels == null ? "null" : forgeLevels.size()));
             return;
         }
         for (final var entry : intervals.entrySet()) {
@@ -542,6 +560,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             final long interval = entry.getValue();
             final String key = forgeKey(forge) + ":" + material.name();
             this.forgeTicks.put(key, new long[]{0L, interval, 0L});
+            Bukkit.getLogger().info("[BedWars]   forge tick: " + key + " interval=" + interval);
         }
     }
 
