@@ -293,12 +293,14 @@ public class ArenaListener implements Listener {
             if (loc == null) {
                 continue;
             }
-            final Location below = loc.getBlock().getRelative(0, -1, 0).getLocation();
-            if (this.isSameBlock(loc, block.getLocation()) || this.isSameBlock(below, block.getLocation())) {
+            if (this.isSameBlock(loc, block.getLocation())) {
                 event.setCancelled(true);
                 event.setDropItems(false);
+                final Block markerBlock = loc.getBlock();
                 if (gen.getOriginBlockData() != null) {
-                    below.getBlock().setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
+                    markerBlock.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
+                } else {
+                    markerBlock.setType(Material.AIR, false);
                 }
                 arena.getGenerators().remove(i);
                 this.arenaManager.save(arena);

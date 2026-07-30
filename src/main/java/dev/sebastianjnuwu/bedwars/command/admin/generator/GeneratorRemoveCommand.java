@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -96,15 +97,13 @@ public class GeneratorRemoveCommand extends BaseCommand implements ArenaSubComma
                 + (gen.getTeam() != null ? " (" + gen.getTeam() + ")" : "")
                 + " [" + gen.getUniqueId().toString().substring(0, 8) + "...]";
 
-        // Restore original block if possible
         if (gen.getLocation() != null) {
-            final var below = gen.getLocation().getBlock().getRelative(0, -1, 0);
+            final Block markerBlock = gen.getLocation().getBlock();
             if (gen.getOriginBlockData() != null) {
-                below.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
+                markerBlock.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
             } else {
-                below.setType(Material.AIR, false);
+                markerBlock.setType(Material.AIR, false);
             }
-            gen.getLocation().getBlock().setType(Material.AIR, false);
         }
 
         arena.getGenerators().remove(gen);

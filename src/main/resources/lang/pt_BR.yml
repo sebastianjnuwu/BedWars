@@ -103,8 +103,6 @@ admin:
     addgen_invalid: "Tipo invalido. Use ferro, ouro, diamante, esmeralda ou forge."
     addgen_forge_usage: "Uso: /bw admin arena <arena> addgenerator forge <time>"
     addgen_forge_team_notfound: "Time '{0}' nao encontrado. Adicione-o primeiro com addteam."
-    addgen_forge_duplicate: "O time {0} ja possui uma fornalha."
-    addgen_duplicate: "Ja existe um gerador nesta posicao."
     addgen_success: "Gerador de {0} adicionado!"
     removegen_usage: "Uso: /bw admin arena <arena> removegenerator <uuid|time|tipo>"
     removegen_notfound: "Nenhum gerador encontrado para '{0}'."

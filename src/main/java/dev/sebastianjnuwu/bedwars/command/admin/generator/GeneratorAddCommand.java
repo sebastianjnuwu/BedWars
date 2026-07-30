@@ -67,23 +67,30 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
                 player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_forge_team_notfound", teamName));
                 return;
             }
-            final boolean alreadyHasForge = arena.getGenerators().stream()
-                    .anyMatch(generator -> generator.getType().equalsIgnoreCase("forge")
-                            && generator.getLocation() != null
-                            && team.getName().equalsIgnoreCase(generator.getTeam()));
-            if (alreadyHasForge) {
-                player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_forge_duplicate", team.getName()));
-                return;
-            }
         }
 
         // Gerador fica no bloco embaixo do player, marcador também fica lá
         final Location loc = player.getLocation().getBlock().getRelative(0, -1, 0).getLocation();
-        for (final var gen : arena.getGenerators()) {
-            if (gen.getLocation() != null && gen.getLocation().equals(loc)) {
-                player.sendMessage(this.lang.text(NamedTextColor.RED, "admin.arena.addgen_duplicate"));
-                return;
+
+        // Remove gerador existente na mesma posição ou fornalha do mesmo time (sobrescreve)
+        final var existing = arena.getGenerators().stream()
+                .filter(g -> {
+                    if (type.equals("forge") && g.getType().equalsIgnoreCase("forge")
+                            && teamName != null && g.getTeam() != null
+                            && g.getTeam().equalsIgnoreCase(teamName)) {
+                        return true;
+                    }
+                    return g.getLocation() != null && g.getLocation().equals(loc);
+                })
+                .findFirst().orElse(null);
+        if (existing != null && existing.getLocation() != null) {
+            final var oldMarker = existing.getLocation().getBlock();
+            if (existing.getOriginBlockData() != null) {
+                oldMarker.setBlockData(org.bukkit.Bukkit.createBlockData(existing.getOriginBlockData()), false);
+            } else {
+                oldMarker.setType(Material.AIR, false);
             }
+            arena.getGenerators().remove(existing);
         }
 
         final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(type, loc);
