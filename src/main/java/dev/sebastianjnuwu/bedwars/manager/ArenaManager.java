@@ -19,8 +19,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.Bed;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -161,39 +165,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (arena == null) {
             return false;
         }
-        final File mapFile = this.getMapFile(name);
-        if (mapFile == null) {
-            return false;
-        }
         final String worldName = "bw_" + name;
-        if (!this.worldManager.deleteWorld(worldName)) {
-            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.reset_error", name,
-                    "nao foi possivel descarregar/remover o mundo antigo"));
-            return false;
-        }
-        final WorldCreator wc = new WorldCreator(worldName);
-        wc.generator(new VoidGenerator());
-        final World world = wc.createWorld();
+        final World world = this.buildWorld(name, worldName, arena, "log.arena_manager.reset_error");
         if (world == null) {
             return false;
         }
-        try {
-            final Schematic schematic = Schematic.load(name, mapFile);
-            final Location pasteLocation = new Location(
-                    world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
-            schematic.paste(world, pasteLocation, mapFile);
-            world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
-            this.applyWorldSettings(world, arena);
-            arena.setWorldName(worldName);
-            this.updateWorldReferences(arena, world);
-            this.flush(arena.getName());
-            this.markWorldClean(worldName);
-            this.showMarkerBlocks(this.get(name));
-            return true;
-        } catch (final IOException e) {
-            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.reset_error", name, e.getMessage()));
-            return false;
-        }
+        arena.setWorldName(worldName);
+        this.updateWorldReferences(arena, world);
+        this.restoreBeds(world, arena);
+        this.flush(arena.getName());
+        this.showMarkerBlocks(this.get(name));
+        return true;
     }
 
     @SuppressWarnings("deprecation")
@@ -272,41 +254,137 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             this.applyWorldSettings(world, arena);
             return world;
         }
-        final File mapFile = this.getMapFile(arena.getName());
+        world = this.buildWorld(arena.getName(), worldName, arena, "log.arena_manager.load_error");
+        if (world == null) {
+            return null;
+        }
+        this.reload(arena.getName());
+        final Arena refreshed = this.get(arena.getName());
+        if (refreshed != null) {
+            refreshed.setWorldName(worldName);
+            this.updateWorldReferences(refreshed, world);
+            this.restoreBeds(world, refreshed);
+        }
+        this.flush(arena.getName());
+        return world;
+    }
+
+    /**
+     * Reconstrói o mundo da arena a partir do schematic do mapa.
+     * <p>
+     * Quando a remoção completa do mundo falha (arquivos travados, ex.: Windows),
+     * o schematic é colado por cima do mundo existente para restaurar camas,
+     * minérios e demais blocos, sem depender da exclusão do diretório.
+     * </p>
+     *
+     * @param name      nome da arena
+     * @param worldName nome do mundo de partida
+     * @param arena     arena cujas posições de paste são usadas
+     * @param errorKey  chave de log usada em caso de falha
+     * @return o mundo reconstruído, ou {@code null} se não foi possível
+     */
+    private @Nullable World buildWorld(final String name, final String worldName, final Arena arena, final String errorKey) {
+        final File mapFile = this.getMapFile(name);
         if (mapFile == null) {
             return null;
         }
-        if (!this.worldManager.deleteWorld(worldName)) {
-            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arena.getName(),
-                    "nao foi possivel limpar o mundo antigo"));
-            return null;
+        World world = this.worldManager.deleteWorld(worldName) ? null : Bukkit.getWorld(worldName);
+        if (world == null) {
+            final WorldCreator wc = new WorldCreator(worldName);
+            wc.generator(new VoidGenerator());
+            world = wc.createWorld();
         }
-        final WorldCreator wc = new WorldCreator(worldName);
-        wc.generator(new VoidGenerator());
-        world = wc.createWorld();
         if (world == null) {
             return null;
         }
         try {
-            final Schematic schematic = Schematic.load(arena.getName(), mapFile);
+            final Schematic schematic = Schematic.load(name, mapFile);
             final Location pasteLocation = new Location(
                     world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
             schematic.paste(world, pasteLocation, mapFile);
+            this.clearWorldEntities(world, pasteLocation, schematic);
             world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
             this.applyWorldSettings(world, arena);
-            this.reload(arena.getName());
-            final Arena refreshed = this.get(arena.getName());
-            if (refreshed != null) {
-                refreshed.setWorldName(worldName);
-                this.updateWorldReferences(refreshed, world);
-            }
-            this.flush(arena.getName());
             this.markWorldClean(worldName);
             return world;
-        } catch (final IOException e) {
-            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arena.getName(), e.getMessage()));
+        } catch (final Exception e) {
+            this.plugin.getLogger().severe(this.lang.raw(errorKey, name, e.getMessage()));
+            this.markWorldDirty(worldName);
             return null;
         }
+    }
+
+    private void clearWorldEntities(final World world, final Location min, final Schematic schematic) {
+        final int minX = min.getBlockX();
+        final int minY = min.getBlockY();
+        final int minZ = min.getBlockZ();
+        final int maxX = minX + schematic.getWidth() - 1;
+        final int maxY = minY + schematic.getHeight() - 1;
+        final int maxZ = minZ + schematic.getLength() - 1;
+        for (final Entity entity : world.getEntities()) {
+            if (entity instanceof Player) {
+                continue;
+            }
+            final Location loc = entity.getLocation();
+            if (loc.getBlockX() >= minX && loc.getBlockX() <= maxX
+                    && loc.getBlockY() >= minY && loc.getBlockY() <= maxY
+                    && loc.getBlockZ() >= minZ && loc.getBlockZ() <= maxZ) {
+                entity.remove();
+            }
+        }
+    }
+
+    /**
+     * Restaura as camas das equipes após a reconstrução do mundo.
+     * <p>
+     * Como a cama pode ficar fora dos limites do schematic, ela é recolocada
+     * programaticamente a partir da configuração da arena (local + direção).
+     * </p>
+     */
+    private void restoreBeds(final World world, final Arena arena) {
+        for (final ArenaTeam team : arena.getTeams()) {
+            if (team.getBed() == null || team.getBedFacing() == null) {
+                continue;
+            }
+            final BlockFace face;
+            try {
+                face = BlockFace.valueOf(team.getBedFacing().toUpperCase());
+            } catch (final IllegalArgumentException ignored) {
+                continue;
+            }
+            final Material material = this.getBedMaterial(team.getColor());
+            final Location foot = new Location(world, team.getBed().getBlockX(), team.getBed().getBlockY(), team.getBed().getBlockZ());
+            final Bed footData = (Bed) Bukkit.createBlockData(material);
+            footData.setFacing(face);
+            footData.setPart(Bed.Part.FOOT);
+            foot.getBlock().setBlockData(footData, false);
+            final Bed headData = (Bed) Bukkit.createBlockData(material);
+            headData.setFacing(face);
+            headData.setPart(Bed.Part.HEAD);
+            final Location head = foot.clone().add(face.getModX(), face.getModY(), face.getModZ());
+            head.getBlock().setBlockData(headData, false);
+        }
+    }
+
+    private Material getBedMaterial(final String dyeColor) {
+        if (dyeColor == null) {
+            return Material.RED_BED;
+        }
+        return switch (dyeColor.toUpperCase()) {
+            case "RED", "VERMELHO" -> Material.RED_BED;
+            case "BLUE", "AZUL" -> Material.BLUE_BED;
+            case "GREEN", "VERDE" -> Material.GREEN_BED;
+            case "YELLOW", "AMARELO" -> Material.YELLOW_BED;
+            case "PURPLE", "ROXO" -> Material.PURPLE_BED;
+            case "PINK", "ROSA" -> Material.PINK_BED;
+            case "ORANGE", "LARANJA" -> Material.ORANGE_BED;
+            case "CYAN", "CIANO" -> Material.CYAN_BED;
+            case "LIME", "VERDE_LIMA" -> Material.LIME_BED;
+            case "LIGHT_BLUE", "AZUL_CLARO" -> Material.LIGHT_BLUE_BED;
+            case "GRAY", "CINZA" -> Material.GRAY_BED;
+            case "BLACK", "PRETO" -> Material.BLACK_BED;
+            default -> Material.RED_BED;
+        };
     }
 
     public void showMarkerBlocks(final Arena arena) {

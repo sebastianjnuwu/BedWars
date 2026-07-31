@@ -84,7 +84,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
             return;
         }
         final String name = args[1];
-        final Arena arena = this.arenaManager.get(name);
+        Arena arena = this.arenaManager.get(name);
         if (arena == null) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.not_found", name));
             return;
@@ -138,6 +138,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
                 refreshed.setWorldName(worldName);
                 this.arenaManager.save(refreshed);
                 this.arenaManager.flush(refreshed.getName());
+                arena = refreshed;
             }
             this.arenaManager.markWorldClean(worldName);
         }

@@ -112,10 +112,46 @@ public class WorldManager {
 
     public boolean deleteWorld(final String name) {
         final World world = Bukkit.getWorld(name);
-        if (world != null && !unloadWorld(name)) {
-            return false;
+        if (world != null) {
+            final File folder = world.getWorldFolder();
+            if (!unloadWorld(name)) {
+                return false;
+            }
+            return deleteWorldFile(folder);
         }
-        return deleteWorldFile(new File(Bukkit.getWorldContainer(), name));
+        File folder = this.findWorldFolder(Bukkit.getWorldContainer(), name);
+        if (folder == null) {
+            folder = new File(Bukkit.getWorldContainer(), name);
+        }
+        return deleteWorldFile(folder);
+    }
+
+    private File findWorldFolder(final File root, final String name) {
+        final File[] files = root.listFiles();
+        if (files != null) {
+            for (final File file : files) {
+                if (file.isDirectory() && file.getName().equals(name)) {
+                    if (this.isWorldFolder(file)) {
+                        return file;
+                    }
+                }
+            }
+            for (final File file : files) {
+                if (file.isDirectory()) {
+                    final File found = this.findWorldFolder(file, name);
+                    if (found != null) {
+                        return found;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isWorldFolder(final File folder) {
+        return new File(folder, "level.dat").exists()
+                || new File(folder, "paper-world.yml").exists()
+                || new File(folder, "region").isDirectory();
     }
 
     private boolean deleteWorldFile(final File path) {
@@ -141,7 +177,7 @@ public class WorldManager {
         if (!file.exists()) {
             return true;
         }
-        for (int attempt = 0; attempt < 3; attempt++) {
+        for (int attempt = 0; attempt < 5; attempt++) {
             if (file.delete()) {
                 return true;
             }
@@ -149,7 +185,7 @@ public class WorldManager {
                 return true;
             }
             try {
-                Thread.sleep(20L);
+                Thread.sleep(50L);
             } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;
