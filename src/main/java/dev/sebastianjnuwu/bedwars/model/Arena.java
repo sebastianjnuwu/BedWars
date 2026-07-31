@@ -34,6 +34,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private String spawnBlockData;
     private int minPlayers;
     private int countdown;
+    private int respawnDelay;
     private String difficulty;
     private String time;
     private String weather;
@@ -301,6 +302,14 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
 
     public void setCountdown(final int countdown) {
         this.countdown = countdown;
+    }
+
+    public int getRespawnDelay() {
+        return this.respawnDelay;
+    }
+
+    public void setRespawnDelay(final int seconds) {
+        this.respawnDelay = seconds;
     }
 
     public @Nullable String getDifficulty() {

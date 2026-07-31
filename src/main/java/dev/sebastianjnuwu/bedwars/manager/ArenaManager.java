@@ -400,6 +400,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
         config.set("min_players", arena.getMinPlayers());
         config.set("countdown", arena.getCountdown());
+        config.set("respawn-delay", arena.getRespawnDelay());
 
         if (arena.getDifficulty() != null) {
             config.set("difficulty", arena.getDifficulty());
@@ -506,6 +507,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
         arena.setMinPlayers(2);
         arena.setCountdown(3);
+        arena.setRespawnDelay(3);
         // Default generator configs
         Map<String, GeneratorConfig> genConfigs = new java.util.HashMap<>();
         genConfigs.put("iron", new GeneratorConfig(Material.IRON_INGOT, 40));
@@ -628,6 +630,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
         arena.setMinPlayers(config.getInt("min_players", 2));
         arena.setCountdown(config.getInt("countdown", 3));
+        arena.setRespawnDelay(config.getInt("respawn-delay", 3));
         if (config.contains("difficulty")) {
             arena.setDifficulty(config.getString("difficulty"));
         }

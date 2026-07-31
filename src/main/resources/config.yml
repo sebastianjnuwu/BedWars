@@ -33,14 +33,6 @@ check: true
 # ===================================================================
 # Configurações de Edição
 # ===================================================================
-# ===================================================================
-# Comportamento de espectadores
-# ===================================================================
-spectator:
-  # Quando ativado, jogadores que entram no modo espectador são
-  # automaticamente teleportados ao lobby.
-  teleport-to-lobby: true
-
 edit:
   # Altura do mundo de edição (deve ser 0 para void)
   edit-world-height: 0

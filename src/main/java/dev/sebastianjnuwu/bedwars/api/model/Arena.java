@@ -86,6 +86,10 @@ public interface Arena {
 
     void setCountdown(int countdown);
 
+    int getRespawnDelay();
+
+    void setRespawnDelay(int seconds);
+
     @Nullable String getDifficulty();
 
     void setDifficulty(@Nullable String difficulty);

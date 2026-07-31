@@ -68,8 +68,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
-    private static final int RESPAWN_DELAY = 40;
-
     private final GameManager gameManager;
     private final ShopNpcManager shopNpcManager;
     private final LangManager lang;
@@ -149,36 +147,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
-        if (this.gameManager.getConfigManager().isSpectatorTeleportToLobby()) {
-            this.leave(player);
-            return;
-        }
-
-        this.spectators.add(player.getUniqueId());
-
-        // Salva inventario antes de limpar
-        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
-        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
-
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
-        player.getInventory().setItem(8, createExitDoorItem());
-        player.getInventory().setItem(0, createTeamSelectorItem());
-        final Location spawn = this.arena.getArenaSpawn();
-        if (spawn != null) {
-            LocationUtil.safeTeleport(player, spawn);
-        }
-        player.setGameMode(GameMode.SPECTATOR);
-        player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.spectating"));
-
-        // Esconde jogadores de outras partidas
-        for (final Player online : Bukkit.getOnlinePlayers()) {
-            if (this == this.gameManager.getPlayerGame(online)) {
-                continue;
-            }
-            player.hidePlayer(this.gameManager.getPlugin(), online);
-            online.hidePlayer(this.gameManager.getPlugin(), player);
-        }
+        this.leave(player);
     }
 
     public boolean isBedless(final ArenaTeam team) {
@@ -750,6 +719,15 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 }
             } else {
                 entry.setValue(remaining);
+                final Player player = Bukkit.getPlayer(entry.getKey());
+                if (player != null) {
+                    final int seconds = (remaining + 19) / 20;
+                    player.sendActionBar(
+                            net.kyori.adventure.text.Component.text(
+                                    "§eRespawn em " + seconds + "s"
+                            )
+                    );
+                }
             }
         }
     }
@@ -822,7 +800,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
-        this.respawnTicks.put(player.getUniqueId(), RESPAWN_DELAY);
+        this.respawnTicks.put(player.getUniqueId(), this.arena.getRespawnDelay() * 20);
         this.startGameTick();
     }
 

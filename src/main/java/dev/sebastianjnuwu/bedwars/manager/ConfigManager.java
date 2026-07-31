@@ -191,10 +191,6 @@ public class ConfigManager {
         return this.config.getBoolean("check", true);
     }
 
-    public boolean isSpectatorTeleportToLobby() {
-        return this.config.getBoolean("spectator.teleport-to-lobby", true);
-    }
-
     /**
      * Retorna o idioma configurado.
      *
