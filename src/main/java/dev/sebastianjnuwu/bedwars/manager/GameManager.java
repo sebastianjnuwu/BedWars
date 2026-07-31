@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
@@ -229,7 +230,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     private void debug(final String key, final Object... args) {
         if (this.configManager.isDebugEnabled()) {
-            this.plugin.getLogger().info("[BedWars] " + this.lang.raw(key, args));
+            Bukkit.getLogger().info("[BedWars] " + this.lang.raw(key, args));
         }
     }
 
