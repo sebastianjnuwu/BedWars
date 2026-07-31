@@ -4,6 +4,12 @@ Um plugin moderno de **BedWars** para **Paper 1.21.4**, desenvolvido com foco em
 
 > **Status:** 🚧 Em desenvolvimento
 
+## 📊 Estatísticas
+
+O plugin utiliza o [bStats](https://bstats.org/) para coletar estatísticas anônimas de uso.
+
+![bStats](https://bstats.org/signatures/bukkit/sBedWars.svg)
+
 ## ✨ Recursos
 
 - 🗺️ Gerenciamento completo de arenas
@@ -168,7 +174,7 @@ Após concluir toda a configuração:
 /bw join <nome_da_arena>         # time automático
 /bw join <nome_da_arena> azul    # time específico
 /bw start <nome_da_arena>        # iniciar manualmente
-/bw leave                         # sair da partida
+/bw leave                        # sair da partida
 ```
 
 > Enquanto um administrador estiver editando a arena, jogadores **não podem** entrar na partida.
