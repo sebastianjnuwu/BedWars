@@ -784,6 +784,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
+        player.setGameMode(GameMode.SPECTATOR);
         this.respawnTicks.put(player.getUniqueId(), this.arena.getRespawnDelay() * 20);
         this.startGameTick();
     }
@@ -805,7 +806,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
-        player.spigot().respawn();
         LocationUtil.safeTeleport(player, team.getSpawn());
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20);
