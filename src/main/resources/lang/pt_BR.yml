@@ -335,3 +335,18 @@ ui:
     no_cancel: "<red><bold>Não, não sair!"
     no_cancel_desc: "<gray>Clique para cancelar"
 
+# ── Mensagens de debug (console) ──
+debug:
+  game_started: "Partida iniciou em {0} (jogadores: {1})"
+  game_ended: "Partida terminou em {0} (vencedor: {1})"
+  game_force_ended: "Partida forçada a terminar em {0}"
+  countdown_started: "Contagem iniciada em {0} ({1}s, jogadores: {2})"
+  countdown_cancelled: "Contagem cancelada em {0}"
+  player_joined: "{0} entrou na partida {1} (time: {2}, jogadores: {3})"
+  player_left: "{0} saiu da partida {1} (jogadores restantes: {2})"
+  player_spectator: "{0} entrou como espectador em {1}"
+  player_eliminated: "{0} foi eliminado em {1} (time {2} sem cama)"
+  player_died: "{0} morreu em {1} (respawn em {2}s)"
+  room_closed: "Sala fechada: {0}"
+  room_closed_empty: "Sala fechou (sem jogadores): {0}"
+

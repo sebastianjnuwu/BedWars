@@ -182,6 +182,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             if (game.getPlayers().isEmpty()) {
                 this.shopNpcManager.removeGameNpcs(game.getArena().getName());
                 this.games.remove(game.getArena().getName());
+                this.debug("debug.room_closed_empty", game.getArena().getName());
             }
         }
     }
@@ -222,6 +223,13 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         if (game != null) {
             this.shopNpcManager.removeGameNpcs(arenaName);
             this.playerGames.values().removeIf(g -> g == game);
+            this.debug("debug.room_closed", arenaName);
+        }
+    }
+
+    private void debug(final String key, final Object... args) {
+        if (this.configManager.isDebugEnabled()) {
+            this.plugin.getLogger().info("[BedWars] " + this.lang.raw(key, args));
         }
     }
 

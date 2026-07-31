@@ -147,7 +147,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
+        this.debug("debug.player_spectator", player.getName(), this.arena.getName());
         this.leave(player);
+    }
+
+    private void debug(final String key, final Object... args) {
+        if (this.gameManager.getConfigManager().isDebugEnabled()) {
+            Bukkit.getLogger().info("[BedWars] " + this.lang.raw(key, args));
+        }
     }
 
     public boolean isBedless(final ArenaTeam team) {
@@ -212,6 +219,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final var gp = new dev.sebastianjnuwu.bedwars.model.GamePlayer(player.getUniqueId(), team);
         this.players.put(player.getUniqueId(), gp);
         this.teams.get(team).add(player.getUniqueId());
+
+        this.debug("debug.player_joined", player.getName(), this.arena.getName(),
+                team.getName(), this.players.size());
 
         Bukkit.getPluginManager().callEvent(new PlayerJoinGameEvent(this, player));
 
@@ -318,6 +328,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final ArenaTeam team = gp.getTeam();
         this.teams.get(team).remove(player.getUniqueId());
 
+        this.debug("debug.player_left", player.getName(), this.arena.getName(),
+                this.players.size());
+
         // Restaura inventario do mundo normal
         restoreInventory(player);
 
@@ -370,6 +383,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.initGeneratorTicks();
         this.initForgeTicks();
         this.startGameTick();
+        this.debug("debug.game_started", this.arena.getName(), this.players.size());
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prevState, GameState.PLAYING));
 
         this.restoreArenaSpawnBlock();
@@ -742,6 +756,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.WAITING, GameState.STARTING));
         this.countdownSeconds = this.arena.getCountdown();
         this.startGameTick();
+        this.debug("debug.countdown_started", this.arena.getName(),
+                this.countdownSeconds, this.players.size());
     }
 
     private void cancelCountdown() {
@@ -750,6 +766,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
         this.state = GameState.WAITING;
         this.stopGameTick();
+        this.debug("debug.countdown_cancelled", this.arena.getName());
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.STARTING, GameState.WAITING));
         final Component langMsg = this.lang.text(NamedTextColor.RED, "game.countdown_cancelled");
         Bukkit.getOnlinePlayers().forEach(p -> {
@@ -778,6 +795,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, gp, null));
             player.setGameMode(GameMode.SPECTATOR);
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.no_bed"));
+            this.debug("debug.player_eliminated", player.getName(), this.arena.getName(),
+                    team.getName());
             if (this.getAliveCount(team) == 0) {
                 this.eliminateTeam(team);
             }
@@ -785,6 +804,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         this.respawnTicks.put(player.getUniqueId(), this.arena.getRespawnDelay() * 20);
+        this.debug("debug.player_died", player.getName(), this.arena.getName(),
+                this.arena.getRespawnDelay());
         Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> player.spigot().respawn());
         this.startGameTick();
     }
@@ -929,6 +950,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.generatorTicks.clear();
         this.forgeTicks.clear();
         this.forgeLevels.clear();
+        this.debug("debug.game_ended", this.arena.getName(), winner.getName());
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prevState, GameState.ENDING));
 
         final Component msg = this.lang.text(NamedTextColor.GOLD, "game.team_wins", winner.getName().toUpperCase());
@@ -1082,6 +1104,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.forgeLevels.clear();
         final GameState prev = this.state;
         this.state = GameState.ENDING;
+        this.debug("debug.game_force_ended", this.arena.getName());
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prev, GameState.ENDING));
         for (final var entry : this.teams.entrySet()) {
             for (final UUID uuid : entry.getValue()) {

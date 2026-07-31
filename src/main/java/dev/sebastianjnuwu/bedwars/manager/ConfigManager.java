@@ -183,6 +183,10 @@ public class ConfigManager {
         return this.config.getBoolean("check", true);
     }
 
+    public boolean isDebugEnabled() {
+        return this.config.getBoolean("debug", false);
+    }
+
     /**
      * Retorna o idioma configurado.
      *

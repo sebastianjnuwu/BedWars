@@ -31,6 +31,13 @@ slimeworld:
 check: true
 
 # ===================================================================
+# Debug
+# ===================================================================
+# Quando true, logs detalhados de partida aparecem no console
+# (inicio/fim de partida, jogador saiu, sala fechada, etc.)
+debug: false
+
+# ===================================================================
 # Configurações de Edição
 # ===================================================================
 edit:
