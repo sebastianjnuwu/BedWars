@@ -46,8 +46,7 @@ save:
   success_with_warnings: "Mapa {0} salvo, mas ha itens faltando:"
   validation_warnings: "§eA arena foi salva mas NAO esta pronta para jogar:"
   error: "Erro ao salvar: {0}"
-  fawe_incomplete: "Seleção do FAWE incompleta. Use //pos1 e //pos2 primeiro."
-  invalid_dimensions: "Dimensões do schematic inválidas. Use //pos1 e //pos2 para selecionar a área."
+  invalid_dimensions: "Dimensões do schematic inválidas. Nenhum bloco foi encontrado no mundo de edição."
   map_save_fail: "Falha ao salvar o arquivo do mapa: {0}"
 
 # ── load ──────────────────────────────
@@ -289,7 +288,7 @@ log:
   editor_manager:
     session_create_error: "Erro criando session.yml: {0}"
   save_command:
-    fawe_dimensions: "Dimensões lidas da seleção FAWE para arena '{0}': {1}x{2}x{3} (paste em {4},{5},{6})"
+    auto_dimensions: "Área construída detectada automaticamente para arena '{0}': {1}x{2}x{3} (paste em {4},{5},{6})"
     saving_schematic: "Salvando schematic da arena '{0}' em {1} (região: {2},{3},{4} a {5},{6},{7})"
     schematic_saved: "Schematic salvo com sucesso: {0} ({1}x{2}x{3} blocos)"
     slime_template_saved: "Template Slime salvo: {0}"

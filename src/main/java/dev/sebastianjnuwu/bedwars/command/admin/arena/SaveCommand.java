@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -12,13 +13,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import net.kyori.adventure.text.format.NamedTextColor;
-
-import com.sk89q.worldedit.IncompleteRegionException;
-import com.sk89q.worldedit.LocalSession;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.Region;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
@@ -124,32 +118,20 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             int h = arena.getSchematicHeight();
             int l = arena.getSchematicLength();
 
-            // Se as dimensões não foram definidas, tenta ler da seleção do FAWE
-            if ((w <= 0 || h <= 0 || l <= 0) && sender instanceof final Player player) {
-                try {
-                    final com.sk89q.worldedit.entity.Player wePlayer = BukkitAdapter.adapt(player);
-                    final LocalSession session = WorldEdit.getInstance().getSessionManager().get(wePlayer);
-                    final Region selection = session.getSelection(wePlayer.getWorld());
-                    final BlockVector3 min = selection.getMinimumPoint();
-                    final BlockVector3 max = selection.getMaximumPoint();
-
-                    pasteX = min.x();
-                    pasteY = min.y();
-                    pasteZ = min.z();
-                    w = max.x() - min.x() + 1;
-                    h = max.y() - min.y() + 1;
-                    l = max.z() - min.z() + 1;
-
-                    arena.setPaste(pasteX, pasteY, pasteZ);
-                    arena.setSchematicSize(w, h, l);
-
-                    org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.fawe_dimensions",
-                            name, String.valueOf(w), String.valueOf(h), String.valueOf(l),
-                            String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ)));
-                } catch (final IncompleteRegionException | NullPointerException e) {
-                    sender.sendMessage(this.lang.text(NamedTextColor.RED, "save.fawe_incomplete"));
-                    return;
-                }
+            // Detecta automaticamente a caixa de contorno dos blocos construídos no mundo de edição.
+            final Bounds bounds = this.detectBuiltBounds(world);
+            if (bounds != null) {
+                pasteX = bounds.minX;
+                pasteY = bounds.minY;
+                pasteZ = bounds.minZ;
+                w = bounds.maxX - bounds.minX + 1;
+                h = bounds.maxY - bounds.minY + 1;
+                l = bounds.maxZ - bounds.minZ + 1;
+                arena.setPaste(pasteX, pasteY, pasteZ);
+                arena.setSchematicSize(w, h, l);
+                org.bukkit.Bukkit.getLogger().info(this.lang.raw("log.save_command.auto_dimensions",
+                        name, String.valueOf(w), String.valueOf(h), String.valueOf(l),
+                        String.valueOf(pasteX), String.valueOf(pasteY), String.valueOf(pasteZ)));
             }
 
             if (w <= 0 || h <= 0 || l <= 0) {
@@ -239,5 +221,67 @@ public class SaveCommand extends BaseCommand implements SubCommand {
                 b.setBlockData(Bukkit.createBlockData(gen.getOriginBlockData()), false);
             }
         }
+    }
+
+    /**
+     * Detecta a caixa de contorno dos blocos construídos no mundo de edição.
+     * <p>
+     * Como o mundo é void, os únicos blocos não-ar são o mapa e as alterações
+     * feitas pelo administrador. Isso permite salvar o schematic sem depender
+     * de seleção manual (//pos1 e //pos2) a cada edição.
+     * </p>
+     *
+     * @param world mundo de edição
+     * @return os limites da área construída, ou {@code null} se não houver blocos
+     */
+    private @org.jetbrains.annotations.Nullable Bounds detectBuiltBounds(final World world) {
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int minZ = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        int maxZ = Integer.MIN_VALUE;
+        boolean found = false;
+        for (final Chunk chunk : world.getLoadedChunks()) {
+            final int baseX = chunk.getX() << 4;
+            final int baseZ = chunk.getZ() << 4;
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    for (int y = world.getMinHeight(); y < world.getMaxHeight(); y++) {
+                        if (chunk.getBlock(x, y, z).getType().isAir()) {
+                            continue;
+                        }
+                        found = true;
+                        final int wx = baseX + x;
+                        final int wz = baseZ + z;
+                        if (wx < minX) {
+                            minX = wx;
+                        }
+                        if (wx > maxX) {
+                            maxX = wx;
+                        }
+                        if (wz < minZ) {
+                            minZ = wz;
+                        }
+                        if (wz > maxZ) {
+                            maxZ = wz;
+                        }
+                        if (y < minY) {
+                            minY = y;
+                        }
+                        if (y > maxY) {
+                            maxY = y;
+                        }
+                    }
+                }
+            }
+        }
+        if (!found) {
+            return null;
+        }
+        return new Bounds(minX, minY, minZ, maxX, maxY, maxZ);
+    }
+
+    private record Bounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
     }
 }
