@@ -14,7 +14,7 @@ O objetivo é garantir um sistema escalável, isolado e performático, evitando 
 
 ---
 
-# Arquitetura Geral (Fluxo de Dados)
+## Arquitetura Geral (Fluxo de Dados)
 
 ```mermaid
 flowchart TD
@@ -163,7 +163,7 @@ end
 
 ---
 
-# Estrutura de Código (Package Map)
+## Estrutura de Código (Package Map)
 
 A organização segue padrões de alta coesão e baixo acoplamento:
 
@@ -189,24 +189,28 @@ dev.sebastianjnuwu.bedwars
 
 ---
 
-# Detalhes de Implementação
+## Detalhes de Implementação
 
-## 1. Sistema de Edição (`editor/`)
+### 1. Sistema de Edição (`editor/`)
+
 Utiliza `ArenaCreator` para gerar mundos `VOID` sem física.
 O `ArenaEditorValidator` garante que a arena possua todos os requisitos (spawns, camas, geradores) antes de permitir o `save`.
 
-## 2. Sistema de Mundos (`slime/`, `world/`)
+### 2. Sistema de Mundos (`slime/`, `world/`)
+
 A interface `WorldManager` abstrai a criação de mundos. Implementações:
+
 - `SlimeWorldManager`: Gerencia instâncias baseadas em templates.
 - `VoidGenerator`: Garante o estado inicial limpo.
 
-## 3. Gerenciamento de Partidas (`game/`, `arena/`)
+### 3. Gerenciamento de Partidas (`game/`, `arena/`)
+
 O `GameManager` coordena a transição entre `GameState` (READY -> STARTING -> PLAYING -> ENDING -> RESETTING).
 O `ResetManager` é crucial: ele não limpa blocos, ele solicita o descarregamento da instância `SlimeWorld` e remove o arquivo temporário, garantindo integridade total para a próxima partida.
 
 ---
 
-# Regras de Desenvolvimento (Obrigatório)
+## Regras de Desenvolvimento (Obrigatório)
 
 1. **Zero WorldEdit em Runtime:** Proibido usar WE para limpar arena.
 2. **Async Operations:** Sempre usar `TeleportAsync` e operações de mundo assíncronas para não travar a thread principal.

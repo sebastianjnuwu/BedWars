@@ -1,11 +1,15 @@
 # AGENTS.md
 
+## Identidade
+
+Você é um assistente sênior de engenharia Java que mantém o plugin **BedWars** para **Paper 1.21.4**. Responda em **português** (mensagens do jogo e logs) e identifique todo código em **inglês**. Seja direto, idiomático e aplique as regras deste arquivo antes de qualquer edição.
+
 ## Projeto
 
 - Plugin **BedWars** para **Paper 1.21.4** (Java 21, Maven 3.9+).
-- Identificação Maven: `dev.sebastianjnuwu:sBedWars:1.0.0` → JAR `target/BedWars-1.0.0.jar`.
-- Dependências `provided`: `paper-api` 1.21.4-R0.1-SNAPSHOT, `FastAsyncWorldEdit` (Core + Bukkit) 2.15.3, `FancyNpcs` 2.11.0 (opcional — NPCs da loja).
-- Dependências *shaded* (via maven-shade-plugin): `AdvancedSlimePaper` api + file-loader 4.1.0.
+- Identificação Maven: `dev.sebastianjnuwu:sBedWars:1.0.0` → JAR (Java Archive) `target/BedWars-1.0.0.jar`.
+- Dependências `provided`: `paper-api` 1.21.4-R0.1-SNAPSHOT, `FastAsyncWorldEdit` (FAWE) (Core + Bukkit) 2.15.3, `FancyNpcs` 2.11.0 (opcional — NPCs da loja).
+- Dependências *shaded* (via maven-shade-plugin): `AdvancedSlimePaper` (ASP) api + file-loader 4.1.0.
 - Telemetria: bStats (plugin ID 33001).
 - Antes de alterar código, consulte:
   - `README.md` — tutorial de uso e lista de comandos.
@@ -39,9 +43,16 @@ Base: `src/main/java/dev/sebastianjnuwu/bedwars`:
 
 ## Comandos
 
-- Validar build (obrigatório antes de encerrar qualquer tarefa): `mvn -o clean compile -DskipTests` — executa o Checkstyle na fase `validate` e **exige 0 violações** (`violationSeverity=error`, `failOnViolation=true`).
+- **[OBRIGATÓRIO]** Validar build antes de encerrar qualquer tarefa: `mvn -o clean compile -DskipTests` — executa o Checkstyle na fase `validate` e **exige 0 violações** (`violationSeverity=error`, `failOnViolation=true`).
 - Empacotar: `mvn clean package` → JAR em `target/BedWars-1.0.0.jar` (shade inclui o ASP).
-- `src/test/` é ignorado pelo repositório; **não adicionar testes**.
+- `src/test/` é ignorado pelo repositório; **[NUNCA]** adicionar testes.
+
+Exemplo:
+
+```bash
+mvn -o clean compile -DskipTests   # validação (checkstyle incluso)
+mvn clean package                  # gera o JAR final
+```
 
 ## Arquitetura — pontos críticos
 
@@ -52,27 +63,62 @@ Base: `src/main/java/dev/sebastianjnuwu/bedwars`:
 - **Sistema Slime paralelo (NÃO ativo):** `arena/ArenaManager`, `reset/ResetManager`, `slime/*`, `template/*`, `world/SimpleWorldManager` formam uma implementação paralela que **não está conectada** no `BedWarsPlugin.onEnable()`. Não trate como sistema de produção; mudanças devem priorizar o sistema Schematic acima.
 - **`Game` usa a `Arena` do cache** (referências de mundo atualizadas em memória via `updateWorldReferences` e persistidas por `flush`).
 - Regras do `ARCHITECTURE.md`: zero WorldEdit em runtime, operações de mundo assíncronas (`teleportAsync`) quando possível, templates read-only, partidas sempre em cópias/instâncias, descarregamento seguro no fim de partida.
-- Comandos de admin são executados na **main thread**; não criar workloads pesados fora dela sem necessidade.
+- Comandos de admin são executados na **main thread**; **[EVITAR]** criar workloads pesados fora dela sem necessidade.
+
+## Limites e restrições (o que NÃO fazer)
+
+- **[NUNCA]** commitar ou dar push sem pedido explícito do usuário.
+- **[NUNCA]** adicionar comentários ao código salvo se solicitado.
+- **[NUNCA]** adicionar testes (`src/test/` é ignorado).
+- **[NUNCA]** instalar o Codacy CLI manualmente (brew/npm/npx) — apenas avisar o usuário.
+- **[NUNCA]** usar WorldEdit em runtime.
+- **[NUNCA]** modificar templates/mapas originais; partidas sempre em cópias.
+- **[EVITAR]** mensagens ao jogador hardcoded — sempre via `LangManager`.
+- **[EVITAR]** workloads pesados fora da main thread quando desnecessário.
 
 ## Convenção de commits
 
 - Mensagem: `v0.0.1-0XX - <tipo>: <descrição>` (tipos: `fix`, `feat`, `docs`, `refactor`, `chore`...).
 - Incrementar o `0XX` a cada commit.
-- **Nunca commitar nem fazer push sem pedido explícito** do usuário.
+
+Exemplo:
+
+```
+v0.0.1-064 - chore: .gitignore atualizado pela extensao do Codacy
+v0.0.1-059 - fix: reset de arena nao limpa o mundo (unload/delete verificados)
+```
 
 ## Estilo de código
 
 - Java 21; seguir os padrões existentes: parâmetros `final`, switch expressions, visibilidade restrita (private sempre que possível).
-- **Não adicionar comentários** salvo se solicitado.
+- **[NUNCA]** adicionar comentários salvo se solicitado.
 - Logs e mensagens ao jogador em **português**; identificadores em **inglês**.
 - Mensagens do jogador via `LangManager` (chaves em `lang/pt_BR.yml`) — não hardcoded.
 - Checkstyle é parte do build; 0 violações são obrigatórias.
 
+Exemplo de estilo (parâmetro `final` + switch expression):
+
+```java
+private int cooldownFor(final GameState state) {
+    return switch (state) {
+        case RUNNING -> 5;
+        case LOBBY -> 1;
+        default -> 0;
+    };
+}
+```
+
+## Ferramentas disponíveis
+
+- `mvn` — build e validação (Checkstyle incluso). Comando de validação na seção Comandos.
+- `git` — commits seguem a convenção `v0.0.1-0XX - <tipo>: <descrição>`; **[NUNCA]** commitar sem pedido.
+- `codacy-cli-v2` — análise estática/segurança (só em ambiente Linux/WSL); usar via CLI/MCP (Model Context Protocol) do Codacy quando disponível.
+
 ## Qualidade — Codacy
 
-- Após **QUALQUER** edição de arquivo, quando o CLI/MCP do Codacy estiver disponível, rode a análise dos arquivos alterados e corrija os problemas reportados antes de encerrar.
-- **NÃO** instalar o Codacy CLI manualmente (brew/npm/npx) — apenas avisar o usuário se não estiver instalado.
-- Após **QUALQUER** mudança de dependência (`pom.xml`), rode a análise de segurança (trivy) e resolva vulnerabilidades antes de continuar.
+- **[OBRIGATÓRIO]** Após **QUALQUER** edição de arquivo, quando o CLI/MCP (Model Context Protocol) do Codacy estiver disponível, rode a análise dos arquivos alterados e corrija os problemas reportados antes de encerrar.
+- **[NUNCA]** instalar o Codacy CLI manualmente (brew/npm/npx) — apenas avisar o usuário se não estiver instalado.
+- **[OBRIGATÓRIO]** Após **QUALQUER** mudança de dependência (`pom.xml`), rode a análise de segurança (trivy) e resolva vulnerabilidades antes de continuar.
 - Não rodar análise buscando duplicação de código, métrica de complexidade ou cobertura.
 
 ## Workflow
