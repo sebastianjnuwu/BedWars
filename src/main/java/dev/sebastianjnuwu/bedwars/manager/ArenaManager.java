@@ -48,11 +48,13 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     private final File mapsFolder;
     private final WorldManager worldManager;
     private final LangManager lang;
+    private final Map<String, YamlConfiguration> diskConfigs;
 
     public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder) {
         this.plugin = plugin;
         this.lang = ((BedWarsPlugin) plugin).getLang();
         this.arenas = new HashMap<>();
+        this.diskConfigs = new HashMap<>();
         this.worldManager = worldManager;
         this.mapsFolder = mapsFolder;
         this.arenasFolder = new File(plugin.getDataFolder(), "arenas");
@@ -381,20 +383,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
 
         final YamlConfiguration config = new YamlConfiguration();
+        final YamlConfiguration disk = this.diskConfigs.get(arenaName);
 
         config.set("enabled", arena.isEnabled());
-        if (arena.getLobby() != null) {
-            config.set("lobby", this.serializeLocation(arena.getLobby()));
-        }
+        this.writeLocation(config, disk, "lobby", arena.getLobby());
         if (arena.getWorldName() != null) {
             config.set("world", arena.getWorldName());
         }
         config.set("paste", arena.getPasteX() + "," + arena.getPasteY() + "," + arena.getPasteZ());
         config.set("schematic_size",
                 arena.getSchematicWidth() + "," + arena.getSchematicHeight() + "," + arena.getSchematicLength());
-        if (arena.getArenaSpawn() != null) {
-            config.set("arena_spawn", this.serializeLocation(arena.getArenaSpawn()));
-        }
+        this.writeLocation(config, disk, "arena_spawn", arena.getArenaSpawn());
         if (arena.getSpawnBlockData() != null) {
             config.set("spawn_block", arena.getSpawnBlockData());
         }
@@ -420,15 +419,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             config.set("shop", arena.getShop());
         }
 
-        // Shop NPCs
+        // Shop NPCs — se vazio porque o mundo não está carregado, preserva a seção do disco
         List<Location> npcLocs = arena.getShopNpcLocations();
-        if (npcLocs != null) {
+        if (npcLocs != null && !npcLocs.isEmpty()) {
             for (int i = 0; i < npcLocs.size(); i++) {
                 config.set("shop_npcs." + i + ".location", this.serializeLocation(npcLocs.get(i)));
             }
             if (arena.getShopNpcSkin() != null) {
                 config.set("shop_npcs.skin", arena.getShopNpcSkin());
             }
+        } else if (disk != null && disk.contains("shop_npcs") && !this.sectionWorldLoaded(disk, "shop_npcs")) {
+            this.copySection(disk, config, "shop_npcs");
         }
 
         // Generator configs
@@ -449,40 +450,43 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
 
         // Teams
+        config.set("teams", null);
         for (final ArenaTeam team : arena.getTeams()) {
             final String path = "teams." + team.getName();
             config.set(path + ".color", team.getColor());
-            if (team.getSpawn() != null) {
-                config.set(path + ".spawn", this.serializeLocation(team.getSpawn()));
-            }
+            this.writeLocation(config, disk, path + ".spawn", team.getSpawn());
             if (team.getSpawnBlockData() != null) {
                 config.set(path + ".spawn_block", team.getSpawnBlockData());
             }
-            if (team.getBed() != null) {
-                config.set(path + ".bed", this.serializeLocation(team.getBed()));
-            }
+            this.writeLocation(config, disk, path + ".bed", team.getBed());
             if (team.getBedFacing() != null) {
                 config.set(path + ".bed_facing", team.getBedFacing());
             }
         }
 
-        // Generators — usa UUID como chave, ignora location null
-        for (final ArenaGenerator gen : arena.getGenerators()) {
-            if (gen.getLocation() == null) {
-                continue;
+        // Generators — usa UUID como chave, ignora location null.
+        // Se a lista está vazia porque o mundo não está carregado, preserva a seção do disco.
+        if (!arena.getGenerators().isEmpty()) {
+            config.set("generators", null);
+            for (final ArenaGenerator gen : arena.getGenerators()) {
+                if (gen.getLocation() == null) {
+                    continue;
+                }
+                final String path = "generators." + gen.getUniqueId().toString();
+                config.set(path + ".type", gen.getType());
+                config.set(path + ".location", this.serializeLocation(gen.getLocation()));
+                if (gen.getTeam() != null) {
+                    config.set(path + ".team", gen.getTeam());
+                }
+                if (gen.getOriginBlockData() != null) {
+                    config.set(path + ".origin_block", gen.getOriginBlockData());
+                }
+                if (gen.getOriginBlockDataAbove() != null) {
+                    config.set(path + ".origin_block_above", gen.getOriginBlockDataAbove());
+                }
             }
-            final String path = "generators." + gen.getUniqueId().toString();
-            config.set(path + ".type", gen.getType());
-            config.set(path + ".location", this.serializeLocation(gen.getLocation()));
-            if (gen.getTeam() != null) {
-                config.set(path + ".team", gen.getTeam());
-            }
-            if (gen.getOriginBlockData() != null) {
-                config.set(path + ".origin_block", gen.getOriginBlockData());
-            }
-            if (gen.getOriginBlockDataAbove() != null) {
-                config.set(path + ".origin_block_above", gen.getOriginBlockDataAbove());
-            }
+        } else if (disk != null && disk.contains("generators") && !this.sectionWorldLoaded(disk, "generators")) {
+            this.copySection(disk, config, "generators");
         }
 
         // Evento pré-save
@@ -495,8 +499,70 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
         try {
             config.save(file);
+            this.diskConfigs.put(arenaName, config);
         } catch (final IOException e) {
             this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.save_arena_error", arenaName, e.getMessage()));
+        }
+    }
+
+    /**
+     * Grava uma localização, preservando o valor anterior quando ela está null
+     * apenas porque o mundo referenciado ainda não foi carregado. Isso evita que
+     * um flush/save com o mundo descarregado remova permanentemente as chaves
+     * do arquivo. Remoções intencionais (feitas com o mundo carregado) continuam
+     * sendo persistidas como null.
+     */
+    private void writeLocation(final YamlConfiguration config, final YamlConfiguration disk,
+                               final String path, final Location loc) {
+        if (loc != null) {
+            config.set(path, this.serializeLocation(loc));
+            return;
+        }
+        if (disk != null && disk.contains(path)) {
+            final String stored = disk.getString(path);
+            if (stored != null && !stored.isBlank()) {
+                final String storedWorld = stored.split(",", 2)[0];
+                if (Bukkit.getWorld(storedWorld) == null) {
+                    config.set(path, stored);
+                    return;
+                }
+            }
+        }
+        config.set(path, null);
+    }
+
+    /**
+     * Verifica se alguma localização armazenada em uma seção do disco referencia
+     * um mundo atualmente carregado.
+     */
+    private boolean sectionWorldLoaded(final YamlConfiguration disk, final String section) {
+        final ConfigurationSection cs = disk != null ? disk.getConfigurationSection(section) : null;
+        if (cs == null) {
+            return false;
+        }
+        for (final String key : cs.getKeys(true)) {
+            final Object value = cs.get(key);
+            if (!(value instanceof final String str) || !str.contains(",")) {
+                continue;
+            }
+            if (Bukkit.getWorld(str.split(",", 2)[0]) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void copySection(final YamlConfiguration source, final YamlConfiguration target, final String section) {
+        final ConfigurationSection cs = source.getConfigurationSection(section);
+        if (cs == null) {
+            return;
+        }
+        for (final String key : cs.getKeys(true)) {
+            final Object value = source.get(section + "." + key);
+            if (value instanceof ConfigurationSection) {
+                continue;
+            }
+            target.set(section + "." + key, value);
         }
     }
 
@@ -539,6 +605,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (arena == null) {
             return false;
         }
+        this.diskConfigs.remove(name);
 
         final File configFile = new File(this.arenasFolder, name + ".yml");
         if (configFile.exists()) {
@@ -778,6 +845,8 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
         final World loadWorld = arena.getWorldName() != null ? Bukkit.getWorld(arena.getWorldName()) : null;
         Bukkit.getPluginManager().callEvent(new ArenaLoadEvent(arena, loadWorld));
+
+        this.diskConfigs.put(name, config);
         return arena;
     }
 
