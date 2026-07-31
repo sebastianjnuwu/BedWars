@@ -63,14 +63,6 @@ public class ConfigManager {
         }
         this.config = YamlConfiguration.loadConfiguration(this.file);
 
-        // Keep global defaults for backward compatibility
-        if (this.addMissingForgeDefaults()) {
-            this.save();
-        }
-        if (this.addMissingGeneratorDefaults()) {
-            this.save();
-        }
-
         // Load spawn.yml for lobby
         if (!this.spawnFile.exists()) {
             try {
@@ -245,43 +237,6 @@ public class ConfigManager {
             return null;
         }
         return Material.matchMaterial(materialName);
-    }
-
-    /**
-     * Adiciona novas opções de forja a arquivos de configuração existentes sem
-     * sobrescrever valores personalizados.
-     */
-    private boolean addMissingForgeDefaults() {
-        boolean changed = false;
-        changed |= this.setDefault("forge.max-level", 4);
-        changed |= this.setDefault("forge.levels.1.iron.interval", 20);
-        changed |= this.setDefault("forge.levels.1.gold.interval", 80);
-        changed |= this.setDefault("forge.levels.2.iron.interval", 15);
-        changed |= this.setDefault("forge.levels.2.gold.interval", 60);
-        changed |= this.setDefault("forge.levels.3.iron.interval", 10);
-        changed |= this.setDefault("forge.levels.3.gold.interval", 40);
-        changed |= this.setDefault("forge.levels.4.iron.interval", 5);
-        changed |= this.setDefault("forge.levels.4.gold.interval", 30);
-        changed |= this.setDefault("forge.levels.4.diamond.interval", 600);
-        changed |= this.setDefault("forge.levels.4.emerald.interval", 1200);
-        return changed;
-    }
-
-    private boolean addMissingGeneratorDefaults() {
-        boolean changed = false;
-        changed |= this.setDefault("generators.iron.interval", 40);
-        changed |= this.setDefault("generators.gold.interval", 120);
-        changed |= this.setDefault("generators.diamond.interval", 600);
-        changed |= this.setDefault("generators.emerald.interval", 1200);
-        return changed;
-    }
-
-    private boolean setDefault(final String path, final Object value) {
-        if (this.config.contains(path)) {
-            return false;
-        }
-        this.config.set(path, value);
-        return true;
     }
 
 }
