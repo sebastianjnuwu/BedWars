@@ -151,8 +151,11 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             return false;
         }
         final String worldName = "bw_" + name;
-        this.worldManager.unloadWorld(worldName);
-        this.worldManager.deleteWorld(worldName);
+        if (!this.worldManager.deleteWorld(worldName)) {
+            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.reset_error", name,
+                    "nao foi possivel descarregar/remover o mundo antigo"));
+            return false;
+        }
         final WorldCreator wc = new WorldCreator(worldName);
         wc.generator(new VoidGenerator());
         final World world = wc.createWorld();
@@ -255,6 +258,11 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
         final File mapFile = this.getMapFile(arena.getName());
         if (mapFile == null) {
+            return null;
+        }
+        if (!this.worldManager.deleteWorld(worldName)) {
+            this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arena.getName(),
+                    "nao foi possivel limpar o mundo antigo"));
             return null;
         }
         final WorldCreator wc = new WorldCreator(worldName);

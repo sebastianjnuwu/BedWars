@@ -110,27 +110,52 @@ public class WorldManager {
         return Bukkit.unloadWorld(world, false);
     }
 
-    public void deleteWorld(final String name) {
-        unloadWorld(name);
-        final File folder = new File(Bukkit.getWorldContainer(), name);
-        deleteWorldFile(folder);
+    public boolean deleteWorld(final String name) {
+        final World world = Bukkit.getWorld(name);
+        if (world != null && !unloadWorld(name)) {
+            return false;
+        }
+        return deleteWorldFile(new File(Bukkit.getWorldContainer(), name));
     }
 
-    private void deleteWorldFile(final File path) {
+    private boolean deleteWorldFile(final File path) {
         if (!path.exists()) {
-            return;
+            return true;
         }
         final File[] files = path.listFiles();
         if (files != null) {
             for (final File file : files) {
                 if (file.isDirectory()) {
-                    deleteWorldFile(file);
-                } else {
-                    file.delete();
+                    if (!deleteWorldFile(file)) {
+                        return false;
+                    }
+                } else if (!deleteFileWithRetries(file)) {
+                    return false;
                 }
             }
         }
-        path.delete();
+        return deleteFileWithRetries(path);
+    }
+
+    private boolean deleteFileWithRetries(final File file) {
+        if (!file.exists()) {
+            return true;
+        }
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (file.delete()) {
+                return true;
+            }
+            if (!file.exists()) {
+                return true;
+            }
+            try {
+                Thread.sleep(20L);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return !file.exists();
     }
 
     private void copyWorld(final File source, final File target) throws IOException {
