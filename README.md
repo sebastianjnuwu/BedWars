@@ -10,6 +10,12 @@ O plugin utiliza o [bStats](https://bstats.org/) para coletar estatísticas anô
 
 ![bStats](https://bstats.org/signatures/bukkit/sBedWars.svg)
 
+### Codacy
+
+Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.com/).
+
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ece841e4ff31406999194219a9035770)](https://app.codacy.com/gh/sebastianjnuwu/BedWars/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+
 ## ✨ Recursos
 
 - 🗺️ Gerenciamento completo de arenas
