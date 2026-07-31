@@ -56,6 +56,9 @@ public class ShopNpcManager {
      * @param skin      nome da skin ou null para padrao
      */
     public void spawnGameNpcs(final String arenaName, final List<Location> locations, final String skin) {
+        // Remove NPCs de edicao/leftover antes de spawnar os da partida para
+        // evitar NPCs duplicados no mundo.
+        this.removeEditorNpcs(arenaName);
         final List<Npc> npcs = spawnNpcs(arenaName, locations, skin, "jogo");
         if (npcs != null) {
             gameNpcs.put(arenaName, npcs);
@@ -119,16 +122,10 @@ public class ShopNpcManager {
             return null;
         }
 
-        final String npcName = "bw-shop-" + arenaName + "-" + index;
-        final NpcData data = new NpcData(npcName, UUID.randomUUID(), location);
-        data.setSkin(skin != null ? skin : "NPC");
-        data.setDisplayName("<red>Loja</red>");
-
-        final Npc npc = FancyNpcsPlugin.get().getNpcAdapter().apply(data);
-        npc.setSaveToFile(false);
-        FancyNpcsPlugin.get().getNpcManager().registerNpc(npc);
-        npc.create();
-        npc.spawnForAll();
+        final Npc npc = this.spawnNpc(arenaName, index, location, skin, "editor");
+        if (npc != null) {
+            this.editorNpcs.computeIfAbsent(arenaName, k -> new ArrayList<>()).add(npc);
+        }
         return npc;
     }
 
@@ -197,25 +194,33 @@ public class ShopNpcManager {
             if (loc == null || loc.getWorld() == null) {
                 continue;
             }
-
-            try {
-                final String npcName = "bw-shop-" + arenaName + "-" + context + "-" + i;
-                final NpcData data = new NpcData(npcName, UUID.randomUUID(), loc);
-                data.setSkin(skin != null ? skin : "NPC");
-                data.setDisplayName("<red>Loja</red>");
-
-                final Npc npc = FancyNpcsPlugin.get().getNpcAdapter().apply(data);
-                npc.setSaveToFile(false);
-                FancyNpcsPlugin.get().getNpcManager().registerNpc(npc);
-                npc.create();
-                npc.spawnForAll();
+            final Npc npc = this.spawnNpc(arenaName, i, loc, skin, context);
+            if (npc != null) {
                 npcs.add(npc);
-            } catch (final Exception e) {
-                plugin.getLogger().warning(this.lang.raw("log.shop_npc.spawn_error", String.valueOf(i), arenaName, e.getMessage()));
             }
         }
 
         return npcs.isEmpty() ? null : npcs;
+    }
+
+    private @org.jetbrains.annotations.Nullable Npc spawnNpc(final String arenaName, final int index,
+                                                             final Location loc, final String skin, final String context) {
+        try {
+            final String npcName = "bw-shop-" + arenaName + "-" + context + "-" + index;
+            final NpcData data = new NpcData(npcName, UUID.randomUUID(), loc);
+            data.setSkin(skin != null ? skin : "NPC");
+            data.setDisplayName("<red>Loja</red>");
+
+            final Npc npc = FancyNpcsPlugin.get().getNpcAdapter().apply(data);
+            npc.setSaveToFile(false);
+            FancyNpcsPlugin.get().getNpcManager().registerNpc(npc);
+            npc.create();
+            npc.spawnForAll();
+            return npc;
+        } catch (final Exception e) {
+            plugin.getLogger().warning(this.lang.raw("log.shop_npc.spawn_error", String.valueOf(index), arenaName, e.getMessage()));
+            return null;
+        }
     }
 
     private void removeNpcs(final List<Npc> npcs) {
