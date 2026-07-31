@@ -141,7 +141,7 @@ public class GameListener implements Listener {
 
         if (team.getSpawn() != null) {
             event.setRespawnLocation(team.getSpawn());
-            player.setGameMode(GameMode.SURVIVAL);
+            player.setGameMode(GameMode.SPECTATOR);
         }
     }
 

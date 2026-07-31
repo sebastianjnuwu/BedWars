@@ -784,8 +784,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
-        player.setGameMode(GameMode.SPECTATOR);
         this.respawnTicks.put(player.getUniqueId(), this.arena.getRespawnDelay() * 20);
+        Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> player.spigot().respawn());
         this.startGameTick();
     }
 
