@@ -148,6 +148,12 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         if (this.spectators.contains(player.getUniqueId())) {
             return;
         }
+
+        if (this.gameManager.getConfigManager().isSpectatorTeleportToLobby()) {
+            this.leave(player);
+            return;
+        }
+
         this.spectators.add(player.getUniqueId());
 
         // Salva inventario antes de limpar
