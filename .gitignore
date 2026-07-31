@@ -2,5 +2,8 @@ target/
 src/test/
 .m2/
 .idea/
-dependency-reduced-pom.xml
-BUGS.md
+.vscode/
+.codacy/
+*-pom.xml
+.github/instructions
+.github/modernize
