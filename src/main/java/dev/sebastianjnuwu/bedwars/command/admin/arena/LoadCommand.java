@@ -129,6 +129,7 @@ public class LoadCommand extends BaseCommand implements SubCommand {
                 this.arenaManager.save(refreshed);
                 this.arenaManager.flush(refreshed.getName());
             }
+            this.arenaManager.markWorldClean(worldName);
             this.editorManager.startSession(player, name);
             LocationUtil.safeTeleport(player, pasteLoc);
             player.setGameMode(org.bukkit.GameMode.CREATIVE);

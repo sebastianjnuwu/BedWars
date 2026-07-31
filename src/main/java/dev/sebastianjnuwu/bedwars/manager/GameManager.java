@@ -137,24 +137,24 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             return;
         }
 
-        if (!this.arenaManager.ensureArenaReady(arena)) {
-            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
-            return;
-        }
-
-        final Arena refreshedArena = this.arenaManager.get(arenaName);
-
-        final List<String> missing = this.validateArena(refreshedArena);
-        if (!missing.isEmpty()) {
-            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
-            for (final String msg : missing) {
-                player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.missing_entry", msg));
-            }
-            return;
-        }
-
         Game game = this.games.get(arenaName);
         if (game == null) {
+            if (!this.arenaManager.ensureArenaReady(arena)) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
+                return;
+            }
+
+            final Arena refreshedArena = this.arenaManager.get(arenaName);
+
+            final List<String> missing = this.validateArena(refreshedArena);
+            if (!missing.isEmpty()) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
+                for (final String msg : missing) {
+                    player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.missing_entry", msg));
+                }
+                return;
+            }
+
             game = new Game(this, refreshedArena, getShopNpcManager());
             this.games.put(arenaName, game);
         }

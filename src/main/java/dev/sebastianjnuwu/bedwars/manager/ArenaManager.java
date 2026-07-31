@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     private final WorldManager worldManager;
     private final LangManager lang;
     private final Map<String, YamlConfiguration> diskConfigs;
+    private final Set<String> cleanWorlds;
 
     public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder) {
         this.plugin = plugin;
@@ -59,6 +61,19 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         this.mapsFolder = mapsFolder;
         this.arenasFolder = new File(plugin.getDataFolder(), "arenas");
         this.arenasFolder.mkdirs();
+        this.cleanWorlds = new HashSet<>();
+    }
+
+    public boolean isWorldClean(final String worldName) {
+        return this.cleanWorlds.contains(worldName);
+    }
+
+    public void markWorldClean(final String worldName) {
+        this.cleanWorlds.add(worldName);
+    }
+
+    public void markWorldDirty(final String worldName) {
+        this.cleanWorlds.remove(worldName);
     }
 
     public WorldManager getWorldManager() {
@@ -172,6 +187,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             arena.setWorldName(worldName);
             this.updateWorldReferences(arena, world);
             this.flush(arena.getName());
+            this.markWorldClean(worldName);
             this.showMarkerBlocks(this.get(name));
             return true;
         } catch (final IOException e) {
@@ -252,7 +268,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             worldName = "bw_" + arena.getName();
         }
         World world = Bukkit.getWorld(worldName);
-        if (world != null) {
+        if (world != null && this.cleanWorlds.contains(worldName)) {
             this.applyWorldSettings(world, arena);
             return world;
         }
@@ -285,6 +301,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 this.updateWorldReferences(refreshed, world);
             }
             this.flush(arena.getName());
+            this.markWorldClean(worldName);
             return world;
         } catch (final IOException e) {
             this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arena.getName(), e.getMessage()));
@@ -627,6 +644,8 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
         this.worldManager.deleteWorld("bw_" + name);
         this.worldManager.deleteWorld("bw_" + name + "_edit");
+        this.markWorldDirty("bw_" + name);
+        this.markWorldDirty("bw_" + name + "_edit");
 
         final File template = this.worldManager.getTemplateFolder(name);
         if (template.exists()) {

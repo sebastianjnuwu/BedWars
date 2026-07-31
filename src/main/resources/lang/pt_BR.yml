@@ -206,6 +206,7 @@ edit:
   not_loaded: "Arena nao esta carregada. Use /bw admin load {0} primeiro."
   world_not_found: "Mundo da arena nao encontrado. Use /bw admin load {0} novamente."
   already_editing: "A arena {0} ja esta sendo editada por {1}."
+  in_progress: "A arena {0} esta em partida. Encerre a partida antes de editar."
   teleported: "Teleportado para a arena {0}."
   arena_spawn_removed: "Spawn da arena removido!"
   team_spawn_removed: "Spawn do time {0} removido!"

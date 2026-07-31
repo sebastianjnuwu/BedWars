@@ -380,6 +380,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final GameState prevState = this.state;
         this.state = GameState.PLAYING;
         this.tick = 0;
+        this.gameManager.getArenaManager().markWorldDirty(
+                this.arena.getWorldName() != null ? this.arena.getWorldName() : "bw_" + this.arena.getName());
         this.initGeneratorTicks();
         this.initForgeTicks();
         this.startGameTick();

@@ -96,13 +96,23 @@ public class EditCommand extends BaseCommand implements SubCommand {
             return;
         }
 
+        if (this.gameManager.getGame(name) != null) {
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.in_progress", name));
+            return;
+        }
+
         String worldName = arena.getWorldName();
         if (worldName == null || worldName.isBlank()) {
             worldName = "bw_" + name;
         }
 
         World world = Bukkit.getWorld(worldName);
-        if (world == null) {
+        final boolean reusingSession = world != null && this.editorManager.isBeingEdited(name);
+        if (world == null || (!this.arenaManager.isWorldClean(worldName) && !reusingSession)) {
+            if (world != null && !this.arenaManager.getWorldManager().deleteWorld(worldName)) {
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.world_not_found"));
+                return;
+            }
             final WorldCreator wc = new WorldCreator(worldName);
             wc.generator(new dev.sebastianjnuwu.bedwars.world.VoidGenerator());
             world = wc.createWorld();
@@ -129,9 +139,11 @@ public class EditCommand extends BaseCommand implements SubCommand {
                 this.arenaManager.save(refreshed);
                 this.arenaManager.flush(refreshed.getName());
             }
+            this.arenaManager.markWorldClean(worldName);
         }
 
         this.arenaManager.showMarkerBlocks(arena);
+        this.arenaManager.markWorldDirty(worldName);
         this.editorManager.startSession(player, name);
         this.editorManager.startParticleTask(player, name, this.arenaManager);
 
