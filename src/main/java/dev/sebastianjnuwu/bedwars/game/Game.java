@@ -501,18 +501,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             this.forgeLevels.put(forge, 1);
             this.putForgeTicks(forge, 1);
         }
-        Bukkit.getLogger().info("[BedWars] initForgeTicks: " + forgeCount + " forges found, "
-                + this.forgeLevels.size() + " levels set, "
-                + this.forgeTicks.size() + " tick entries");
-        var fl = this.arena.getForgeLevels();
-        Bukkit.getLogger().info("[BedWars]   forgeLevels from arena: "
-                + (fl == null ? "null" : fl.size() + " levels"));
-        if (fl != null) {
-            for (var f : fl) {
-                Bukkit.getLogger().info("[BedWars]   level " + f.level() + " -> "
-                        + (f.intervals() == null ? "null" : f.intervals().size() + " materials"));
-            }
-        }
+
     }
 
     private void putForgeTicks(final ArenaGenerator forge, final int level) {
@@ -537,7 +526,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             final long interval = entry.getValue();
             final String key = forgeKey(forge) + ":" + material.name();
             this.forgeTicks.put(key, new long[]{0L, interval, 0L});
-            Bukkit.getLogger().info("[BedWars]   forge tick: " + key + " interval=" + interval);
         }
     }
 
@@ -693,11 +681,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             });
             spawned++;
         }
-        if (this.tick % 100 == 0 && !this.forgeTicks.isEmpty()) {
-            Bukkit.getLogger().info("[BedWars] handleForgeTicks tick=" + this.tick
-                    + " entries=" + this.forgeTicks.size()
-                    + " skipped=" + skipped + " spawned=" + spawned);
-        }
     }
 
     private void handleRespawnTicks() {
@@ -719,14 +702,15 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 }
             } else {
                 entry.setValue(remaining);
-                final Player player = Bukkit.getPlayer(entry.getKey());
-                if (player != null) {
-                    final int seconds = (remaining + 19) / 20;
-                    player.sendActionBar(
-                            net.kyori.adventure.text.Component.text(
-                                    "§eRespawn em " + seconds + "s"
-                            )
-                    );
+                if (remaining % 20 == 0) {
+                    final Player player = Bukkit.getPlayer(entry.getKey());
+                    if (player != null) {
+                        final int seconds = remaining / 20;
+                        player.showTitle(Title.title(
+                                net.kyori.adventure.text.Component.text("§e" + seconds),
+                                this.lang.text("game.respawn_title"),
+                                Title.Times.times(java.time.Duration.ZERO, java.time.Duration.ofSeconds(1), java.time.Duration.ofMillis(500))));
+                    }
                 }
             }
         }
