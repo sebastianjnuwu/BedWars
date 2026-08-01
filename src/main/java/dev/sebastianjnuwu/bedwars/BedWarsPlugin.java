@@ -89,18 +89,11 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.getServer().getPluginManager().registerEvents(new ShopListener(), this);
 
         final boolean hasFancyNpcs = this.isClassAvailable("de.oliver.fancynpcs.api.events.NpcInteractEvent");
-        final boolean hasCitizens = this.isClassAvailable("net.citizensnpcs.api.CitizensAPI");
-        if (hasFancyNpcs || hasCitizens) {
+        if (hasFancyNpcs) {
             this.getServer().getPluginManager().registerEvents(
                     new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
             this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
-            if (hasFancyNpcs && hasCitizens) {
-                this.getLogger().info(this.lang.raw("startup.npcs_hook_both"));
-            } else if (hasFancyNpcs) {
-                this.getLogger().info(this.lang.raw("startup.npcs_hook_fancynpcs"));
-            } else {
-                this.getLogger().info(this.lang.raw("startup.npcs_hook_citizens"));
-            }
+            this.getLogger().info(this.lang.raw("startup.npcs_hook_fancynpcs"));
         } else {
             this.getLogger().info(this.lang.raw("startup.fancynpcs_not_found"));
         }

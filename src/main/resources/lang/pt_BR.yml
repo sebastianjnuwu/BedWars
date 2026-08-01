@@ -132,7 +132,7 @@ admin:
       usage_remove: "Uso: /bw admin arena <arena> shop-npc remove <id>"
       usage_list: "Uso: /bw admin arena <arena> shop-npc list"
       added: "Shop NPC adicionado na arena {0}"
-      added_no_npcs: "Localização do Shop NPC salva (FancyNPCs não disponível)"
+      added_no_npcs: "Localização do Shop NPC salva, mas o NPC não pôde ser criado no backend ativo"
       removed: "Shop NPC {0} removido"
       removed_last: "Último Shop NPC removido"
       invalid_id: "ID inválido"
@@ -313,10 +313,8 @@ startup:
   github: "https://github.com/sebastianjnuwu/bedwars"
   author: "sebastianjnuwu <sebastianjnuwu@gmail.com>"
   version: "v{0}"
-  npcs_hook_both: "Hook de NPCs ativo para FancyNPCs e Citizens!"
   npcs_hook_fancynpcs: "Hook de NPCs ativo para FancyNPCs!"
-  npcs_hook_citizens: "Hook de NPCs ativo para Citizens!"
-  fancynpcs_not_found: "Nenhum suporte de NPCs compatível encontrado - interação com NPC da loja desativada."
+  fancynpcs_not_found: "FancyNPCs não encontrado - interação com NPC da loja desativada."
 
 # ── ui ────────────────────────────────
 ui:

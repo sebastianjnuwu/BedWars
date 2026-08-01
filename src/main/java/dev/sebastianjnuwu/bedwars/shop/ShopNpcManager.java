@@ -20,8 +20,7 @@ import dev.sebastianjnuwu.bedwars.lang.LangManager;
 /**
  * Gerencia o ciclo de vida dos NPCs da loja para as arenas do BedWars.
  * <p>
- * Os NPCs podem ser criados via FancyNPCs ou Citizens, dependendo do que
- * estiver disponível no servidor.
+ * Os NPCs são criados via FancyNPCs quando o backend estiver disponível.
  */
 public class ShopNpcManager {
 
@@ -155,55 +154,35 @@ public class ShopNpcManager {
      * Remove todos os NPCs do BedWars que tenham sobrado de sessoes anteriores.
      */
     public void removeAllBedWarsNpcs() {
-        if (this.isFancyNpcsAvailable()) {
-            try {
-                final Object fancyPlugin = this.invokeStaticMethod("de.oliver.fancynpcs.api.FancyNpcsPlugin", "get", new Class<?>[0]);
-                final Object npcManager = this.invokeMethod(fancyPlugin, "getNpcManager", new Class<?>[0]);
-                final Collection<?> all = (Collection<?>) this.invokeMethod(npcManager, "getAllNpcs", new Class<?>[0]);
-                if (all == null) {
-                    return;
-                }
-                for (final Object npc : all) {
-                    if (this.isManagedNpc(npc)) {
-                        this.removeNpcHandle(npc);
-                    }
-                }
-            } catch (final Exception e) {
-                this.plugin.getLogger().warning("Failed to clean up leftover shop NPCs: " + e.getMessage());
-            }
+        if (!this.isFancyNpcsAvailable()) {
             return;
         }
 
-        if (this.isCitizensAvailable()) {
-            try {
-                final Object registry = this.invokeStaticMethod("net.citizensnpcs.api.CitizensAPI", "getNPCRegistry", new Class<?>[0]);
-                final Collection<?> all = this.getCitizensNpcs(registry);
-                if (all == null) {
-                    return;
-                }
-                for (final Object npc : all) {
-                    if (this.isManagedNpc(npc)) {
-                        this.removeNpcHandle(npc);
-                    }
-                }
-            } catch (final Exception e) {
-                this.plugin.getLogger().fine("Failed to clean up leftover shop NPCs: " + e.getMessage());
+        try {
+            final Object fancyPlugin = this.invokeStaticMethod("de.oliver.fancynpcs.api.FancyNpcsPlugin", "get", new Class<?>[0]);
+            final Object npcManager = this.invokeMethod(fancyPlugin, "getNpcManager", new Class<?>[0]);
+            final Collection<?> all = (Collection<?>) this.invokeMethod(npcManager, "getAllNpcs", new Class<?>[0]);
+            if (all == null) {
+                return;
             }
+            for (final Object npc : all) {
+                if (this.isManagedNpc(npc)) {
+                    this.removeNpcHandle(npc);
+                }
+            }
+        } catch (final Exception e) {
+            this.plugin.getLogger().warning("Failed to clean up leftover shop NPCs: " + e.getMessage());
         }
     }
 
     // ── metodos internos ─────────────────────────────────────────────────
 
     private boolean isBackendAvailable() {
-        return this.isFancyNpcsAvailable() || this.isCitizensAvailable();
+        return this.isFancyNpcsAvailable();
     }
 
     private boolean isFancyNpcsAvailable() {
         return this.isClassAvailable("de.oliver.fancynpcs.api.FancyNpcsPlugin");
-    }
-
-    private boolean isCitizensAvailable() {
-        return this.isClassAvailable("net.citizensnpcs.api.CitizensAPI");
     }
 
     private boolean isClassAvailable(final String className) {
@@ -243,10 +222,10 @@ public class ShopNpcManager {
     private @org.jetbrains.annotations.Nullable Object spawnNpc(final String arenaName, final int index,
                                                                final Location loc, final String skin, final String context) {
         try {
-            if (this.isFancyNpcsAvailable()) {
-                return this.spawnFancyNpc(arenaName, index, loc, skin, context);
+            if (!this.isFancyNpcsAvailable()) {
+                throw new IllegalStateException("FancyNPCs não disponível");
             }
-            return this.spawnCitizensNpc(arenaName, index, loc, skin, context);
+            return this.spawnFancyNpc(arenaName, index, loc, skin, context);
         } catch (final Exception e) {
             this.plugin.getLogger().warning(this.lang.raw("log.shop_npc.spawn_error", String.valueOf(index), arenaName, e.getMessage()));
             return null;
@@ -273,27 +252,6 @@ public class ShopNpcManager {
         return npc;
     }
 
-    private Object spawnCitizensNpc(final String arenaName, final int index, final Location loc,
-                                    final String skin, final String context) throws Exception {
-        final String npcName = this.buildNpcName(arenaName, context, index);
-        final Object registry = this.invokeStaticMethod("net.citizensnpcs.api.CitizensAPI", "getNPCRegistry", new Class<?>[0]);
-        final Class<?> entityTypeClass = Class.forName("org.bukkit.entity.EntityType");
-        final Object entityType = Enum.valueOf((Class) entityTypeClass, "PLAYER");
-        final Object npc = this.invokeMethod(registry, "createNPC", new Class<?>[]{entityTypeClass, String.class}, entityType, npcName);
-        this.invokeOptionalMethod(npc, "setName", new Class<?>[]{String.class}, npcName);
-        this.invokeOptionalMethod(npc, "setProtected", new Class<?>[]{boolean.class}, true);
-        this.spawnCitizensEntity(npc, loc);
-        return npc;
-    }
-
-    private void spawnCitizensEntity(final Object npc, final Location loc) throws Exception {
-        try {
-            this.invokeMethod(npc, "spawn", new Class<?>[]{Location.class}, loc);
-        } catch (final NoSuchMethodException ignored) {
-            this.invokeMethod(npc, "spawn", new Class<?>[]{Location.class, boolean.class}, loc, true);
-        }
-    }
-
     private void removeNpcs(final List<Object> npcs) {
         for (final Object npc : npcs) {
             try {
@@ -315,17 +273,13 @@ public class ShopNpcManager {
             this.invokeMethod(npc, "removeForAll", new Class<?>[0]);
             return;
         }
-        if (this.isCitizensNpcHandle(npc)) {
+        if (this.isFancyNpcHandle(npc)) {
             this.invokeMethod(npc, "destroy", new Class<?>[0]);
         }
     }
 
     private boolean isFancyNpcHandle(final Object npc) {
         return npc != null && npc.getClass().getName().startsWith("de.oliver.fancynpcs");
-    }
-
-    private boolean isCitizensNpcHandle(final Object npc) {
-        return npc != null && npc.getClass().getName().startsWith("net.citizensnpcs");
     }
 
     private @org.jetbrains.annotations.Nullable String resolveNpcName(final Object npc) {
@@ -336,13 +290,6 @@ public class ShopNpcManager {
             try {
                 final Object data = this.invokeMethod(npc, "getData", new Class<?>[0]);
                 return (String) this.invokeMethod(data, "getName", new Class<?>[0]);
-            } catch (final Exception e) {
-                return null;
-            }
-        }
-        if (this.isCitizensNpcHandle(npc)) {
-            try {
-                return (String) this.invokeMethod(npc, "getName", new Class<?>[0]);
             } catch (final Exception e) {
                 return null;
             }
@@ -362,48 +309,11 @@ public class ShopNpcManager {
         if (customName != null && customName.startsWith("bw-shop-")) {
             return customName;
         }
-        if (this.isCitizensAvailable()) {
-            try {
-                final Object registry = this.invokeStaticMethod("net.citizensnpcs.api.CitizensAPI", "getNPCRegistry", new Class<?>[0]);
-                final Object citizensNpc = this.getCitizensNpcForEntity(registry, entity);
-                return this.resolveNpcName(citizensNpc);
-            } catch (final Exception e) {
-                return null;
-            }
-        }
         return null;
     }
 
     private String buildNpcName(final String arenaName, final String context, final int index) {
         return "bw-shop-" + arenaName + "-" + context + "-" + index;
-    }
-
-    private @org.jetbrains.annotations.Nullable Collection<?> getCitizensNpcs(final Object registry) throws Exception {
-        if (registry == null) {
-            return null;
-        }
-        for (final String methodName : List.of("getNPCs", "getAllNPCs")) {
-            final Method method = this.findMethod(registry.getClass(), methodName, new Class<?>[0]);
-            if (method != null) {
-                method.setAccessible(true);
-                return (Collection<?>) method.invoke(registry);
-            }
-        }
-        return null;
-    }
-
-    private @org.jetbrains.annotations.Nullable Object getCitizensNpcForEntity(final Object registry, final Entity entity) throws Exception {
-        if (registry == null || entity == null) {
-            return null;
-        }
-        for (final String methodName : List.of("getNPC", "getNPCFromEntity")) {
-            final Method method = this.findMethod(registry.getClass(), methodName, new Class<?>[]{Entity.class});
-            if (method != null) {
-                method.setAccessible(true);
-                return method.invoke(registry, entity);
-            }
-        }
-        return null;
     }
 
     private Method findMethod(final Class<?> type, final String methodName, final Class<?>[] parameterTypes) {
@@ -424,16 +334,6 @@ public class ShopNpcManager {
             }
         }
         return null;
-    }
-
-    private boolean invokeOptionalMethod(final Object target, final String methodName, final Class<?>[] parameterTypes,
-                                         final Object... args) {
-        try {
-            this.invokeMethod(target, methodName, parameterTypes, args);
-            return true;
-        } catch (final Exception ignored) {
-            return false;
-        }
     }
 
     private Object invokeMethod(final Object target, final String methodName, final Class<?>[] parameterTypes,
