@@ -436,8 +436,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         this.shopNpcManager.spawnGameNpcs(
                 this.arena.getName(),
-                this.arena.getShopNpcLocations(),
-                this.arena.getShopNpcSkin()
+                this.arena.getShopNpcs()
         );
     }
 

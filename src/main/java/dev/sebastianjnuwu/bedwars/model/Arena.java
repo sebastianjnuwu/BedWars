@@ -12,6 +12,7 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
+import dev.sebastianjnuwu.bedwars.api.model.ShopNpc;
 
 /**
  * Representa uma arena de BedWars. Contém todas as informações de configuração
@@ -46,8 +47,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private Map<String, GeneratorConfig> generatorConfigs;
     private int forgeMaxLevel;
     private List<ForgeLevel> forgeLevels;
-    private List<Location> shopNpcLocations;
-    private String shopNpcSkin;
+    private List<ShopNpc> shopNpcs;
     private final List<ArenaTeam> teams;
     private final List<ArenaGenerator> generators;
 
@@ -61,7 +61,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.enabled = false;
         this.generatorConfigs = new HashMap<>();
         this.forgeLevels = new ArrayList<>();
-        this.shopNpcLocations = new ArrayList<>();
+        this.shopNpcs = new ArrayList<>();
         this.teams = new ArrayList<>();
         this.generators = new ArrayList<>();
     }
@@ -419,39 +419,21 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     }
 
     /**
-     * Retorna as localizações dos NPCs da loja desta arena.
+     * Retorna os NPCs da loja desta arena.
      *
-     * @return lista de localizações dos NPCs
+     * @return lista de NPCs da loja
      */
-    public List<Location> getShopNpcLocations() {
-        return shopNpcLocations;
+    public List<ShopNpc> getShopNpcs() {
+        return shopNpcs;
     }
 
     /**
-     * Define as localizações dos NPCs da loja desta arena.
+     * Define os NPCs da loja desta arena.
      *
-     * @param locations lista de localizações
+     * @param npcs lista de NPCs da loja
      */
-    public void setShopNpcLocations(List<Location> locations) {
-        this.shopNpcLocations = locations;
-    }
-
-    /**
-     * Retorna a skin configurada para os NPCs da loja.
-     *
-     * @return nome da skin ou null se não definida
-     */
-    public @Nullable String getShopNpcSkin() {
-        return shopNpcSkin;
-    }
-
-    /**
-     * Define a skin dos NPCs da loja desta arena.
-     *
-     * @param skin nome da skin ou null para usar padrão
-     */
-    public void setShopNpcSkin(@Nullable String skin) {
-        this.shopNpcSkin = skin;
+    public void setShopNpcs(List<ShopNpc> npcs) {
+        this.shopNpcs = npcs;
     }
 
     /**

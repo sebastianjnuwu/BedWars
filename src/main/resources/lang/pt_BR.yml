@@ -128,19 +128,22 @@ admin:
     status_forges: "Forjas configuradas: {0}"
     status_forge_level: "Forja nível {0}: {1}"
     shop_npc:
-      usage_add: "Uso: /bw admin arena <arena> shop-npc add <skin>"
+      usage_add: "Uso: /bw admin arena <arena> shop-npc add <skin> [displayName]"
       usage_remove: "Uso: /bw admin arena <arena> shop-npc remove <id>"
       usage_list: "Uso: /bw admin arena <arena> shop-npc list"
+      usage_display_name: "Uso: /bw admin arena <arena> shop-npc displayName <id> <nome>"
       added: "Shop NPC adicionado na arena {0}"
-      added_no_npcs: "Localização do Shop NPC salva, mas o NPC não pôde ser criado no backend ativo"
+      added_no_npcs: "Localização do Shop NPC salva, mas o NPC não pôde ser criado. Verifique se o FancyNPCs está ativo e carregado."
       removed: "Shop NPC {0} removido"
       removed_last: "Último Shop NPC removido"
       invalid_id: "ID inválido"
       none: "Nenhum Shop NPC configurado"
       header: "Shop NPCs da arena {0}:"
       entry: "  {0}: {1}, {2}, {3}"
-      skin_label: "Skin: {0}"
-      unknown_action: "Ação inválida. Use: add, remove, list"
+      entry_skin: "      Skin: {0}"
+      entry_display_name: "      Nome: {0}"
+      display_name_set: "Nome de exibição do Shop NPC {0} definido para: {1}"
+      unknown_action: "Ação inválida. Use: add, remove, list, displayName"
 
 # ── game ──────────────────────────────
 game:

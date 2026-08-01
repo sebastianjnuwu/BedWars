@@ -36,6 +36,7 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
+import dev.sebastianjnuwu.bedwars.api.model.ShopNpc;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
 import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
@@ -151,12 +152,14 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 gen.setLocation(new Location(newWorld, old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch()));
             }
         }
-        if (arena.getShopNpcLocations() != null) {
-            final List<Location> updated = new ArrayList<>();
-            for (final Location loc : arena.getShopNpcLocations()) {
-                updated.add(new Location(newWorld, loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch()));
+        if (arena.getShopNpcs() != null) {
+            final List<ShopNpc> updated = new ArrayList<>();
+            for (final ShopNpc npc : arena.getShopNpcs()) {
+                final Location old = npc.location();
+                final Location newLoc = new Location(newWorld, old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch());
+                updated.add(new ShopNpc(newLoc, npc.skin(), npc.displayName()));
             }
-            arena.setShopNpcLocations(updated);
+            arena.setShopNpcs(updated);
         }
     }
 
@@ -523,13 +526,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
 
         // Shop NPCs — se vazio porque o mundo não está carregado, preserva a seção do disco
-        List<Location> npcLocs = arena.getShopNpcLocations();
-        if (npcLocs != null && !npcLocs.isEmpty()) {
-            for (int i = 0; i < npcLocs.size(); i++) {
-                config.set("shop_npcs." + i + ".location", this.serializeLocation(npcLocs.get(i)));
-            }
-            if (arena.getShopNpcSkin() != null) {
-                config.set("shop_npcs.skin", arena.getShopNpcSkin());
+        List<ShopNpc> shopNpcs = arena.getShopNpcs();
+        if (shopNpcs != null && !shopNpcs.isEmpty()) {
+            for (int i = 0; i < shopNpcs.size(); i++) {
+                ShopNpc npc = shopNpcs.get(i);
+                config.set("shop_npcs." + i + ".location", this.serializeLocation(npc.location()));
+                if (npc.skin() != null) {
+                    config.set("shop_npcs." + i + ".skin", npc.skin());
+                }
+                if (npc.displayName() != null) {
+                    config.set("shop_npcs." + i + ".displayName", npc.displayName());
+                }
             }
         } else if (disk != null && disk.contains("shop_npcs") && !this.sectionWorldLoaded(disk, "shop_npcs")) {
             this.copySection(disk, config, "shop_npcs");
@@ -875,25 +882,26 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
 
         if (config.contains("shop_npcs")) {
-            List<Location> npcLocs = new java.util.ArrayList<>();
+            List<ShopNpc> shopNpcs = new java.util.ArrayList<>();
             ConfigurationSection npcSection = config.getConfigurationSection("shop_npcs");
             if (npcSection != null) {
+                String fallbackSkin = config.getString("shop_npcs.skin");
+                String fallbackDisplayName = config.getString("shop_npcs.displayName");
                 for (String key : npcSection.getKeys(false)) {
-                    if (key.equals("skin")) {
+                    if (key.equals("skin") || key.equals("displayName")) {
                         continue;
                     }
                     Location loc = this.parseLocation(config.getString("shop_npcs." + key + ".location"));
-                    if (loc != null) {
-                        npcLocs.add(loc);
+                    if (loc == null) {
+                        continue;
                     }
+                    String skin = config.getString("shop_npcs." + key + ".skin", fallbackSkin);
+                    String displayName = config.getString("shop_npcs." + key + ".displayName", fallbackDisplayName);
+                    shopNpcs.add(new ShopNpc(loc, skin, displayName));
                 }
             }
-            if (!npcLocs.isEmpty()) {
-                arena.setShopNpcLocations(npcLocs);
-            }
-            String skin = config.getString("shop_npcs.skin");
-            if (skin != null) {
-                arena.setShopNpcSkin(skin);
+            if (!shopNpcs.isEmpty()) {
+                arena.setShopNpcs(shopNpcs);
             }
         }
 

@@ -167,10 +167,11 @@ Por padrão, cada arena já possui configurações para os tipos **ferro**, **ou
 Instale o **FancyNPCs** no servidor. Durante a edição da arena, posicione-se onde o NPC deverá ficar e execute:
 
 ```bash
-/bw admin arena <nome_da_arena> shop-npc add [skin]
+/bw admin arena <nome_da_arena> shop-npc add [skin] [displayName]
+/bw admin arena <nome_da_arena> shop-npc displayName <id> <nome>
 ```
 
-> O NPC será spawnado automaticamente quando a partida iniciar e removido ao final. Use `list` para ver os NPCs adicionados e `remove <id>` para remover.
+> O NPC será spawnado automaticamente quando a partida iniciar e removido ao final. Use `list` para ver os NPCs adicionados e `remove <id>` para remover. Cada NPC guarda seu próprio skin e displayName no arquivo da arena.
 
 ```bash
 /bw admin arena <nome_da_arena> shop-npc list
@@ -242,7 +243,8 @@ Se não definir `shop`, a arena usa `default.yml`.
 Instale o **FancyNPCs** no servidor. Os NPCs são spawnados automaticamente quando a partida inicia e removidos ao final. Para configurar as posições durante a edição da arena:
 
 ```bash
-/bw admin arena <nome_da_arena> shop-npc add [skin]
+/bw admin arena <nome_da_arena> shop-npc add [skin] [displayName]
+/bw admin arena <nome_da_arena> shop-npc displayName <id> <nome>
 ```
 
 Para gerenciar:
@@ -275,7 +277,8 @@ Para gerenciar:
 | `/bw admin arena <arena> setbed <cor>` | Define a cama do time | `bw.admin` |
 | `/bw admin arena <arena> teams` | Lista os times | `bw.admin` |
 | `/bw admin arena <arena> addgenerator <tipo>` | Adiciona um gerador | `bw.admin` |
-| `/bw admin arena <arena> shop-npc add [skin]` | Adiciona NPC da loja | `bw.admin` |
+| `/bw admin arena <arena> shop-npc add [skin] [displayName]` | Adiciona NPC da loja | `bw.admin` |
+| `/bw admin arena <arena> shop-npc displayName <id> <nome>` | Define o nome de exibição de um NPC | `bw.admin` |
 | `/bw admin arena <arena> shop-npc list` | Lista NPCs da loja | `bw.admin` |
 | `/bw admin arena <arena> shop-npc remove <id>` | Remove NPC da loja | `bw.admin` |
 | `/bw join <arena> [time]` | Entra em uma partida | `bw.player` |

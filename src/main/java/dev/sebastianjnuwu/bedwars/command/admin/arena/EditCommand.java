@@ -151,8 +151,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
         // Spawn shop NPCs for editor view
         this.gameManager.getShopNpcManager().spawnEditorNpcs(
                 arena.getName(),
-                arena.getShopNpcLocations(),
-                arena.getShopNpcSkin()
+                arena.getShopNpcs()
         );
 
         // Teleport to the arena spawn if already set, otherwise fall back to world spawn

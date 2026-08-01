@@ -1,7 +1,5 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,11 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.model.ShopNpc;
+import dev.sebastianjnuwu.bedwars.hook.FancyNpcsHook;
+import dev.sebastianjnuwu.bedwars.hook.NpcHook;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
 /**
@@ -26,6 +26,7 @@ public class ShopNpcManager {
 
     private final JavaPlugin plugin;
     private final LangManager lang;
+    private final NpcHook npcHook;
     private final Map<String, List<Object>> gameNpcs;
     private final Map<String, List<Object>> editorNpcs;
 
@@ -37,6 +38,7 @@ public class ShopNpcManager {
     public ShopNpcManager(final JavaPlugin plugin) {
         this.plugin = plugin;
         this.lang = ((BedWarsPlugin) plugin).getLang();
+        this.npcHook = new FancyNpcsHook(plugin);
         this.gameNpcs = new HashMap<>();
         this.editorNpcs = new HashMap<>();
     }
@@ -45,14 +47,13 @@ public class ShopNpcManager {
      * Spawna os NPCs da loja para uma partida.
      *
      * @param arenaName identificador da arena
-     * @param locations localizacoes dos NPCs
-     * @param skin      nome da skin ou null para padrao
+     * @param npcs      NPCs da loja a serem spawnados
      */
-    public void spawnGameNpcs(final String arenaName, final List<Location> locations, final String skin) {
+    public void spawnGameNpcs(final String arenaName, final List<ShopNpc> npcs) {
         this.removeEditorNpcs(arenaName);
-        final List<Object> npcs = this.spawnNpcs(arenaName, locations, skin, "jogo");
-        if (npcs != null) {
-            this.gameNpcs.put(arenaName, npcs);
+        final List<Object> created = this.spawnNpcs(arenaName, npcs, "jogo");
+        if (created != null) {
+            this.gameNpcs.put(arenaName, created);
         }
     }
 
@@ -72,14 +73,13 @@ public class ShopNpcManager {
      * Spawna os NPCs da loja para o modo edicao.
      *
      * @param arenaName identificador da arena
-     * @param locations localizacoes dos NPCs
-     * @param skin      nome da skin ou null para padrao
+     * @param npcs      NPCs da loja a serem spawnados
      */
-    public void spawnEditorNpcs(final String arenaName, final List<Location> locations, final String skin) {
+    public void spawnEditorNpcs(final String arenaName, final List<ShopNpc> npcs) {
         this.removeEditorNpcs(arenaName);
-        final List<Object> npcs = this.spawnNpcs(arenaName, locations, skin, "editor");
-        if (npcs != null) {
-            this.editorNpcs.put(arenaName, npcs);
+        final List<Object> created = this.spawnNpcs(arenaName, npcs, "editor");
+        if (created != null) {
+            this.editorNpcs.put(arenaName, created);
         }
     }
 
@@ -100,31 +100,30 @@ public class ShopNpcManager {
      *
      * @param arenaName identificador da arena
      * @param index     indice deste NPC
-     * @param location  local onde spawnar
-     * @param skin      nome da skin ou null para padrao
+     * @param npc       NPC da loja a ser spawnado
      * @return o NPC spawnado, ou null se nenhum backend estiver disponivel
      */
     public @org.jetbrains.annotations.Nullable Object spawnSingleNpc(final String arenaName, final int index,
-                                                                     final Location location, final String skin) {
-        if (location == null || location.getWorld() == null) {
+                                                                     final ShopNpc npc) {
+        if (npc == null || npc.location() == null || npc.location().getWorld() == null) {
             return null;
         }
         if (!this.isBackendAvailable()) {
             return null;
         }
 
-        final Object npc = this.spawnNpc(arenaName, index, location, skin, "editor");
-        if (npc != null) {
-            this.editorNpcs.computeIfAbsent(arenaName, k -> new ArrayList<>()).add(npc);
+        final Object created = this.spawnNpc(arenaName, index, npc, "editor");
+        if (created != null) {
+            this.editorNpcs.computeIfAbsent(arenaName, k -> new ArrayList<>()).add(created);
         }
-        return npc;
+        return created;
     }
 
     /**
      * Verifica se um objeto representa um NPC gerenciado pelo BedWars.
      */
     public boolean isManagedNpc(final Object npc) {
-        return npc != null && this.resolveNpcName(npc) != null && this.resolveNpcName(npc).startsWith("bw-shop-");
+        return this.npcHook.isManagedNpc(npc);
     }
 
     /**
@@ -159,9 +158,7 @@ public class ShopNpcManager {
         }
 
         try {
-            final Object fancyPlugin = this.invokeStaticMethod("de.oliver.fancynpcs.api.FancyNpcsPlugin", "get", new Class<?>[0]);
-            final Object npcManager = this.invokeMethod(fancyPlugin, "getNpcManager", new Class<?>[0]);
-            final Collection<?> all = (Collection<?>) this.invokeMethod(npcManager, "getAllNpcs", new Class<?>[0]);
+            final Collection<?> all = this.npcHook.getAllNpcs();
             if (all == null) {
                 return;
             }
@@ -182,74 +179,51 @@ public class ShopNpcManager {
     }
 
     private boolean isFancyNpcsAvailable() {
-        return this.isClassAvailable("de.oliver.fancynpcs.api.FancyNpcsPlugin");
+        return this.npcHook.isAvailable();
     }
 
-    private boolean isClassAvailable(final String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (final ClassNotFoundException e) {
-            return false;
-        }
-    }
-
-    private @org.jetbrains.annotations.Nullable List<Object> spawnNpcs(final String arenaName, final List<Location> locations,
-                                                                       final String skin, final String context) {
-        if (locations == null || locations.isEmpty()) {
+    private @org.jetbrains.annotations.Nullable List<Object> spawnNpcs(final String arenaName, final List<ShopNpc> npcs,
+                                                                       final String context) {
+        if (npcs == null || npcs.isEmpty()) {
             return null;
         }
         if (!this.isBackendAvailable()) {
             return null;
         }
 
-        final List<Object> npcs = new ArrayList<>();
+        final List<Object> created = new ArrayList<>();
 
-        for (int i = 0; i < locations.size(); i++) {
-            final Location loc = locations.get(i);
-            if (loc == null || loc.getWorld() == null) {
+        for (int i = 0; i < npcs.size(); i++) {
+            final ShopNpc npc = npcs.get(i);
+            if (npc == null || npc.location() == null || npc.location().getWorld() == null) {
                 continue;
             }
-            final Object npc = this.spawnNpc(arenaName, i, loc, skin, context);
-            if (npc != null) {
-                npcs.add(npc);
+            final Object createdNpc = this.spawnNpc(arenaName, i, npc, context);
+            if (createdNpc != null) {
+                created.add(createdNpc);
             }
         }
 
-        return npcs.isEmpty() ? null : npcs;
+        return created.isEmpty() ? null : created;
     }
 
     private @org.jetbrains.annotations.Nullable Object spawnNpc(final String arenaName, final int index,
-                                                               final Location loc, final String skin, final String context) {
+                                                                final ShopNpc npc, final String context) {
         try {
             if (!this.isFancyNpcsAvailable()) {
                 throw new IllegalStateException("FancyNPCs não disponível");
             }
-            return this.spawnFancyNpc(arenaName, index, loc, skin, context);
+            return this.spawnFancyNpc(arenaName, index, npc, context);
         } catch (final Exception e) {
             this.plugin.getLogger().warning(this.lang.raw("log.shop_npc.spawn_error", String.valueOf(index), arenaName, e.getMessage()));
             return null;
         }
     }
 
-    private Object spawnFancyNpc(final String arenaName, final int index, final Location loc,
-                                 final String skin, final String context) throws Exception {
+    private Object spawnFancyNpc(final String arenaName, final int index, final ShopNpc npc,
+                                 final String context) throws Exception {
         final String npcName = this.buildNpcName(arenaName, context, index);
-        final Class<?> npcDataClass = Class.forName("de.oliver.fancynpcs.api.NpcData");
-        final Constructor<?> constructor = npcDataClass.getConstructor(String.class, UUID.class, Location.class);
-        final Object npcData = constructor.newInstance(npcName, UUID.randomUUID(), loc);
-        this.invokeMethod(npcData, "setSkin", new Class<?>[]{String.class}, skin != null ? skin : "NPC");
-        this.invokeMethod(npcData, "setDisplayName", new Class<?>[]{String.class}, "<red>Loja</red>");
-
-        final Object fancyPlugin = this.invokeStaticMethod("de.oliver.fancynpcs.api.FancyNpcsPlugin", "get", new Class<?>[0]);
-        final Object npcAdapter = this.invokeMethod(fancyPlugin, "getNpcAdapter", new Class<?>[0]);
-        final Object npcManager = this.invokeMethod(fancyPlugin, "getNpcManager", new Class<?>[0]);
-        final Object npc = this.invokeMethod(npcAdapter, "apply", new Class<?>[]{npcDataClass}, npcData);
-        this.invokeMethod(npc, "setSaveToFile", new Class<?>[]{boolean.class}, false);
-        this.invokeMethod(npcManager, "registerNpc", new Class<?>[]{Class.forName("de.oliver.fancynpcs.api.Npc")}, npc);
-        this.invokeMethod(npc, "create", new Class<?>[0]);
-        this.invokeMethod(npc, "spawnForAll", new Class<?>[0]);
-        return npc;
+        return this.npcHook.createNpc(npcName, UUID.randomUUID(), npc.location(), npc.skin(), npc.displayName());
     }
 
     private void removeNpcs(final List<Object> npcs) {
@@ -263,38 +237,11 @@ public class ShopNpcManager {
     }
 
     private void removeNpcHandle(final Object npc) throws Exception {
-        if (npc == null) {
-            return;
-        }
-        if (this.isFancyNpcHandle(npc)) {
-            final Object fancyPlugin = this.invokeStaticMethod("de.oliver.fancynpcs.api.FancyNpcsPlugin", "get", new Class<?>[0]);
-            final Object npcManager = this.invokeMethod(fancyPlugin, "getNpcManager", new Class<?>[0]);
-            this.invokeMethod(npcManager, "removeNpc", new Class<?>[]{Class.forName("de.oliver.fancynpcs.api.Npc")}, npc);
-            this.invokeMethod(npc, "removeForAll", new Class<?>[0]);
-            return;
-        }
-        if (this.isFancyNpcHandle(npc)) {
-            this.invokeMethod(npc, "destroy", new Class<?>[0]);
-        }
-    }
-
-    private boolean isFancyNpcHandle(final Object npc) {
-        return npc != null && npc.getClass().getName().startsWith("de.oliver.fancynpcs");
+        this.npcHook.removeNpc(npc);
     }
 
     private @org.jetbrains.annotations.Nullable String resolveNpcName(final Object npc) {
-        if (npc == null) {
-            return null;
-        }
-        if (this.isFancyNpcHandle(npc)) {
-            try {
-                final Object data = this.invokeMethod(npc, "getData", new Class<?>[0]);
-                return (String) this.invokeMethod(data, "getName", new Class<?>[0]);
-            } catch (final Exception e) {
-                return null;
-            }
-        }
-        return null;
+        return this.npcHook.resolveNpcName(npc);
     }
 
     private @org.jetbrains.annotations.Nullable String resolveEntityName(final Entity entity) {
@@ -316,44 +263,4 @@ public class ShopNpcManager {
         return "bw-shop-" + arenaName + "-" + context + "-" + index;
     }
 
-    private Method findMethod(final Class<?> type, final String methodName, final Class<?>[] parameterTypes) {
-        Class<?> current = type;
-        while (current != null) {
-            try {
-                return current.getDeclaredMethod(methodName, parameterTypes);
-            } catch (final NoSuchMethodException ignored) {
-                // continue searching
-            }
-            current = current.getSuperclass();
-        }
-
-        for (final Class<?> iface : type.getInterfaces()) {
-            final Method method = this.findMethod(iface, methodName, parameterTypes);
-            if (method != null) {
-                return method;
-            }
-        }
-        return null;
-    }
-
-    private Object invokeMethod(final Object target, final String methodName, final Class<?>[] parameterTypes,
-                                final Object... args) throws Exception {
-        final Method method = this.findMethod(target.getClass(), methodName, parameterTypes);
-        if (method == null) {
-            throw new NoSuchMethodException(methodName);
-        }
-        method.setAccessible(true);
-        return method.invoke(target, args);
-    }
-
-    private Object invokeStaticMethod(final String className, final String methodName, final Class<?>[] parameterTypes,
-                                      final Object... args) throws Exception {
-        final Class<?> clazz = Class.forName(className);
-        final Method method = this.findMethod(clazz, methodName, parameterTypes);
-        if (method == null) {
-            throw new NoSuchMethodException(methodName);
-        }
-        method.setAccessible(true);
-        return method.invoke(null, args);
-    }
 }

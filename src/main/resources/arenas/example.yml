@@ -193,4 +193,5 @@ shop: "default"
 shop_npcs:
   0:
     location: "bw_example,3,65,3,0,0"
-  skin: "Keeper"
+    skin: "Keeper"
+    displayName: "<red>Loja</red>"
