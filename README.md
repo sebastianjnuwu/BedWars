@@ -36,7 +36,19 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 
 ## Tutorial — Como utilizar o plugin?
 
-### 1. Definir o lobby
+### 1. Instalar o servidor e os plugins necessários
+
+Antes de usar o BedWars, você precisa preparar um servidor Paper 1.21.4 com os plugins de suporte abaixo:
+
+- Baixe o servidor Paper **1.21.4** e coloque o arquivo JAR na pasta do servidor.
+- Instale os plugins obrigatórios:
+  - FastAsyncWorldEdit **v2.15+**
+  - AdvancedSlimePaper **v4.0+**
+  - FancyNPCs **v2.9+** ou Citizens **v2.0.43**
+
+Depois, coloque o arquivo do BedWars gerado em `target/BedWars-1.0.0.jar` na pasta `plugins/` do servidor.
+
+### 2. Definir o lobby
 
 Primeiro, vá até o local onde será o lobby principal e execute o comando abaixo.
 
@@ -46,7 +58,7 @@ Primeiro, vá até o local onde será o lobby principal e execute o comando abai
 /bw admin setlobby
 ```
 
-### 2. Criar a arena
+### 3. Criar a arena
 
 Crie uma nova arena utilizando um **nome único e sem espaços**. Esse nome será usado como identificador interno da arena.
 
@@ -56,7 +68,7 @@ Crie uma nova arena utilizando um **nome único e sem espaços**. Esse nome ser�
 /bw admin create <nome_da_arena>
 ```
 
-### 3. Construir e salvar o mapa
+### 4. Construir e salvar o mapa
 
 Após construir a arena com FAWE, selecione toda a construção com `//pos1` e `//pos2` e execute:
 
@@ -66,7 +78,7 @@ Após construir a arena com FAWE, selecione toda a construção com `//pos1` e `
 
 > O comando lê a seleção do FAWE automaticamente, gera o arquivo `.schem` na pasta `maps/` e o template SlimeWorld em `templates/`.
 
-### 4. Editar a arena (configurar spawn, times, etc.)
+### 5. Editar a arena (configurar spawn, times, etc.)
 
 Com a arena salva, entre no modo de edição para configurá-la.
 
@@ -76,7 +88,7 @@ Com a arena salva, entre no modo de edição para configurá-la.
 /bw admin edit <nome_da_arena>
 ```
 
-### 5. Definir o spawn de espera
+### 6. Definir o spawn de espera
 
 Vá até o local onde os jogadores deverão aguardar o início da partida e execute:
 
@@ -84,7 +96,7 @@ Vá até o local onde os jogadores deverão aguardar o início da partida e exec
 /bw admin arena <nome_da_arena> spawn
 ```
 
-### 6. Adicionar os times
+### 7. Adicionar os times
 
 Adicione todos os times que farão parte da partida.
 
@@ -97,7 +109,7 @@ Adicione todos os times que farão parte da partida.
 /bw admin arena <nome_da_arena> addteam amarelo
 ```
 
-### 7. Definir o spawn dos times
+### 8. Definir o spawn dos times
 
 Vá até o local onde os jogadores de cada time deverão nascer e execute:
 
@@ -108,7 +120,7 @@ Vá até o local onde os jogadores de cada time deverão nascer e execute:
 
 > Repita para todos os times.
 
-### 8. Definir a cama dos times
+### 9. Definir a cama dos times
 
 Posicione-se sobre a cama correspondente ao time e execute:
 
@@ -119,7 +131,7 @@ Posicione-se sobre a cama correspondente ao time e execute:
 
 > Repita para todos os times.
 
-### 9. Adicionar geradores
+### 10. Adicionar geradores
 
 #### Geradores base (configuração automática)
 
@@ -141,7 +153,7 @@ Por padrão, cada arena já possui configurações para os tipos **ferro**, **ou
 
 > Repita para todos os times.
 
-### 10. Configurações opcionais
+### 11. Configurações opcionais
 
 ```bash
 /bw admin arena <nome_da_arena> setminplayers 4
@@ -150,7 +162,7 @@ Por padrão, cada arena já possui configurações para os tipos **ferro**, **ou
 /bw admin arena <nome_da_arena> teams
 ```
 
-### 11. Adicionar NPC da loja
+### 12. Adicionar NPC da loja
 
 Instale o **FancyNPCs** no servidor. Durante a edição da arena, posicione-se onde o NPC deverá ficar e execute:
 
@@ -165,7 +177,7 @@ Instale o **FancyNPCs** no servidor. Durante a edição da arena, posicione-se o
 /bw admin arena <nome_da_arena> shop-npc remove 0
 ```
 
-### 12. Salvar a arena
+### 13. Salvar a arena
 
 Após concluir toda a configuração:
 
@@ -173,7 +185,7 @@ Após concluir toda a configuração:
 /bw admin save <nome_da_arena>
 ```
 
-### 13. Jogar na arena
+### 14. Jogar na arena
 
 ```bash
 /bw join <nome_da_arena>         # time automático
@@ -184,7 +196,7 @@ Após concluir toda a configuração:
 
 > Enquanto um administrador estiver editando a arena, jogadores **não podem** entrar na partida.
 
-### 14. Configurar a loja da arena
+### 15. Configurar a loja da arena
 
 Cada arena pode usar uma loja diferente. As lojas ficam em `plugins/BedWars/shop/<nome>.yml`.
 

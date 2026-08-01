@@ -31,9 +31,10 @@ public class ConfigManager {
 
     private final JavaPlugin plugin;
     private final File file;
-    private final File spawnFile;
+    private final File lobbyFile;
+    private final File legacySpawnFile;
     private YamlConfiguration config;
-    private YamlConfiguration spawnConfig;
+    private YamlConfiguration lobbyConfig;
     private Location cachedLobby;
     private LangManager lang;
 
@@ -46,7 +47,8 @@ public class ConfigManager {
         this.plugin = plugin;
         this.lang = ((BedWarsPlugin) plugin).getLang();
         this.file = new File(plugin.getDataFolder(), "config.yml");
-        this.spawnFile = new File(plugin.getDataFolder(), "spawn.yml");
+        this.lobbyFile = new File(plugin.getDataFolder(), "lobby.yml");
+        this.legacySpawnFile = new File(plugin.getDataFolder(), "spawn.yml");
         this.load();
     }
 
@@ -63,18 +65,27 @@ public class ConfigManager {
         }
         this.config = YamlConfiguration.loadConfiguration(this.file);
 
-        // Load spawn.yml for lobby
-        if (!this.spawnFile.exists()) {
-            try {
-                this.spawnFile.createNewFile();
-            } catch (IOException e) {
-                this.plugin.getLogger().warning(this.lang.raw("log.config_manager.create_spawn_error", e.getMessage()));
+        // Load lobby.yml for lobby
+        if (!this.lobbyFile.exists()) {
+            if (this.legacySpawnFile.exists()) {
+                try {
+                    this.lobbyConfig = YamlConfiguration.loadConfiguration(this.legacySpawnFile);
+                    this.saveLobby();
+                } catch (Exception e) {
+                    this.plugin.getLogger().warning(this.lang.raw("log.config_manager.create_lobby_error", e.getMessage()));
+                }
+            } else {
+                try {
+                    this.lobbyFile.createNewFile();
+                } catch (IOException e) {
+                    this.plugin.getLogger().warning(this.lang.raw("log.config_manager.create_lobby_error", e.getMessage()));
+                }
             }
         }
-        this.spawnConfig = YamlConfiguration.loadConfiguration(this.spawnFile);
-        this.cachedLobby = loadLobbyFromConfig(this.spawnConfig);
+        this.lobbyConfig = YamlConfiguration.loadConfiguration(this.lobbyFile);
+        this.cachedLobby = loadLobbyFromConfig(this.lobbyConfig);
 
-        // Migration: copy lobby from old config.yml to spawn.yml if not yet set
+        // Migration: copy lobby from old config.yml to lobby.yml if not yet set
         if (this.cachedLobby == null && this.config.contains("lobby")) {
             try {
                 String worldName = this.config.getString("lobby.world");
@@ -112,14 +123,14 @@ public class ConfigManager {
         }
     }
 
-    public void saveSpawn() {
-        if (this.spawnConfig == null) {
+    public void saveLobby() {
+        if (this.lobbyConfig == null) {
             return;
         }
         try {
-            this.spawnConfig.save(this.spawnFile);
+            this.lobbyConfig.save(this.lobbyFile);
         } catch (final IOException e) {
-            this.plugin.getLogger().severe(this.lang.raw("log.config_manager.save_spawn_error", e.getMessage()));
+            this.plugin.getLogger().severe(this.lang.raw("log.config_manager.save_lobby_error", e.getMessage()));
         }
     }
 
@@ -129,14 +140,14 @@ public class ConfigManager {
      * @param location local do lobby
      */
     public void setLobby(final Location location) {
-        this.spawnConfig.set("lobby.world", location.getWorld().getName());
-        this.spawnConfig.set("lobby.x", location.getBlockX());
-        this.spawnConfig.set("lobby.y", location.getBlockY());
-        this.spawnConfig.set("lobby.z", location.getBlockZ());
-        this.spawnConfig.set("lobby.yaw", (double) location.getYaw());
-        this.spawnConfig.set("lobby.pitch", (double) location.getPitch());
+        this.lobbyConfig.set("lobby.world", location.getWorld().getName());
+        this.lobbyConfig.set("lobby.x", location.getBlockX());
+        this.lobbyConfig.set("lobby.y", location.getBlockY());
+        this.lobbyConfig.set("lobby.z", location.getBlockZ());
+        this.lobbyConfig.set("lobby.yaw", (double) location.getYaw());
+        this.lobbyConfig.set("lobby.pitch", (double) location.getPitch());
         this.cachedLobby = location;
-        this.saveSpawn();
+        this.saveLobby();
     }
 
     /**

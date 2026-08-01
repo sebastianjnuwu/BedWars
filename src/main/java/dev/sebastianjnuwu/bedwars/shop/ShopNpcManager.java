@@ -177,7 +177,7 @@ public class ShopNpcManager {
         if (this.isCitizensAvailable()) {
             try {
                 final Object registry = this.invokeStaticMethod("net.citizensnpcs.api.CitizensAPI", "getNPCRegistry", new Class<?>[0]);
-                final Collection<?> all = (Collection<?>) this.invokeMethod(registry, "getNPCs", new Class<?>[0]);
+                final Collection<?> all = this.getCitizensNpcs(registry);
                 if (all == null) {
                     return;
                 }
@@ -187,7 +187,7 @@ public class ShopNpcManager {
                     }
                 }
             } catch (final Exception e) {
-                this.plugin.getLogger().warning("Failed to clean up leftover shop NPCs: " + e.getMessage());
+                this.plugin.getLogger().fine("Failed to clean up leftover shop NPCs: " + e.getMessage());
             }
         }
     }
@@ -357,7 +357,7 @@ public class ShopNpcManager {
         if (this.isCitizensAvailable()) {
             try {
                 final Object registry = this.invokeStaticMethod("net.citizensnpcs.api.CitizensAPI", "getNPCRegistry", new Class<?>[0]);
-                final Object citizensNpc = this.invokeMethod(registry, "getNPC", new Class<?>[]{Entity.class}, entity);
+                final Object citizensNpc = this.getCitizensNpcForEntity(registry, entity);
                 return this.resolveNpcName(citizensNpc);
             } catch (final Exception e) {
                 return null;
@@ -370,16 +370,72 @@ public class ShopNpcManager {
         return "bw-shop-" + arenaName + "-" + context + "-" + index;
     }
 
+    private @org.jetbrains.annotations.Nullable Collection<?> getCitizensNpcs(final Object registry) throws Exception {
+        if (registry == null) {
+            return null;
+        }
+        for (final String methodName : List.of("getNPCs", "getAllNPCs")) {
+            final Method method = this.findMethod(registry.getClass(), methodName, new Class<?>[0]);
+            if (method != null) {
+                method.setAccessible(true);
+                return (Collection<?>) method.invoke(registry);
+            }
+        }
+        return null;
+    }
+
+    private @org.jetbrains.annotations.Nullable Object getCitizensNpcForEntity(final Object registry, final Entity entity) throws Exception {
+        if (registry == null || entity == null) {
+            return null;
+        }
+        for (final String methodName : List.of("getNPC", "getNPCFromEntity")) {
+            final Method method = this.findMethod(registry.getClass(), methodName, new Class<?>[]{Entity.class});
+            if (method != null) {
+                method.setAccessible(true);
+                return method.invoke(registry, entity);
+            }
+        }
+        return null;
+    }
+
+    private Method findMethod(final Class<?> type, final String methodName, final Class<?>[] parameterTypes) {
+        Class<?> current = type;
+        while (current != null) {
+            try {
+                return current.getDeclaredMethod(methodName, parameterTypes);
+            } catch (final NoSuchMethodException ignored) {
+                // continue searching
+            }
+            current = current.getSuperclass();
+        }
+
+        for (final Class<?> iface : type.getInterfaces()) {
+            final Method method = this.findMethod(iface, methodName, parameterTypes);
+            if (method != null) {
+                return method;
+            }
+        }
+        return null;
+    }
+
     private Object invokeMethod(final Object target, final String methodName, final Class<?>[] parameterTypes,
                                 final Object... args) throws Exception {
-        final Method method = target.getClass().getMethod(methodName, parameterTypes);
+        final Method method = this.findMethod(target.getClass(), methodName, parameterTypes);
+        if (method == null) {
+            throw new NoSuchMethodException(methodName);
+        }
+        method.setAccessible(true);
         return method.invoke(target, args);
     }
 
     private Object invokeStaticMethod(final String className, final String methodName, final Class<?>[] parameterTypes,
                                       final Object... args) throws Exception {
         final Class<?> clazz = Class.forName(className);
-        final Method method = clazz.getMethod(methodName, parameterTypes);
+        final Method method = this.findMethod(clazz, methodName, parameterTypes);
+        if (method == null) {
+            throw new NoSuchMethodException(methodName);
+        }
+        method.setAccessible(true);
         return method.invoke(null, args);
     }
 }

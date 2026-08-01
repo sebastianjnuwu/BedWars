@@ -252,11 +252,11 @@ log:
     loaded: "Idioma carregado: {0}"
     placeholder_missing: "Placeholder {0} não encontrado em args para a chave \"{1}\""
   config_manager:
-    migrate_lobby: "Lobby migrado de config.yml para spawn.yml"
-    create_spawn_error: "Não foi possível criar spawn.yml: {0}"
+    migrate_lobby: "Lobby migrado de config.yml para lobby.yml"
+    create_lobby_error: "Não foi possível criar lobby.yml: {0}"
     migrate_lobby_error: "Não foi possível migrar lobby: {0}"
     save_config_error: "Erro ao salvar config.yml: {0}"
-    save_spawn_error: "Erro ao salvar spawn.yml: {0}"
+    save_lobby_error: "Erro ao salvar lobby.yml: {0}"
   arena_manager:
     loaded: "Arenas carregadas: {0}"
     forge_duplicate: "Arena {0}: forge duplicado para o time '{1}' ignorado."
@@ -313,7 +313,9 @@ startup:
   github: "https://github.com/sebastianjnuwu/bedwars"
   author: "sebastianjnuwu <sebastianjnuwu@gmail.com>"
   version: "v{0}"
-  fancynpcs_hook: "Hook de NPCs ativo para FancyNPCs/Citizens!"
+  npcs_hook_both: "Hook de NPCs ativo para FancyNPCs e Citizens!"
+  npcs_hook_fancynpcs: "Hook de NPCs ativo para FancyNPCs!"
+  npcs_hook_citizens: "Hook de NPCs ativo para Citizens!"
   fancynpcs_not_found: "Nenhum suporte de NPCs compatível encontrado - interação com NPC da loja desativada."
 
 # ── ui ────────────────────────────────

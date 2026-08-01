@@ -46,17 +46,17 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.lang = new LangManager(this, this.configManager.getLang());
 
         this.getLogger().info("\n\n"
-                + "██████╗ ███████╗██████╗ ██╗    ██╗ █████╗ ██████╗ ███████╗\n"
-                + "██╔══██╗██╔════╝██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔════╝\n"
-                + "██████╔╝█████╗  ██║  ██║██║ █╗ ██║███████║██████╔╝███████╗\n"
-                + "██╔══██╗██╔══╝  ██║  ██║██║███╗██║██╔══██║██╔══██╗╚════██║\n"
-                + "██████╔╝███████╗██████╔╝╚███╔███╔╝██║  ██║██║  ██║███████║\n"
-                + "╚═════╝ ╚══════╝╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝\n"
+                + "███████╗██████╗ ███████╗██████╗ ██╗    ██╗ █████╗ ██████╗ ███████╗\n"
+                + "██╔════╝██╔══██╗██╔════╝██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔════╝\n"
+                + "███████╗██████╔╝█████╗  ██║  ██║██║ █╗ ██║███████║██████╔╝███████╗\n"
+                + "╚════██║██╔══██╗██╔══╝  ██║  ██║██║███╗██║██╔══██║██╔══██╗╚════██║\n"
+                + "███████║██████╔╝███████╗██████╔╝╚███╔███╔╝██║  ██║██║  ██║███████║\n"
+                + "╚══════╝╚═════╝ ╚══════╝╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝\n"
                 + "                                                           \n"
                 + "  - GitHub: " + this.lang.raw("startup.github") + "\n"
                 + "  - Author: " + this.lang.raw("startup.author") + "\n"
                 + "  - Version: " + this.lang.raw("startup.version", getPluginMeta().getVersion())
-                +                 "\n");
+                + "\n");
 
         new Metrics(this, 33001);
 
@@ -94,7 +94,13 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             this.getServer().getPluginManager().registerEvents(
                     new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
             this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
-            this.getLogger().info(this.lang.raw("startup.fancynpcs_hook"));
+            if (hasFancyNpcs && hasCitizens) {
+                this.getLogger().info(this.lang.raw("startup.npcs_hook_both"));
+            } else if (hasFancyNpcs) {
+                this.getLogger().info(this.lang.raw("startup.npcs_hook_fancynpcs"));
+            } else {
+                this.getLogger().info(this.lang.raw("startup.npcs_hook_citizens"));
+            }
         } else {
             this.getLogger().info(this.lang.raw("startup.fancynpcs_not_found"));
         }
@@ -134,8 +140,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         if (this.arenaManager != null) {
             this.arenaManager.flush();
         }
-
-        this.getLogger().info("BedWars desativado!");
     }
 
     private boolean isClassAvailable(final String className) {
