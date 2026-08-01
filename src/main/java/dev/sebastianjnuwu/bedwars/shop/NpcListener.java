@@ -10,6 +10,8 @@ import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 
+import de.oliver.fancynpcs.api.events.NpcInteractEvent;
+
 public class NpcListener implements Listener {
 
     private final GameManager gameManager;
@@ -27,6 +29,14 @@ public class NpcListener implements Listener {
     @EventHandler
     public void onEntityInteract(final PlayerInteractEntityEvent event) {
         if (!this.shopNpcManager.isManagedEntity(event.getRightClicked())) {
+            return;
+        }
+        this.handleInteract(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onNpcInteract(final NpcInteractEvent event) {
+        if (!this.shopNpcManager.isManagedNpc(event.getNpc())) {
             return;
         }
         this.handleInteract(event.getPlayer());
