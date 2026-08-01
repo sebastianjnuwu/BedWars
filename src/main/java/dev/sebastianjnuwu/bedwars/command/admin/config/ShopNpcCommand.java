@@ -21,8 +21,6 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
 
-import de.oliver.fancynpcs.api.Npc;
-
 /**
  * Comando para gerenciar NPCs da loja em uma arena.
  * <p>
@@ -76,7 +74,7 @@ public class ShopNpcCommand extends BaseCommand implements ArenaSubCommand {
                 arena.setShopNpcSkin(skin);
                 this.arenaManager.save(arena);
 
-                final Npc npc = this.shopNpcManager.spawnSingleNpc(arena.getName(), index, loc, skin);
+                final Object npc = this.shopNpcManager.spawnSingleNpc(arena.getName(), index, loc, skin);
                 if (npc != null) {
                     sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.shop_npc.added", arena.getName()));
                 } else {

@@ -313,8 +313,8 @@ startup:
   github: "https://github.com/sebastianjnuwu/bedwars"
   author: "sebastianjnuwu <sebastianjnuwu@gmail.com>"
   version: "v{0}"
-  fancynpcs_hook: "FancyNPCs registrado!"
-  fancynpcs_not_found: "FancyNPCs não encontrado - interação com NPC da loja desativada."
+  fancynpcs_hook: "Hook de NPCs ativo para FancyNPCs/Citizens!"
+  fancynpcs_not_found: "Nenhum suporte de NPCs compatível encontrado - interação com NPC da loja desativada."
 
 # ── ui ────────────────────────────────
 ui:

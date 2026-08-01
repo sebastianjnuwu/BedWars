@@ -88,13 +88,14 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.getServer().getPluginManager().registerEvents(new UIListener(this.arenaManager, this.gameManager), this);
         this.getServer().getPluginManager().registerEvents(new ShopListener(), this);
 
-        try {
-            Class.forName("de.oliver.fancynpcs.api.events.NpcInteractEvent");
+        final boolean hasFancyNpcs = this.isClassAvailable("de.oliver.fancynpcs.api.events.NpcInteractEvent");
+        final boolean hasCitizens = this.isClassAvailable("net.citizensnpcs.api.CitizensAPI");
+        if (hasFancyNpcs || hasCitizens) {
             this.getServer().getPluginManager().registerEvents(
                     new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
             this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
             this.getLogger().info(this.lang.raw("startup.fancynpcs_hook"));
-        } catch (ClassNotFoundException e) {
+        } else {
             this.getLogger().info(this.lang.raw("startup.fancynpcs_not_found"));
         }
 
@@ -135,6 +136,15 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         }
 
         this.getLogger().info("BedWars desativado!");
+    }
+
+    private boolean isClassAvailable(final String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (final ClassNotFoundException e) {
+            return false;
+        }
     }
 
     @Override

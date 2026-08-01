@@ -28,12 +28,11 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 
 ## 📦 Requisitos
 
-- Java **21+**
-- Maven **3.9+**
-- Paper **1.21.4**
-- FastAsyncWorldEdit **2.15+**
-- AdvancedSlimePaper **4.0+**
-- FancyNPCs **2.9+** (opcional — necessário apenas para NPCs da loja)
+- Java **v21+**
+- Maven **v3.9+**
+- FastAsyncWorldEdit **v2.15+**
+- AdvancedSlimePaper **v4.0+**
+- FancyNPCs **v2.9+** ou Citizens **v2.0.43** 
 
 ## Tutorial — Como utilizar o plugin?
 
