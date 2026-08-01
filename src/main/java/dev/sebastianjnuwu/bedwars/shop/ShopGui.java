@@ -355,33 +355,36 @@ public class ShopGui implements InventoryHolder {
             }
         }
 
-        if (currentCategory == null) {
-            // Category selection
-            if (slot < CATEGORY_SLOTS && slot < categories.size()) {
-                ShopCategory cat = categories.get(slot);
-                if (cat.isCategory() || !cat.getItems().isEmpty()) {
-                    openCategory(cat);
-                }
+        // Category navigation in the top row (main view and inside a category)
+        if (slot < CATEGORY_SLOTS && slot < categories.size()) {
+            ShopCategory cat = categories.get(slot);
+            if (cat.isCategory() || !cat.getItems().isEmpty()) {
+                openCategory(cat);
             }
-        } else {
-            // Item click or sub-category click
-            List<Object> entries = new ArrayList<>();
-            for (ShopCategory child : currentCategory.getChildren()) {
-                entries.add(child);
-            }
-            entries.addAll(currentCategory.getItems());
+            return;
+        }
 
-            List<Integer> slots = computeSlots(entries, currentPage);
-            int index = slots.indexOf(slot);
-            if (index >= 0) {
-                int globalIndex = currentPage * ITEMS_PER_PAGE + index;
-                if (globalIndex < entries.size()) {
-                    Object entry = entries.get(globalIndex);
-                    if (entry instanceof ShopCategory cat) {
-                        openCategory(cat);
-                    } else if (entry instanceof ShopItem item) {
-                        purchaseItem(item);
-                    }
+        if (currentCategory == null) {
+            return;
+        }
+
+        // Item click or sub-category click
+        List<Object> entries = new ArrayList<>();
+        for (ShopCategory child : currentCategory.getChildren()) {
+            entries.add(child);
+        }
+        entries.addAll(currentCategory.getItems());
+
+        List<Integer> slots = computeSlots(entries, currentPage);
+        int index = slots.indexOf(slot);
+        if (index >= 0) {
+            int globalIndex = currentPage * ITEMS_PER_PAGE + index;
+            if (globalIndex < entries.size()) {
+                Object entry = entries.get(globalIndex);
+                if (entry instanceof ShopCategory cat) {
+                    openCategory(cat);
+                } else if (entry instanceof ShopItem item) {
+                    purchaseItem(item);
                 }
             }
         }
