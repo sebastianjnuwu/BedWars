@@ -57,7 +57,9 @@ public class ShopGui implements InventoryHolder {
         this.categories = shopManager.getCategories(shopName);
         this.currentPage = 0;
 
-        this.inventory = Bukkit.createInventory(this, 54, MM.deserialize(this.lang.raw("shop.title")));
+        final String displayName = shopManager.getDisplayName(shopName);
+        final String title = displayName != null ? displayName : this.lang.raw("shop.title");
+        this.inventory = Bukkit.createInventory(this, 54, MM.deserialize(title));
 
         openGuis.put(player.getUniqueId(), this);
         openMain();

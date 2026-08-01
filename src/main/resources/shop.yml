@@ -19,6 +19,7 @@
 # Positioning: skip, column, row, linebreak (before/after/both),
 #              pagebreak (before/after/both), absolute
 
+displayName: "Loja > Compra"
 categories:
   blocks:
     display-name: "<bold><red>Blocos</red></bold>"

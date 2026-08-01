@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
@@ -100,6 +101,21 @@ public class ShopManager {
             return cached;
         }
         return loadShop(shopName);
+    }
+
+    /**
+     * Retorna o nome de exibicao da loja (titulo da GUI).
+     *
+     * @param name nome do arquivo da loja
+     * @return displayName configurado ou null se nao definido
+     */
+    public @Nullable String getDisplayName(String name) {
+        File file = new File(shopFolder, name + ".yml");
+        if (!file.exists()) {
+            return null;
+        }
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        return config.getString("displayName");
     }
 
     public void invalidateCache(String name) {
