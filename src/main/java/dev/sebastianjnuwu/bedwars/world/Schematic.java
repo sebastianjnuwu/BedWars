@@ -135,7 +135,7 @@ public class Schematic {
         }
 
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-            final Clipboard clipboard = new BlockArrayClipboard(region, java.util.UUID.randomUUID());
+            final Clipboard clipboard = new BlockArrayClipboard(region);
             final ForwardExtentCopy copy = new ForwardExtentCopy(editSession, region, clipboard, region.getMinimumPoint());
             Operations.completeLegacy(copy);
 

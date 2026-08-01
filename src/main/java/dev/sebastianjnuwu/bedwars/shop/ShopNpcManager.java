@@ -280,10 +280,18 @@ public class ShopNpcManager {
         final Class<?> entityTypeClass = Class.forName("org.bukkit.entity.EntityType");
         final Object entityType = Enum.valueOf((Class) entityTypeClass, "PLAYER");
         final Object npc = this.invokeMethod(registry, "createNPC", new Class<?>[]{entityTypeClass, String.class}, entityType, npcName);
-        this.invokeMethod(npc, "setName", new Class<?>[]{String.class}, npcName);
-        this.invokeMethod(npc, "setProtected", new Class<?>[]{boolean.class}, true);
-        this.invokeMethod(npc, "spawn", new Class<?>[]{Location.class}, loc);
+        this.invokeOptionalMethod(npc, "setName", new Class<?>[]{String.class}, npcName);
+        this.invokeOptionalMethod(npc, "setProtected", new Class<?>[]{boolean.class}, true);
+        this.spawnCitizensEntity(npc, loc);
         return npc;
+    }
+
+    private void spawnCitizensEntity(final Object npc, final Location loc) throws Exception {
+        try {
+            this.invokeMethod(npc, "spawn", new Class<?>[]{Location.class}, loc);
+        } catch (final NoSuchMethodException ignored) {
+            this.invokeMethod(npc, "spawn", new Class<?>[]{Location.class, boolean.class}, loc, true);
+        }
     }
 
     private void removeNpcs(final List<Object> npcs) {
@@ -416,6 +424,16 @@ public class ShopNpcManager {
             }
         }
         return null;
+    }
+
+    private boolean invokeOptionalMethod(final Object target, final String methodName, final Class<?>[] parameterTypes,
+                                         final Object... args) {
+        try {
+            this.invokeMethod(target, methodName, parameterTypes, args);
+            return true;
+        } catch (final Exception ignored) {
+            return false;
+        }
     }
 
     private Object invokeMethod(final Object target, final String methodName, final Class<?>[] parameterTypes,
