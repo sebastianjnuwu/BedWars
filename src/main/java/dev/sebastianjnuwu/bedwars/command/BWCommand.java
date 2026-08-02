@@ -190,6 +190,8 @@ public class BWCommand implements CommandExecutor, TabCompleter {
                 completions.addAll(List.of("azul", "vermelho", "verde", "amarelo", "roxo", "rosa", "laranja", "ciano"));
             } else if (sub.equals("addgenerator")) {
                 completions.addAll(List.of("ferro", "ouro", "diamante", "esmeralda", "forge"));
+            } else if (sub.equals("shop-npc")) {
+                completions.addAll(List.of("add", "remove", "list", "displayname"));
             }
         } else if (args.length == 6 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
             final String sub = args[3].toLowerCase();
