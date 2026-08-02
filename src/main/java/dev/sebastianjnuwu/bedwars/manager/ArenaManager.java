@@ -315,16 +315,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (mapFile == null) {
             return null;
         }
-        World world = this.worldManager.deleteWorld(worldName) ? null : Bukkit.getWorld(worldName);
-        if (world == null) {
-            final WorldCreator wc = new WorldCreator(worldName);
-            wc.generator(new VoidGenerator());
-            world = wc.createWorld();
-        }
-        if (world == null) {
-            return null;
-        }
         try {
+            World world = this.worldManager.deleteWorld(worldName) ? null : Bukkit.getWorld(worldName);
+            if (world == null) {
+                final WorldCreator wc = new WorldCreator(worldName);
+                wc.generator(new VoidGenerator());
+                world = wc.createWorld();
+            }
+            if (world == null) {
+                this.markWorldDirty(worldName);
+                return null;
+            }
             final Schematic schematic = Schematic.load(name, mapFile);
             final Location pasteLocation = new Location(
                     world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
