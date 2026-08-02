@@ -316,7 +316,12 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             return null;
         }
         try {
-            World world = this.worldManager.deleteWorld(worldName) ? null : Bukkit.getWorld(worldName);
+            // Reutiliza o mundo já carregado em vez de apagar e recriar do zero.
+            // Apagar e recriar exige que o Paper gere um mundo novo (depende do
+            // config/paper-world-defaults.yml), o que falha em servidores sem esse
+            // arquivo. Colar o schematic por cima do mundo existente restaura camas,
+            // minérios e blocos sem precisar de um novo mundo.
+            World world = Bukkit.getWorld(worldName);
             if (world == null) {
                 final WorldCreator wc = new WorldCreator(worldName);
                 wc.generator(new VoidGenerator());

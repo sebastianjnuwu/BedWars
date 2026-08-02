@@ -17,15 +17,6 @@ arena:
     max-length: 1000
 
 # ===================================================================
-# Sistema SlimeWorld (AdvancedSlimePaper)
-# ===================================================================
-slimeworld:
-  enabled: true
-  templates-folder: templates
-  max-loaded-instances: 5
-  unload-timeout: 10m
-
-# ===================================================================
 # Verificador de atualizações no GitHub
 # ===================================================================
 check: true
