@@ -139,31 +139,6 @@ public class ShopGui implements InventoryHolder {
         }
         entries.addAll(currentCategory.getItems());
 
-        // Show category navigation in top row
-        int catSlot = 0;
-        for (ShopCategory cat : categories) {
-            if (catSlot >= CATEGORY_SLOTS) {
-                break;
-            }
-            ItemStack icon = cat.createIconItem();
-            // Mark the current category as selected
-            if (cat == currentCategory) {
-                var meta = icon.getItemMeta();
-                meta.lore(List.of(MM.deserialize(this.lang.raw("shop.selected"))));
-                icon.setItemMeta(meta);
-            }
-            inventory.setItem(catSlot, icon);
-            catSlot++;
-        }
-        // Fill remaining top slots with border
-        ItemStack border = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        var borderMeta = border.getItemMeta();
-        borderMeta.displayName(Component.text(" "));
-        border.setItemMeta(borderMeta);
-        for (int i = catSlot; i < CATEGORY_SLOTS; i++) {
-            inventory.setItem(i, border.clone());
-        }
-
         List<Integer> slots = computeSlots(entries, currentPage);
 
         int itemIndex = 0;

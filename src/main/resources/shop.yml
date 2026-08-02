@@ -34,8 +34,14 @@ categories:
         price: 4 iron
       - stack: END_STONE
         price: 6 iron
-      - stack: GLASS
+      - stack:
+          type: GLASS
+          display-name: "<yellow>Barreira de Vidro</yellow>"
         price: 3 iron
+      - stack:
+          type: GLASS_PANE
+          display-name: "<yellow>Moldura de Vidro</yellow>"
+        price: 2 iron
       - stack: OAK_PLANKS
         price: 3 iron
       - stack: CHEST
@@ -56,8 +62,28 @@ categories:
         price: 4 iron
       - stack: GREEN_WOOL
         price: 4 iron
-      - stack: YELLOW_WOOL
+      - stack: GRAY_WOOL
         price: 4 iron
+      - stack:
+          type: STAINED_GLASS_PANE
+          display-name: "<yellow>Vidro Colorido</yellow>"
+        price: 4 iron
+      - stack:
+          type: COBBLESTONE
+          display-name: "<yellow>Pedregulho</yellow>"
+        price: 6 iron
+      - stack:
+          type: STONE
+          display-name: "<yellow>Pedra</yellow>"
+        price: 6 iron
+      - stack:
+          type: CLAY
+          display-name: "<yellow>Argila</yellow>"
+        price: 8 iron
+      - stack:
+          type: COBWEB
+          display-name: "<yellow>Teia de Aranha</yellow>"
+        price: 20 iron
 
   weapons:
     display-name: "<bold><red>Armas</red></bold>"
@@ -104,7 +130,16 @@ categories:
       - stack:
           type: STICK
           amount: 2
+          display-name: "<yellow>Vara de Empurrar</yellow>"
         price: 5 gold
+      - stack:
+          type: FISHING_ROD
+          display-name: "<yellow>Vara de Pescar (Knockback)</yellow>"
+        price: 6 gold
+      - stack:
+          type: FIRE_CHARGE
+          display-name: "<yellow>Bola de Fogo</yellow>"
+        price: 1 gold
 
   armor:
     display-name: "<bold><red>Armaduras</red></bold>"
@@ -241,6 +276,43 @@ categories:
           amount: 4
           tag: '{potion_contents:{potion:"minecraft:healing"}}'
         price: 2 gold
+
+  utils:
+    display-name: "<bold><red>Utilidades</red></bold>"
+    icon: TNT
+    lore:
+      - "<gray>Itens de utilidade</gray>"
+      - "<gray>para vencer a partida</gray>"
+    items:
+      - stack:
+          type: WATER_BUCKET
+          display-name: "<yellow>Balde de Agua</yellow>"
+        price: 3 gold
+      - stack:
+          type: LAVA_BUCKET
+          display-name: "<yellow>Balde de Lava</yellow>"
+        price: 6 gold
+      - stack:
+          type: ENDER_PEARL
+          display-name: "<yellow>Pera de Fim</yellow>"
+        price: 1 emerald
+      - stack:
+          type: TNT
+          display-name: "<yellow>Dinamite</yellow>"
+        price: 4 gold
+      - stack:
+          type: IRON_TRAPDOOR
+          display-name: "<yellow>Alcapao de Ferro</yellow>"
+        price: 8 iron
+      - stack:
+          type: FIRE_CHARGE
+          display-name: "<yellow>Bola de Fogo</yellow>"
+        price: 4 gold
+      - stack:
+          type: SPLASH_POTION
+          display-name: "<yellow>Pot. Veneno</yellow>"
+          tag: '{potion_contents:{potion:"minecraft:poison"}}'
+        price: 4 diamond
 
   upgrades:
     display-name: "<bold><red>Melhorias</red></bold>"
