@@ -132,6 +132,15 @@ public class ShopGui implements InventoryHolder {
         }
     }
 
+    /**
+     * Renderiza os produtos da categoria ativa.
+     * <p>
+     * Diferente da visão principal, aqui a fileira do topo de categorias é omitida:
+     * a linha já fica coberta pela borda e aparecem apenas os produtos, com botões de
+     * navegação de página (slots 45/53) e um botão "Voltar às categorias" (slot 49)
+     * para retornar à lista principal.
+     * </p>
+     */
     private void renderCategoryItems() {
         List<Object> entries = new ArrayList<>();
         for (ShopCategory child : currentCategory.getChildren()) {

@@ -135,7 +135,8 @@ public class BWCommand implements CommandExecutor, TabCompleter {
      *   <li>2 argumentos: subcomandos do admin ou nomes de arena para join/start</li>
      *   <li>3 argumentos: times da arena (join) ou operações admin/arena</li>
      *   <li>4 argumentos: ações da arena ({@code spawn}, {@code addteam}, etc.)</li>
-     *   <li>5 argumentos: nomes de times ou tipos de gerador</li>
+     *   <li>5 argumentos: nomes de times, tipos de gerador ou as ações do
+     *       subcomando {@code shop-npc} ({@code add}, {@code remove}, {@code list}, {@code displayname})</li>
      * </ul>
      * Retorna uma lista vazia se nenhuma sugestão for aplicável.
      * </p>

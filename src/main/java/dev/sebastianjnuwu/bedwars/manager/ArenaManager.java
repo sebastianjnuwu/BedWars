@@ -247,14 +247,38 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         return file.exists() ? file : null;
     }
 
+    /**
+     * Garante que o mundo da arena está carregado e com as referências atualizadas.
+     * <p>
+     * Quando o mundo já está carregado e sem mudanças pendentes (ex.: após um
+     * unload/load do plugin), a arena é recarregada do yml e suas localizações
+     * (spawns, camas, geradores e NPCs) são re-sincronizadas em memória. Isso evita
+     * que o {@code validateArena} acuse configurações faltando após o reload.
+     * Caso contrário, o mundo é reconstruído a partir do schematic.
+     * </p>
+     *
+     * @param arena a arena cujo mundo deve estar pronto (não nulo)
+     * @return o mundo carregado/pronto, ou {@code null} se não foi possível
+     */
     public @Nullable World ensureWorldLoaded(final Arena arena) {
         String worldName = arena.getWorldName();
         if (worldName == null || worldName.isBlank()) {
             worldName = "bw_" + arena.getName();
         }
         World world = Bukkit.getWorld(worldName);
+        // Mundo já carregado e sem mudanças pendentes (ex.: após unload/load do plugin).
+        // Recarrega o yml e atualiza as referências em memória para que spawns, camas,
+        // geradores e NPCs não fiquem nulos e o validateArena não acuse configuração faltando.
         if (world != null && this.cleanWorlds.contains(worldName)) {
             this.applyWorldSettings(world, arena);
+            this.reload(arena.getName());
+            final Arena refreshed = this.get(arena.getName());
+            if (refreshed != null) {
+                refreshed.setWorldName(worldName);
+                this.updateWorldReferences(refreshed, world);
+                this.restoreBeds(world, refreshed);
+            }
+            this.flush(arena.getName());
             return world;
         }
         world = this.buildWorld(arena.getName(), worldName, arena, "log.arena_manager.load_error");
