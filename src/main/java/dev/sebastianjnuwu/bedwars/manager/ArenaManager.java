@@ -221,6 +221,71 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     }
 
     /**
+     * Cria uma instância de partida de forma assíncrona, colando o schematic
+     * fora da main thread (FAWE enfileira as mudanças de blocos) e invocando o
+     * callback na main thread quando o mundo estiver pronto.
+     * <p>
+     * O mundo é criado (ou reutilizado) na main thread e o paste acontece em
+     * segundo plano. Quando finalizado, o callback recebe a arena clonada com
+     * todas as locations rebasadas, ou {@code null} se a construção falhar.
+     * </p>
+     *
+     * @param arenaName nome da arena (não nulo)
+     * @param callback  consumidor chamado na main thread com a instância pronta (não nulo)
+     */
+    public void createInstanceAsync(final String arenaName, final @org.jetbrains.annotations.NotNull java.util.function.Consumer<Arena> callback) {
+        final Arena arena = this.get(arenaName);
+        if (arena == null) {
+            callback.accept(null);
+            return;
+        }
+        final File file = new File(this.arenasFolder, arenaName + ".yml");
+        if (!file.exists()) {
+            callback.accept(null);
+            return;
+        }
+        final File mapFile = this.getMapFile(arena);
+        if (mapFile == null) {
+            callback.accept(null);
+            return;
+        }
+        final String worldName = this.nextInstanceWorldName(arenaName);
+        final World world = this.createOrLoadWorld(worldName);
+        if (world == null) {
+            callback.accept(null);
+            return;
+        }
+
+        this.plugin.getServer().getScheduler().runTaskAsynchronously(this.plugin, () -> {
+            final Schematic schematic;
+            final Location pasteLocation;
+            try {
+                schematic = Schematic.load(arenaName, mapFile);
+                pasteLocation = this.pasteSchematic(world, schematic, mapFile, arena);
+            } catch (final Exception e) {
+                this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arenaName, e.getMessage()));
+                this.markWorldDirty(worldName);
+                this.plugin.getServer().getScheduler().runTask(this.plugin, () -> callback.accept(null));
+                return;
+            }
+            this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
+                try {
+                    this.finalizeWorld(world, arena, schematic, pasteLocation);
+                    final Arena instance = this.loadArenaFromFile(arenaName, file, world);
+                    instance.setWorldName(worldName);
+                    this.restoreBeds(world, instance);
+                    this.markWorldClean(worldName);
+                    callback.accept(instance);
+                } catch (final Exception e) {
+                    this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arenaName, e.getMessage()));
+                    this.markWorldDirty(worldName);
+                    callback.accept(null);
+                }
+            });
+        });
+    }
+
+    /**
      * Remove o mundo de uma instância de partida (unload + exclusão do disco).
      *
      * @param worldName nome do mundo de partida
@@ -412,28 +477,13 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             return null;
         }
         try {
-            // Reutiliza o mundo já carregado em vez de apagar e recriar do zero.
-            // Apagar e recriar exige que o Paper gere um mundo novo (depende do
-            // config/paper-world-defaults.yml), o que falha em servidores sem esse
-            // arquivo. Colar o schematic por cima do mundo existente restaura camas,
-            // minérios e blocos sem precisar de um novo mundo.
-            World world = Bukkit.getWorld(worldName);
+            final World world = this.createOrLoadWorld(worldName);
             if (world == null) {
-                final WorldCreator wc = new WorldCreator(worldName);
-                wc.generator(new VoidGenerator());
-                world = wc.createWorld();
-            }
-            if (world == null) {
-                this.markWorldDirty(worldName);
                 return null;
             }
             final Schematic schematic = Schematic.load(name, mapFile);
-            final Location pasteLocation = new Location(
-                    world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
-            schematic.paste(world, pasteLocation, mapFile);
-            this.clearWorldEntities(world, pasteLocation, schematic);
-            world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
-            this.applyWorldSettings(world, arena);
+            final Location pasteLocation = this.pasteSchematic(world, schematic, mapFile, arena);
+            this.finalizeWorld(world, arena, schematic, pasteLocation);
             this.markWorldClean(worldName);
             return world;
         } catch (final Exception e) {
@@ -441,6 +491,65 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             this.markWorldDirty(worldName);
             return null;
         }
+    }
+
+    /**
+     * Obtém o mundo de partida já carregado ou cria um novo mundo vazio (void).
+     * <p>
+     * Reutiliza o mundo já carregado em vez de apagar e recriar do zero. Apagar
+     * e recriar exige que o Paper gere um mundo novo (depende do
+     * config/paper-world-defaults.yml), o que falha em servidores sem esse
+     * arquivo. Colar o schematic por cima do mundo existente restaura camas,
+     * minérios e blocos sem precisar de um novo mundo.
+     * </p>
+     *
+     * @param worldName nome do mundo de partida
+     * @return o mundo carregado/criado, ou {@code null} se não foi possível
+     */
+    private @Nullable World createOrLoadWorld(final String worldName) {
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            final WorldCreator wc = new WorldCreator(worldName);
+            wc.generator(new VoidGenerator());
+            world = wc.createWorld();
+        }
+        if (world == null) {
+            this.markWorldDirty(worldName);
+            return null;
+        }
+        return world;
+    }
+
+    /**
+     * Cola o schematic do mapa no mundo, retornando a localização base do paste.
+     *
+     * @param world          mundo de destino
+     * @param schematic      schematic carregado
+     * @param mapFile        arquivo do mapa
+     * @param arena          arena cujas posições de paste são usadas
+     * @return localização base do paste
+     * @throws Exception se o paste falhar
+     */
+    private Location pasteSchematic(final World world, final Schematic schematic, final File mapFile, final Arena arena) throws Exception {
+        final Location pasteLocation = new Location(
+                world, arena.getPasteX(), arena.getPasteY(), arena.getPasteZ());
+        schematic.paste(world, pasteLocation, mapFile);
+        return pasteLocation;
+    }
+
+    /**
+     * Finaliza o mundo de partida após o paste: limpa entidades, ajusta o spawn
+     * e aplica as configurações de mundo da arena.
+     *
+     * @param world         mundo de partida
+     * @param arena         arena cujas configurações são aplicadas
+     * @param schematic     schematic usado no paste
+     * @param pasteLocation localização base do paste
+     */
+    private void finalizeWorld(final World world, final Arena arena, final Schematic schematic, final Location pasteLocation) {
+        this.clearWorldEntities(world, pasteLocation, schematic);
+        world.setSpawnLocation(pasteLocation.getBlockX(), pasteLocation.getBlockY(), pasteLocation.getBlockZ());
+        this.applyWorldSettings(world, arena);
     }
 
     private void clearWorldEntities(final World world, final Location min, final Schematic schematic) {

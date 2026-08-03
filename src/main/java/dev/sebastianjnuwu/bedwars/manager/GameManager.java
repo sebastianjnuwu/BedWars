@@ -2,8 +2,10 @@ package dev.sebastianjnuwu.bedwars.manager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -36,6 +38,8 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private final Map<UUID, Game> playerGames;
     private final ShopNpcManager shopNpcManager;
     private final EditorManager editorManager;
+    private final Set<String> buildingArenas;
+    private final Map<String, List<PendingJoin>> pendingJoins;
 
     public GameManager(final JavaPlugin plugin, final ArenaManager arenaManager, final ConfigManager configManager, final LangManager lang, final EditorManager editorManager) {
         this.plugin = plugin;
@@ -46,6 +50,8 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         this.playerGames = new HashMap<>();
         this.shopNpcManager = new ShopNpcManager(plugin);
         this.editorManager = editorManager;
+        this.buildingArenas = new HashSet<>();
+        this.pendingJoins = new HashMap<>();
     }
 
     public JavaPlugin getPlugin() {
@@ -157,22 +163,8 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
         Game game = this.findOpenGame(arenaName, mode);
         if (game == null) {
-            final Arena instance = this.arenaManager.createInstance(arenaName);
-            if (instance == null) {
-                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
-                return;
-            }
-            final List<String> missing = this.validateArena(instance);
-            if (!missing.isEmpty()) {
-                this.arenaManager.deleteInstanceWorld(instance.getWorldName());
-                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
-                for (final String msg : missing) {
-                    player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.missing_entry", msg));
-                }
-                return;
-            }
-            game = new Game(this, instance, getShopNpcManager(), mode);
-            this.games.put(this.gameKey(instance), game);
+            this.enqueueJoin(player, arenaName, teamName, mode, teleport);
+            return;
         }
 
         if (game.getState() == GameState.ENDING) {
@@ -189,6 +181,101 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
         game.join(player, teamName, teleport);
         this.playerGames.put(player.getUniqueId(), game);
+    }
+
+    /**
+     * Enfileira o jogador para entrar numa arena cujo mundo ainda não existe,
+     * iniciando a construção assíncrona da instância quando necessário.
+     * <p>
+     * Se a arena já estiver sendo construída, o jogador é apenas adicionado à
+     * fila de espera. Quando o mundo fica pronto, todos os jogadores pendentes
+     * são teleportados para dentro da partida na main thread.
+     * </p>
+     *
+     * @param player    jogador que deseja entrar (não nulo)
+     * @param arenaName nome da arena (não nulo)
+     * @param teamName  time desejado ou {@code null} para seleção automática
+     * @param mode      modo de partida ou {@code null}
+     * @param teleport  se deve teleportar o jogador quando o mundo estiver pronto
+     */
+    private void enqueueJoin(final Player player, final String arenaName, final @Nullable String teamName, final @Nullable ArenaMode mode, final boolean teleport) {
+        final List<PendingJoin> queue = this.pendingJoins.computeIfAbsent(arenaName, k -> new ArrayList<>());
+        final UUID playerId = player.getUniqueId();
+        if (queue.stream().anyMatch(pending -> pending.playerId().equals(playerId))) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_this_game"));
+            return;
+        }
+        queue.add(new PendingJoin(playerId, teamName, mode, teleport));
+        if (this.buildingArenas.contains(arenaName)) {
+            player.sendMessage(this.lang.text(NamedTextColor.YELLOW, "game.countdown_preparing"));
+            return;
+        }
+        this.buildingArenas.add(arenaName);
+        player.sendMessage(this.lang.text(NamedTextColor.YELLOW, "game.countdown_preparing"));
+        this.arenaManager.createInstanceAsync(arenaName, instance -> this.completePendingJoins(arenaName, instance));
+    }
+
+    /**
+     * Finaliza as entradas pendentes de uma arena após a construção do mundo.
+     * <p>
+     * Executado na main thread pelo callback da construção assíncrona. Cria a
+     * partida a partir da instância pronta e teleporta todos os jogadores que
+     * estavam na fila de espera.
+     * </p>
+     *
+     * @param arenaName nome da arena (não nulo)
+     * @param instance  instância pronta, ou {@code null} se a construção falhou
+     */
+    private void completePendingJoins(final String arenaName, final @Nullable Arena instance) {
+        this.buildingArenas.remove(arenaName);
+        final List<PendingJoin> waiters = this.pendingJoins.remove(arenaName);
+        if (instance == null) {
+            if (waiters != null) {
+                for (final PendingJoin pending : waiters) {
+                    final Player player = Bukkit.getPlayer(pending.playerId());
+                    if (player != null) {
+                        player.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
+                    }
+                }
+            }
+            return;
+        }
+        final List<String> missing = this.validateArena(instance);
+        if (!missing.isEmpty()) {
+            this.arenaManager.deleteInstanceWorld(instance.getWorldName());
+            if (waiters != null) {
+                for (final PendingJoin pending : waiters) {
+                    final Player player = Bukkit.getPlayer(pending.playerId());
+                    if (player == null) {
+                        continue;
+                    }
+                    player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
+                    for (final String msg : missing) {
+                        player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.missing_entry", msg));
+                    }
+                }
+            }
+            return;
+        }
+        final Game game = new Game(this, instance, this.shopNpcManager,
+                waiters != null && !waiters.isEmpty() ? waiters.get(0).mode() : null);
+        this.games.put(this.gameKey(instance), game);
+        if (waiters != null) {
+            for (final PendingJoin pending : waiters) {
+                final Player player = Bukkit.getPlayer(pending.playerId());
+                if (player == null) {
+                    continue;
+                }
+                game.join(player, pending.teamName(), pending.teleport());
+                this.playerGames.put(player.getUniqueId(), game);
+            }
+        }
+    }
+
+    /**
+     * Representa uma entrada pendente aguardando a construção do mundo da arena.
+     */
+    private record PendingJoin(UUID playerId, @Nullable String teamName, @Nullable ArenaMode mode, boolean teleport) {
     }
 
     @Override
