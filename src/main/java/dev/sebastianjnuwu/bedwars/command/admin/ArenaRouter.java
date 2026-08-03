@@ -14,6 +14,7 @@ import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SetCountdownCommand;
+import dev.sebastianjnuwu.bedwars.command.admin.config.SetMapCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SetMinPlayersCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.ShopNpcCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SpawnCommand;
@@ -77,6 +78,7 @@ public class ArenaRouter extends BaseCommand implements SubCommand {
         this.register("status", new StatusCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("setminplayers", new SetMinPlayersCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("setcountdown", new SetCountdownCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
+        this.register("setmap", new SetMapCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("addteam", new TeamAddCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("removeteam", new TeamRemoveCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("setspawn", new SetSpawnCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));

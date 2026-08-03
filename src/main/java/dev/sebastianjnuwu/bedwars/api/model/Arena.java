@@ -42,6 +42,10 @@ public interface Arena {
 
     void setWorldName(String worldName);
 
+    @Nullable String getMapName();
+
+    void setMapName(String mapName);
+
     int getPasteX();
 
     int getPasteY();

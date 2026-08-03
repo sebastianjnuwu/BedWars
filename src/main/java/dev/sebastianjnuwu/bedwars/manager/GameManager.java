@@ -69,7 +69,11 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public @Nullable dev.sebastianjnuwu.bedwars.api.model.Game getGame(final String arenaName) {
-        return this.games.get(arenaName);
+        return this.findFirstByArenaName(arenaName);
+    }
+
+    public @Nullable Game getGameByWorld(final String worldName) {
+        return this.games.get(worldName);
     }
 
     @Override
@@ -137,26 +141,24 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             return;
         }
 
-        Game game = this.games.get(arenaName);
+        Game game = this.findOpenGame(arenaName);
         if (game == null) {
-            if (!this.arenaManager.ensureArenaReady(arena)) {
+            final Arena instance = this.arenaManager.createInstance(arenaName);
+            if (instance == null) {
                 player.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
                 return;
             }
-
-            final Arena refreshedArena = this.arenaManager.get(arenaName);
-
-            final List<String> missing = this.validateArena(refreshedArena);
+            final List<String> missing = this.validateArena(instance);
             if (!missing.isEmpty()) {
+                this.arenaManager.deleteInstanceWorld(instance.getWorldName());
                 player.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
                 for (final String msg : missing) {
                     player.sendMessage(this.lang.text(NamedTextColor.GRAY, "game.missing_entry", msg));
                 }
                 return;
             }
-
-            game = new Game(this, refreshedArena, getShopNpcManager());
-            this.games.put(arenaName, game);
+            game = new Game(this, instance, getShopNpcManager());
+            this.games.put(this.gameKey(instance), game);
         }
 
         if (game.getState() == GameState.ENDING) {
@@ -181,8 +183,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         if (game != null) {
             game.leave(player);
             if (game.getPlayers().isEmpty()) {
-                this.shopNpcManager.removeGameNpcs(game.getArena().getName());
-                this.games.remove(game.getArena().getName());
+                this.removeGame(this.gameKey(game.getArena()));
                 this.debug("debug.room_closed_empty", game.getArena().getName());
             }
         }
@@ -190,21 +191,23 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public void startGame(final String arenaName) {
-        Game game = this.games.get(arenaName);
+        Game game = this.findOpenGame(arenaName);
         if (game == null) {
             final Arena arena = this.arenaManager.get(arenaName);
             if (arena == null) {
                 return;
             }
-            if (!this.arenaManager.ensureArenaReady(arena)) {
+            final Arena instance = this.arenaManager.createInstance(arenaName);
+            if (instance == null) {
                 return;
             }
-            final Arena refreshed = this.arenaManager.get(arenaName);
-            if (refreshed == null) {
+            final List<String> missing = this.validateArena(instance);
+            if (!missing.isEmpty()) {
+                this.arenaManager.deleteInstanceWorld(instance.getWorldName());
                 return;
             }
-            game = new Game(this, refreshed, this.shopNpcManager);
-            this.games.put(arenaName, game);
+            game = new Game(this, instance, this.shopNpcManager);
+            this.games.put(this.gameKey(instance), game);
         }
         final List<String> missing = this.validateArena(game.getArena());
         if (!missing.isEmpty()) {
@@ -219,13 +222,50 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     }
 
     @Override
-    public void removeGame(final String arenaName) {
-        final Game game = this.games.remove(arenaName);
-        if (game != null) {
-            this.shopNpcManager.removeGameNpcs(arenaName);
-            this.playerGames.values().removeIf(g -> g == game);
-            this.debug("debug.room_closed", arenaName);
+    public void removeGame(final String key) {
+        Game game = this.games.get(key);
+        if (game == null) {
+            game = this.findFirstByArenaName(key);
+            if (game != null) {
+                this.games.remove(this.gameKey(game.getArena()));
+            }
+        } else {
+            this.games.remove(key);
         }
+        if (game == null) {
+            return;
+        }
+        final Game removed = game;
+        this.shopNpcManager.removeGameNpcs(removed.getArena().getWorldName());
+        this.playerGames.values().removeIf(g -> g == removed);
+        this.arenaManager.deleteInstanceWorld(removed.getArena().getWorldName());
+        this.debug("debug.room_closed", removed.getArena().getName());
+    }
+
+    private @Nullable Game findFirstByArenaName(final String arenaName) {
+        for (final Game game : this.games.values()) {
+            if (game.getArena().getName().equals(arenaName)) {
+                return game;
+            }
+        }
+        return null;
+    }
+
+    private @Nullable Game findOpenGame(final String arenaName) {
+        for (final Game game : this.games.values()) {
+            final Arena arena = game.getArena();
+            if (arena.getName().equals(arenaName)
+                    && (game.getState() == GameState.WAITING || game.getState() == GameState.STARTING)
+                    && !game.isFull()) {
+                return game;
+            }
+        }
+        return null;
+    }
+
+    private String gameKey(final Arena arena) {
+        final String worldName = arena.getWorldName();
+        return worldName != null && !worldName.isBlank() ? worldName : arena.getName();
     }
 
     private void debug(final String key, final Object... args) {
@@ -235,7 +275,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     }
 
     public void forceEndAll() {
-        for (final Game game : this.games.values()) {
+        for (final Game game : new ArrayList<>(this.games.values())) {
             game.forceEnd();
         }
         this.games.clear();

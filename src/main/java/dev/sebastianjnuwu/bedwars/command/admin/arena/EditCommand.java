@@ -120,7 +120,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
                 sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.world_not_found"));
                 return;
             }
-            final File file = this.arenaManager.getMapFile(name);
+            final File file = this.arenaManager.getMapFile(arena);
             if (file != null) {
                 try {
                     final Schematic schematic = Schematic.load(name, file);

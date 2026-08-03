@@ -100,7 +100,7 @@ public class LoadCommand extends BaseCommand implements SubCommand {
             return;
         }
 
-        final File file = this.arenaManager.getMapFile(name);
+        final File file = this.arenaManager.getMapFile(arena);
         if (file == null) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.file_not_found"));
             return;

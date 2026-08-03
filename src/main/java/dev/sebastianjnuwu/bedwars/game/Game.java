@@ -435,7 +435,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
 
         this.shopNpcManager.spawnGameNpcs(
-                this.arena.getName(),
+                this.arena.getWorldName(),
                 this.arena.getShopNpcs()
         );
     }
@@ -1015,14 +1015,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                             this.gameManager.removePlayerMapping(player);
                         }
                     }
-                    this.shopNpcManager.removeGameNpcs(this.arena.getName());
+                    this.shopNpcManager.removeGameNpcs(this.arena.getWorldName());
                     this.players.clear();
                     this.teams.values().forEach(List::clear);
                     this.eliminatedTeams.clear();
                     this.bedlessTeams.clear();
-                    if (this.gameManager.getGame(this.arena.getName()) == this) {
-                        this.gameManager.removeGame(this.arena.getName());
-                        this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
+                    if (this.gameManager.getGameByWorld(this.arena.getWorldName()) == this) {
+                        this.gameManager.removeGame(this.arena.getWorldName());
                     }
                 },
                 200L
@@ -1066,6 +1065,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public int getPlayerCount() {
         return this.players.size();
+    }
+
+    public boolean isFull() {
+        final int capacity = this.arena.getTeams().size() * this.maxTeamSlots();
+        return this.players.size() >= capacity;
     }
 
     public Map<ArenaTeam, List<UUID>> getTeams() {
@@ -1140,14 +1144,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             player.setGameMode(GameMode.SURVIVAL);
             this.gameManager.removePlayerMapping(player);
         }
-        this.shopNpcManager.removeGameNpcs(this.arena.getName());
+        this.shopNpcManager.removeGameNpcs(this.arena.getWorldName());
         this.spectators.clear();
         this.players.clear();
         this.teams.values().forEach(List::clear);
         this.eliminatedTeams.clear();
         this.bedlessTeams.clear();
-        this.gameManager.removeGame(this.arena.getName());
-        this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
+        this.gameManager.removeGame(this.arena.getWorldName());
     }
 
     private @Nullable ArenaTeam determineWinner() {

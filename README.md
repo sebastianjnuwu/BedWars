@@ -197,6 +197,21 @@ Após concluir toda a configuração:
 
 > Enquanto um administrador estiver editando a arena, jogadores **não podem** entrar na partida.
 
+### 14.1 Partidas simultâneas no mesmo mapa
+
+Uma única arena pode hospedar **várias partidas ao mesmo tempo**. Ao entrar em uma arena que já está com sala cheia (ou em andamento), o plugin **cria automaticamente uma nova instância** com um mundo próprio:
+
+```
+/bw join <nome_da_arena>
+```
+
+- Cada partida roda em um mundo dedicado `bw_<arena>_<id>` (ex.: `bw_lush_0`, `bw_lush_1`, `bw_lush_2`...), clonado do schematic da arena.
+- Jogadores que chegam enquanto a sala atual não está cheia entram nela; quando a sala atinge a capacidade, a próxima partida é criada em outra instância.
+- Ao fim da partida o mundo da instância é descartado (unload + delete) e um novo mundo é recriado do schematic para a próxima partida.
+- Nada é persistido em disco durante a partida: o arquivo da arena (`arenas/<nome>.yml`) continua sendo apenas a configuração, e o schematic continua uma única vez em `maps/`.
+
+Isso permite, por exemplo, rodar **3 solo + 2 duplas + 1 trio + 4 quartetos** do mesmo mapa ao mesmo tempo apenas com `/bw join` — cada sala lotada gera uma nova instância automaticamente.
+
 ### 15. Configurar a loja da arena
 
 Cada arena pode usar uma loja diferente. As lojas ficam em `plugins/BedWars/shop/<nome>.yml`.
@@ -271,6 +286,7 @@ Para gerenciar:
 | `/bw admin arena <arena> status` | Exibe o status da arena | `bw.admin` |
 | `/bw admin arena <arena> setminplayers <num>` | Define mínimo de jogadores | `bw.admin` |
 | `/bw admin arena <arena> setcountdown <seg>` | Define contagem regressiva | `bw.admin` |
+| `/bw admin arena <arena> setmap <mapa\|default>` | Aponta a arena para um schematic compartilhado | `bw.admin` |
 | `/bw admin arena <arena> addteam <cor>` | Adiciona um time | `bw.admin` |
 | `/bw admin arena <arena> removeteam <cor>` | Remove um time | `bw.admin` |
 | `/bw admin arena <arena> setspawn <cor>` | Define o spawn do time | `bw.admin` |

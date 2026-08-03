@@ -130,8 +130,8 @@ public class TeamSelectionGui implements InventoryHolder {
 
         if (index >= 0 && index < teams.size()) {
             final ArenaTeam team = teams.get(index);
-            final Game game = (Game) this.gameManager.getGame(this.arena.getName());
-            if (game != null && game.getGamePlayer(this.player) != null) {
+            final Game game = (Game) this.gameManager.getPlayerGame(this.player);
+            if (game != null && game.getArena().getName().equals(this.arena.getName())) {
                 game.switchTeam(this.player, team.getName());
             } else {
                 this.gameManager.joinGame(this.player, this.arena.getName(), team.getName(), false);
