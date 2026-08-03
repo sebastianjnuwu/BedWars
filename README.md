@@ -32,7 +32,7 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 - Maven **v3.9+**
 - FastAsyncWorldEdit **v2.15+**
 - AdvancedSlimePaper **v4.0+**
-- FancyNPCs **v2.9+** ou Citizens **v2.0.43** 
+- FancyNPCs **v2.9+** 
 
 ## Tutorial — Como utilizar o plugin?
 
@@ -44,7 +44,7 @@ Antes de usar o BedWars, você precisa preparar um servidor Paper 1.21.4 com os 
 - Instale os plugins obrigatórios:
   - FastAsyncWorldEdit **v2.15+**
   - AdvancedSlimePaper **v4.0+**
-  - FancyNPCs **v2.9+** ou Citizens **v2.0.43**
+  - FancyNPCs **v2.9+**
 
 Depois, coloque o arquivo do BedWars gerado em `target/BedWars-1.0.0.jar` na pasta `plugins/` do servidor.
 
