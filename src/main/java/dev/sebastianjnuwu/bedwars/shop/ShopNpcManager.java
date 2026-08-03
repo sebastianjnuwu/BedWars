@@ -168,7 +168,7 @@ public class ShopNpcManager {
                 }
             }
         } catch (final Exception e) {
-            this.plugin.getLogger().warning("Failed to clean up leftover shop NPCs: " + e.getMessage());
+            this.plugin.getLogger().warning(this.lang.raw("log.shop_npc.cleanup_failed", e.getMessage()));
         }
     }
 

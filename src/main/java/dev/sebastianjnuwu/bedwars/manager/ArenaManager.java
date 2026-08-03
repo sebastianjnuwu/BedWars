@@ -29,6 +29,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.Saveable;
 import dev.sebastianjnuwu.bedwars.api.events.ArenaLoadEvent;
 import dev.sebastianjnuwu.bedwars.api.events.ArenaSaveEvent;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
@@ -44,9 +45,9 @@ import dev.sebastianjnuwu.bedwars.world.WorldManager;
 
 /**
  * Gerencia todas as arenas do servidor.
- * Cada arena é salva em um arquivo separado: arenas/&lt;nome&gt;.yml.
+ * Cada arena é salva em um arquivo separado: arenas/<nome>.yml.
  */
-public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager {
+public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager, Saveable {
 
     private final JavaPlugin plugin;
     private final Map<String, Arena> arenas;
@@ -57,9 +58,11 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     private final Map<String, YamlConfiguration> diskConfigs;
     private final Set<String> cleanWorlds;
     private final Map<String, Integer> instanceCounters;
+    private final DataManager dataManager;
 
-    public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder) {
+    public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder, final DataManager dataManager) {
         this.plugin = plugin;
+        this.dataManager = dataManager;
         this.lang = ((BedWarsPlugin) plugin).getLang();
         this.arenas = new HashMap<>();
         this.diskConfigs = new HashMap<>();
@@ -694,7 +697,13 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         this.writeArenaToFile(arena);
     }
 
+    @Override
+    public void save() {
+        this.flush();
+    }
+
     public void flush() {
+
         for (final Arena arena : this.arenas.values()) {
             this.writeArenaToFile(arena);
         }

@@ -23,6 +23,7 @@ import dev.sebastianjnuwu.bedwars.listener.GameListener;
 import dev.sebastianjnuwu.bedwars.listener.UIListener;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
+import dev.sebastianjnuwu.bedwars.manager.DataManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopListener;
@@ -36,12 +37,14 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
     private EditorManager editorManager;
     private ConfigManager configManager;
     private GameManager gameManager;
+    private DataManager dataManager;
     private LangManager lang;
     private ShopManager shopManager;
 
     @Override
     public void onEnable() {
         this.configManager = new ConfigManager(this);
+        this.dataManager = new DataManager(this, this.configManager);
         this.editorManager = new EditorManager(this);
         this.lang = new LangManager(this, this.configManager.getLang());
 
@@ -75,8 +78,9 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         final File mapsFolder = new File(this.getDataFolder(), "maps");
         mapsFolder.mkdirs();
 
-        this.arenaManager = new ArenaManager(this, worldManager, mapsFolder);
+        this.arenaManager = new ArenaManager(this, worldManager, mapsFolder, this.dataManager);
         this.arenaManager.load();
+        this.dataManager.register(this.arenaManager);
 
         this.gameManager = new GameManager(this, this.arenaManager, this.configManager, this.lang, this.editorManager);
 
@@ -130,8 +134,8 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             this.gameManager.forceEndAll();
         }
 
-        if (this.arenaManager != null) {
-            this.arenaManager.flush();
+        if (this.dataManager != null) {
+            this.dataManager.saveAllSync();
         }
     }
 

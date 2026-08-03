@@ -522,7 +522,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 continue;
             }
             if (forge.getLocation() == null) {
-                Bukkit.getLogger().warning("[BedWars] Forge " + forge.getUniqueId() + " skipped (location null)");
+                this.gameManager.getPlugin().getLogger().warning(this.lang.raw("log.game.forge_skipped", forge.getUniqueId()));
                 continue;
             }
             forgeCount++;
@@ -544,9 +544,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
         }
         if (intervals == null || intervals.isEmpty()) {
-            Bukkit.getLogger().warning("[BedWars] putForgeTicks(" + forge.getUniqueId() + ", level=" + level
-                    + "): intervals null or empty, forgeLevels="
-                    + (forgeLevels == null ? "null" : forgeLevels.size()));
+            this.gameManager.getPlugin().getLogger().warning(this.lang.raw("log.game.put_forge_ticks_warning", forge.getUniqueId(), level, forgeLevels == null ? "null" : forgeLevels.size()));
             return;
         }
         for (final var entry : intervals.entrySet()) {

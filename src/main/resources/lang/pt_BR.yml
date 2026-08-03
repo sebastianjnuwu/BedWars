@@ -266,8 +266,11 @@ kick:
 
 # ── log ───────────────────────────────
 log:
-  lang:
-    loaded: "Idioma carregado: {0}"
+    lang:
+      loaded: "Idioma carregado: {0}"
+    game:
+      forge_skipped: "Forge {0} ignorada (localização nula)"
+      put_forge_ticks_warning: "putForgeTicks({0}, level={1}): intervalos nulos ou vazios, forgeLevels={2}"
     placeholder_missing: "Placeholder {0} não encontrado em args para a chave \"{1}\""
   config_manager:
     migrate_lobby: "Lobby migrado de config.yml para lobby.yml"
@@ -296,7 +299,8 @@ log:
     not_installed: "FancyNPCs não instalado, não foi possível spawnar NPCs da loja"
     spawn_error: "Falha ao spawnar NPC da loja {0} para {1}: {2}"
     skin_fallback: "Falha ao definir skin '{0}' para NPC '{1}': {2}. Usando skin padrão."
-    remove_error: "Falha ao remover NPC da loja: {0}"
+      remove_error: "Falha ao remover NPC da loja: {0}"
+      cleanup_failed: "Falha ao limpar NPCs da loja remanescentes: {0}"
   slime_manager:
     template_saved: "Template salvo: {0}"
     instance_unloaded: "Instância descarregada: {0}"
