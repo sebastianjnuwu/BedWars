@@ -56,6 +56,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     private final LangManager lang;
     private final Map<String, YamlConfiguration> diskConfigs;
     private final Set<String> cleanWorlds;
+    private final Map<String, Integer> instanceCounters;
 
     public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder) {
         this.plugin = plugin;
@@ -67,6 +68,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         this.arenasFolder = new File(plugin.getDataFolder(), "arenas");
         this.arenasFolder.mkdirs();
         this.cleanWorlds = new HashSet<>();
+        this.instanceCounters = new HashMap<>();
     }
 
     public boolean isWorldClean(final String worldName) {
@@ -181,6 +183,117 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         return true;
     }
 
+    /**
+     * Cria uma nova instância de partida para uma arena, clonando a configuração
+     * e construindo um mundo de partida dedicado ({@code bw_<arena>_<id>}).
+     * <p>
+     * Isso permite que uma única arena hospede várias partidas simultâneas do
+     * mesmo mapa, cada uma isolada em seu próprio mundo, recriado a partir do
+     * schematic a cada instância.
+     * </p>
+     *
+     * @param arenaName nome da arena (não nulo)
+     * @return a arena clonada com o mundo de partida pronto, ou {@code null} se falhar
+     */
+    public @Nullable Arena createInstance(final String arenaName) {
+        final Arena arena = this.get(arenaName);
+        if (arena == null) {
+            return null;
+        }
+        final dev.sebastianjnuwu.bedwars.model.Arena template =
+                (dev.sebastianjnuwu.bedwars.model.Arena) arena;
+        final String worldName = this.nextInstanceWorldName(arenaName);
+        final Arena instance = template.copy();
+        instance.setWorldName(worldName);
+        final World world = this.buildWorld(arenaName, worldName, instance, "log.arena_manager.load_error");
+        if (world == null) {
+            return null;
+        }
+        this.applyInstanceLocations(instance, world);
+        this.restoreBeds(world, instance);
+        return instance;
+    }
+
+    /**
+     * Remove o mundo de uma instância de partida (unload + exclusão do disco).
+     *
+     * @param worldName nome do mundo de partida
+     */
+    public void deleteInstanceWorld(final String worldName) {
+        if (worldName == null || worldName.isBlank()) {
+            return;
+        }
+        this.worldManager.deleteWorld(worldName);
+        this.markWorldDirty(worldName);
+    }
+
+    private String nextInstanceWorldName(final String arenaName) {
+        int id = this.instanceCounters.getOrDefault(arenaName, 0);
+        String worldName;
+        do {
+            worldName = "bw_" + arenaName + "_" + id;
+            id++;
+        } while (new File(Bukkit.getWorldContainer(), worldName).exists());
+        this.instanceCounters.put(arenaName, id);
+        return worldName;
+    }
+
+    private void applyInstanceLocations(final Arena instance, final World world) {
+        final YamlConfiguration disk = this.diskConfigs.get(instance.getName());
+        if (disk == null) {
+            return;
+        }
+        if (disk.contains("arena_spawn")) {
+            instance.setArenaSpawn(this.rebaseLocation(disk.getString("arena_spawn"), world));
+        }
+        if (disk.contains("lobby")) {
+            instance.setLobby(this.rebaseLocation(disk.getString("lobby"), world));
+        }
+        for (final ArenaTeam team : instance.getTeams()) {
+            final String path = "teams." + team.getName();
+            if (disk.contains(path + ".spawn")) {
+                team.setSpawn(this.rebaseLocation(disk.getString(path + ".spawn"), world));
+            }
+            if (disk.contains(path + ".bed")) {
+                team.setBed(this.rebaseLocation(disk.getString(path + ".bed"), world));
+            }
+        }
+        for (final ArenaGenerator gen : instance.getGenerators()) {
+            final String path = "generators." + gen.getUniqueId();
+            if (disk.contains(path + ".location")) {
+                gen.setLocation(this.rebaseLocation(disk.getString(path + ".location"), world));
+            }
+        }
+        final List<ShopNpc> npcs = instance.getShopNpcs();
+        for (int i = 0; i < npcs.size(); i++) {
+            final String path = "shop_npcs." + i + ".location";
+            if (!disk.contains(path)) {
+                continue;
+            }
+            final ShopNpc old = npcs.get(i);
+            final Location loc = this.rebaseLocation(disk.getString(path), world);
+            if (loc != null) {
+                npcs.set(i, new ShopNpc(loc, old.skin(), old.displayName()));
+            }
+        }
+    }
+
+    private @Nullable Location rebaseLocation(final String str, final World world) {
+        if (str == null || str.isBlank()) {
+            return null;
+        }
+        final String[] parts = str.split(",");
+        if (parts.length < 4) {
+            return null;
+        }
+        return new Location(world,
+                Double.parseDouble(parts[1]),
+                Double.parseDouble(parts[2]),
+                Double.parseDouble(parts[3]),
+                parts.length > 4 ? Float.parseFloat(parts[4]) : 0F,
+                parts.length > 5 ? Float.parseFloat(parts[5]) : 0F);
+    }
+
     @SuppressWarnings("deprecation")
     public void applyWorldSettings(final World world, final Arena arena) {
         if (arena.getDifficulty() != null) {
@@ -248,6 +361,23 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     }
 
     /**
+     * Resolve o arquivo de mapa usado por uma arena, considerando o mapa
+     * compartilhado ({@link Arena#getMapName()}) quando configurado. Isso
+     * permite que várias arenas rodem partidas simultâneas do mesmo mapa.
+     *
+     * @param arena arena cujo mapa deve ser resolvido (não nulo)
+     * @return arquivo do schematic, ou {@code null} se não encontrado
+     */
+    public @Nullable File getMapFile(final Arena arena) {
+        if (arena == null) {
+            return null;
+        }
+        final String mapName = arena.getMapName();
+        final String resolved = mapName == null || mapName.isBlank() ? arena.getName() : mapName;
+        return this.getMapFile(resolved);
+    }
+
+    /**
      * Garante que o mundo da arena está carregado e com as referências atualizadas.
      * <p>
      * Quando o mundo já está carregado e sem mudanças pendentes (ex.: após um
@@ -311,7 +441,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
      * @return o mundo reconstruído, ou {@code null} se não foi possível
      */
     private @Nullable World buildWorld(final String name, final String worldName, final Arena arena, final String errorKey) {
-        final File mapFile = this.getMapFile(name);
+        final File mapFile = this.getMapFile(arena);
         if (mapFile == null) {
             return null;
         }
@@ -525,6 +655,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         this.writeLocation(config, disk, "lobby", arena.getLobby());
         if (arena.getWorldName() != null) {
             config.set("world", arena.getWorldName());
+        }
+        if (arena.getMapName() != null) {
+            config.set("map", arena.getMapName());
         }
         config.set("paste", arena.getPasteX() + "," + arena.getPasteY() + "," + arena.getPasteZ());
         config.set("schematic_size",
@@ -752,9 +885,12 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             configFile.delete();
         }
 
-        final File mapFile = new File(this.mapsFolder, name + ".bwmap");
-        if (mapFile.exists()) {
-            mapFile.delete();
+        final String mapName = arena.getMapName();
+        if (mapName == null || mapName.isBlank() || mapName.equals(name)) {
+            final File mapFile = this.getMapFile(name);
+            if (mapFile != null) {
+                mapFile.delete();
+            }
         }
 
         this.worldManager.deleteWorld("bw_" + name);
@@ -814,6 +950,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
         if (config.contains("world")) {
             arena.setWorldName(config.getString("world"));
+        }
+        if (config.contains("map")) {
+            arena.setMapName(config.getString("map"));
         }
         if (config.contains("paste")) {
             final String[] parts = config.getString("paste").split(",");

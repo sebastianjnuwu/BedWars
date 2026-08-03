@@ -27,7 +27,7 @@ jobs:
         run: mvn -q clean package -DskipTests
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: BedWars-1.0.0
           path: target/sBedWars-1.0.0.jar

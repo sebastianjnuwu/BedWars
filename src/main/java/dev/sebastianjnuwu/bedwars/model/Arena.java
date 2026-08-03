@@ -25,6 +25,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private Location lobby;
     private boolean enabled;
     private String worldName;
+    private String mapName;
     private int pasteX;
     private int pasteY;
     private int pasteZ;
@@ -127,6 +128,29 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
      */
     public void setWorldName(final String worldName) {
         this.worldName = worldName;
+    }
+
+    /**
+     * Retorna o nome do mapa (schematic) usado por esta arena.
+     * <p>
+     * Quando definido, várias arenas podem apontar para o mesmo arquivo em
+     * {@code maps/}, permitindo partidas simultâneas do mesmo mapa. Se null,
+     * o mapa é <code>maps/&lt;nome-da-arena&gt;.schem</code>.
+     * </p>
+     *
+     * @return nome do mapa compartilhado ou null
+     */
+    public @Nullable String getMapName() {
+        return this.mapName;
+    }
+
+    /**
+     * Define o nome do mapa compartilhado.
+     *
+     * @param mapName nome do mapa ou null para usar o próprio nome da arena
+     */
+    public void setMapName(final @Nullable String mapName) {
+        this.mapName = mapName;
     }
 
     /**
@@ -452,5 +476,72 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
      */
     public void clearSession() {
         this.worldName = null;
+    }
+
+    /**
+     * Cria uma cópia profunda desta arena, usada para instâncias de partida.
+     * <p>
+     * Cada partida simultânea do mesmo mapa recebe uma cópia própria, com um
+     * mundo dedicado, permitindo que uma única arena hospede várias partidas
+     * ao mesmo tempo sem compartilhar estado.
+     * </p>
+     *
+     * @return cópia independente desta arena
+     */
+    public Arena copy() {
+        final Arena copy = new Arena(this.name);
+        copy.lobby = this.lobby;
+        copy.enabled = this.enabled;
+        copy.worldName = this.worldName;
+        copy.mapName = this.mapName;
+        copy.pasteX = this.pasteX;
+        copy.pasteY = this.pasteY;
+        copy.pasteZ = this.pasteZ;
+        copy.schematicWidth = this.schematicWidth;
+        copy.schematicHeight = this.schematicHeight;
+        copy.schematicLength = this.schematicLength;
+        copy.arenaSpawn = this.arenaSpawn;
+        copy.spawnBlockData = this.spawnBlockData;
+        copy.minPlayers = this.minPlayers;
+        copy.countdown = this.countdown;
+        copy.respawnDelay = this.respawnDelay;
+        copy.difficulty = this.difficulty;
+        copy.time = this.time;
+        copy.weather = this.weather;
+        copy.cycleDay = this.cycleDay;
+        copy.cycleWeather = this.cycleWeather;
+        copy.spawnMobs = this.spawnMobs;
+        copy.spawnAnimals = this.spawnAnimals;
+        copy.shop = this.shop;
+        copy.generatorConfigs = this.generatorConfigs != null ? new HashMap<>(this.generatorConfigs) : new HashMap<>();
+        copy.forgeMaxLevel = this.forgeMaxLevel;
+        copy.forgeLevels = this.forgeLevels != null ? new ArrayList<>(this.forgeLevels) : new ArrayList<>();
+        copy.shopNpcs = this.shopNpcs != null ? new ArrayList<>(this.shopNpcs) : new ArrayList<>();
+        for (final ArenaGenerator gen : this.generators) {
+            final dev.sebastianjnuwu.bedwars.model.ArenaGenerator genCopy =
+                    new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(gen.getUniqueId(), gen.getType(), gen.getLocation());
+            genCopy.setTeam(gen.getTeam());
+            genCopy.setOriginBlockData(gen.getOriginBlockData());
+            genCopy.setOriginBlockDataAbove(gen.getOriginBlockDataAbove());
+            copy.generators.add(genCopy);
+        }
+        for (final ArenaTeam team : this.teams) {
+            final dev.sebastianjnuwu.bedwars.model.ArenaTeam teamCopy =
+                    new dev.sebastianjnuwu.bedwars.model.ArenaTeam(team.getName(), team.getColor());
+            teamCopy.setSpawn(team.getSpawn());
+            teamCopy.setSpawnBlockData(team.getSpawnBlockData());
+            teamCopy.setBed(team.getBed());
+            teamCopy.setBedFacing(team.getBedFacing());
+            if (team.getForge() != null) {
+                for (final ArenaGenerator genCopy : copy.generators) {
+                    if (genCopy.getUniqueId().equals(team.getForge().getUniqueId())) {
+                        teamCopy.setForge(genCopy);
+                        break;
+                    }
+                }
+            }
+            copy.teams.add(teamCopy);
+        }
+        return copy;
     }
 }

@@ -120,9 +120,14 @@ admin:
     setminplayers_usage: "Uso: /bw admin arena <arena> setminplayers <numero>"
     setminplayers_invalid: "Número inválido. Use um número maior que 0."
     setminplayers_success: "Mínimo de jogadores definido para {0}!"
+    status_modes: "Times: {0} | Modos disponíveis: {1}"
     setcountdown_usage: "Uso: /bw admin arena <arena> setcountdown <segundos>"
     setcountdown_invalid: "Número inválido. Use pelo menos 3 segundos."
     setcountdown_success: "Tempo de contagem definido para {0} segundos!"
+    setmap_usage: "Uso: /bw admin arena <arena> setmap <mapa|default>"
+    setmap_not_found: "Mapa '{0}' não encontrado em maps/. Salve primeiro a arena de origem."
+    setmap_success: "Arena apontando para o mapa compartilhado '{0}'. Cada arena usa seu próprio mundo de partida."
+    setmap_reset: "Arena {0} voltou a usar o mapa próprio (maps/{0}.schem)."
     status_minplayers: "Mínimo de jogadores: {0}"
     status_countdown: "Contagem regressiva: {0}s"
     status_forges: "Forjas configuradas: {0}"
@@ -147,7 +152,8 @@ admin:
 
 # ── game ──────────────────────────────
 game:
-  join_usage: "Uso: /bw join <arena> [time]"
+  join_usage: "Uso: /bw join <arena> [modo|time]"
+  mode_not_supported: "O modo {0} não é suportado por esta arena ({1}). Use /bw admin arena <arena> status para ver os modos disponíveis."
   already_in_game: "Você já está em uma partida."
   already_in_this_game: "Você já está nesta partida."
   already_in_team: "Você já está neste time."

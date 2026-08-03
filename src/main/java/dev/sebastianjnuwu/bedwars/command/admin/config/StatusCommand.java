@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
 import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
@@ -37,6 +38,13 @@ public class StatusCommand extends BaseCommand implements ArenaSubCommand {
         final List<String> missing = this.gameManager.validateArena(arena);
         sender.sendMessage(this.lang.text(NamedTextColor.GOLD, "admin.arena.status_header", arena.getName()));
         sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_minplayers", String.valueOf(arena.getMinPlayers())));
+        final int teamCount = arena.getTeams().size();
+        final String modes = java.util.Arrays.stream(ArenaMode.values())
+                .filter(mode -> mode.isValidFor(teamCount))
+                .map(mode -> mode.name().toLowerCase())
+                .reduce((left, right) -> left + ", " + right)
+                .orElse("—");
+        sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_modes", String.valueOf(teamCount), modes));
         sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_countdown", String.valueOf(arena.getCountdown())));
         final long forgeCount = arena.getGenerators().stream()
                 .filter(generator -> generator.getType().equalsIgnoreCase("forge"))

@@ -47,6 +47,7 @@ import dev.sebastianjnuwu.bedwars.api.events.PlayerRespawnEvent;
 import dev.sebastianjnuwu.bedwars.api.events.TeamEliminateEvent;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.DeathCause;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
@@ -72,6 +73,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final ShopNpcManager shopNpcManager;
     private final LangManager lang;
     private final Arena arena;
+    private final ArenaMode mode;
     private final Map<ArenaTeam, List<UUID>> teams;
     private final Map<UUID, GamePlayer> players;
     private final Set<ArenaTeam> eliminatedTeams;
@@ -93,17 +95,21 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
      * <p>
      * Inicializa todos os mapas internos e define o estado inicial como
      * {@link GameState#WAITING}. Os times são populados a partir da configuração
-     * da arena — cada time começa com a lista de jogadores vazia.
+     * da arena — cada time começa com a lista de jogadores vazia. O modo define
+     * quantos jogadores cabem por time; quando {@code null}, a capacidade é
+     * derivada do mínimo de jogadores da arena.
      * </p>
      *
      * @param gameManager gerenciador de partidas que controla esta instância (não nulo)
      * @param arena       configuração da arena onde a partida será realizada (não nula)
+     * @param mode        modo de partida (solo/dupla/trio/quarteto) ou null para livre
      */
-    public Game(final GameManager gameManager, final Arena arena, final ShopNpcManager shopNpcManager) {
+    public Game(final GameManager gameManager, final Arena arena, final ShopNpcManager shopNpcManager, final @Nullable ArenaMode mode) {
         this.gameManager = gameManager;
         this.shopNpcManager = shopNpcManager;
         this.lang = gameManager.getLang();
         this.arena = arena;
+        this.mode = mode;
         this.teams = new HashMap<>();
         this.players = new HashMap<>();
         this.eliminatedTeams = new HashSet<>();
@@ -435,7 +441,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
 
         this.shopNpcManager.spawnGameNpcs(
-                this.arena.getName(),
+                this.arena.getWorldName(),
                 this.arena.getShopNpcs()
         );
     }
@@ -1015,14 +1021,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                             this.gameManager.removePlayerMapping(player);
                         }
                     }
-                    this.shopNpcManager.removeGameNpcs(this.arena.getName());
+                    this.shopNpcManager.removeGameNpcs(this.arena.getWorldName());
                     this.players.clear();
                     this.teams.values().forEach(List::clear);
                     this.eliminatedTeams.clear();
                     this.bedlessTeams.clear();
-                    if (this.gameManager.getGame(this.arena.getName()) == this) {
-                        this.gameManager.removeGame(this.arena.getName());
-                        this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
+                    if (this.gameManager.getGameByWorld(this.arena.getWorldName()) == this) {
+                        this.gameManager.removeGame(this.arena.getWorldName());
                     }
                 },
                 200L
@@ -1045,7 +1050,21 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return null;
     }
 
+    /**
+     * Retorna o modo de partida desta instância, ou {@code null} para partidas
+     * livres (capacidade derivada do mínimo de jogadores da arena).
+     *
+     * @return modo da partida ou null
+     */
+    public @Nullable ArenaMode getMode() {
+        return this.mode;
+    }
+
     private int maxTeamSlots() {
+        final ArenaMode mode = this.mode;
+        if (mode != null) {
+            return mode.getTeamSize();
+        }
         final int teamCount = this.teams.size();
         if (teamCount == 0) {
             return 0;
@@ -1066,6 +1085,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public int getPlayerCount() {
         return this.players.size();
+    }
+
+    public boolean isFull() {
+        final int capacity = this.arena.getTeams().size() * this.maxTeamSlots();
+        return this.players.size() >= capacity;
     }
 
     public Map<ArenaTeam, List<UUID>> getTeams() {
@@ -1140,14 +1164,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             player.setGameMode(GameMode.SURVIVAL);
             this.gameManager.removePlayerMapping(player);
         }
-        this.shopNpcManager.removeGameNpcs(this.arena.getName());
+        this.shopNpcManager.removeGameNpcs(this.arena.getWorldName());
         this.spectators.clear();
         this.players.clear();
         this.teams.values().forEach(List::clear);
         this.eliminatedTeams.clear();
         this.bedlessTeams.clear();
-        this.gameManager.removeGame(this.arena.getName());
-        this.gameManager.getArenaManager().resetArenaMap(this.arena.getName());
+        this.gameManager.removeGame(this.arena.getWorldName());
     }
 
     private @Nullable ArenaTeam determineWinner() {
