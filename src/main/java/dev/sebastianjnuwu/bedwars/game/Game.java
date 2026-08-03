@@ -728,8 +728,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                     if (player != null) {
                         final int seconds = remaining / 20;
                         player.showTitle(Title.title(
-                                net.kyori.adventure.text.Component.text("§e" + seconds),
-                                this.lang.text("game.respawn_title"),
+                                this.lang.text("game.died_title"),
+                                this.lang.text("game.respawn_subtitle", seconds),
                                 Title.Times.times(java.time.Duration.ZERO, java.time.Duration.ofSeconds(1), java.time.Duration.ofMillis(500))));
                     }
                 }
@@ -811,6 +811,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         this.respawnTicks.put(player.getUniqueId(), this.arena.getRespawnDelay() * 20);
+        player.showTitle(Title.title(
+                this.lang.text("game.died_title"),
+                this.lang.text("game.respawn_subtitle", this.arena.getRespawnDelay()),
+                Title.Times.times(java.time.Duration.ZERO, java.time.Duration.ofSeconds(1), java.time.Duration.ofMillis(500))));
         this.debug("debug.player_died", player.getName(), this.arena.getName(),
                 this.arena.getRespawnDelay());
         Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> player.spigot().respawn());
