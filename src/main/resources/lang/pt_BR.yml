@@ -295,6 +295,7 @@ log:
   shop_npc:
     not_installed: "FancyNPCs não instalado, não foi possível spawnar NPCs da loja"
     spawn_error: "Falha ao spawnar NPC da loja {0} para {1}: {2}"
+    skin_fallback: "Falha ao definir skin '{0}' para NPC '{1}': {2}. Usando skin padrão."
     remove_error: "Falha ao remover NPC da loja: {0}"
   slime_manager:
     template_saved: "Template salvo: {0}"

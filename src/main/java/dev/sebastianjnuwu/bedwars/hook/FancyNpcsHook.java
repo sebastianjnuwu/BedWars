@@ -8,6 +8,9 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.lang.LangManager;
+
 /**
  * Hook dedicado para FancyNPCs.
  */
@@ -35,7 +38,13 @@ public class FancyNpcsHook implements NpcHook {
         final Constructor<?> constructor = npcDataClass.getConstructor(String.class, UUID.class, Location.class);
         final Object npcData = constructor.newInstance(npcName, creator, location);
 
-        this.invokeMethod(npcData, "setSkin", new Class<?>[]{String.class}, skin != null ? skin : "NPC");
+        try {
+            this.invokeMethod(npcData, "setSkin", new Class<?>[]{String.class}, skin != null ? skin : "NPC");
+        } catch (final Exception e) {
+            final LangManager lang = ((BedWarsPlugin) this.plugin).getLang();
+            final String errorMsg = e.getMessage() != null ? e.getMessage() : "Erro desconhecido";
+            this.plugin.getLogger().warning(lang.raw("log.shop_npc.skin_fallback", skin != null ? skin : "null", npcName, errorMsg));
+        }
         this.invokeMethod(npcData, "setDisplayName", new Class<?>[]{String.class}, displayName != null ? displayName : "<red>Loja</red>");
 
         final Object fancyPlugin = this.invokeStaticMethod("de.oliver.fancynpcs.api.FancyNpcsPlugin", "get", new Class<?>[0]);
