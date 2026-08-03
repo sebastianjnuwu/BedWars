@@ -220,6 +220,24 @@ Uma única arena pode hospedar **várias partidas ao mesmo tempo**, inclusive em
 
 Isso permite, por exemplo, rodar **partidas solo, dupla e quarteto** do mesmo mapa ao mesmo tempo apenas com `/bw join <arena> <modo>` — cada sala lotada gera uma nova instância automaticamente.
 
+### 14.2 Modos e times
+
+O modo define **quantos jogadores cabem por time**; o número de times/camas é fixo do mapa:
+
+| Modo | Jogadores por time | Mapa com 4 camas |
+|------|--------------------|------------------|
+| `solo` | 1 | até 4 jogadores (1v1 x4) |
+| `dupla` | 2 | até 8 (2v2 x4) |
+| `trio` | 3 | **bloqueado** (4 não é divisível por 3) |
+| `quarteto` | 4 | até 16 (4v4 x4) |
+
+Regras importantes:
+
+- **O modo é o máximo, não o mínimo.** Uma partida `quarteto` num mapa de 4 camas funciona com menos gente: 4 jogadores viram 1v1v1v1, 8 viram 2v2v2v2, e assim por diante.
+- **Distribuição automática balanceada.** Quem entra sem escolher time vai para o time com menos jogadores (`findSmallestTeam`). Por isso nunca fica um time vazio por acaso — com 12 jogadores numa partida quarteto de 4 camas, o resultado é 3v3v3v3, não 3 times cheios + 1 sobrando.
+- **Mapa com 3 camas não aceita quarteto** (nem trio num mapa de 2 camas): o modo é rejeitado se o número de times não for divisível pelo tamanho do time. Consulte os modos válidos com `/bw admin arena <arena> status`.
+- Só fica um time vazio se **jogadores forçarem na mão**, escolhendo times específicos (`/bw join <arena> azul` etc.) — a partida começa com os times preenchidos mesmo assim.
+
 ### 15. Configurar a loja da arena
 
 Cada arena pode usar uma loja diferente. As lojas ficam em `plugins/BedWars/shop/<nome>.yml`.
