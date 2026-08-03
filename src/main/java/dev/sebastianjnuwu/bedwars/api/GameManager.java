@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
 import dev.sebastianjnuwu.bedwars.api.model.Game;
 
 public interface GameManager {
@@ -22,6 +23,8 @@ public interface GameManager {
     void joinGame(@NotNull Player player, @NotNull String arenaName);
 
     void joinGame(@NotNull Player player, @NotNull String arenaName, @Nullable String teamName);
+
+    void joinGame(@NotNull Player player, @NotNull String arenaName, @Nullable ArenaMode mode);
 
     void leaveGame(@NotNull Player player);
 

@@ -162,6 +162,8 @@ Por padrão, cada arena já possui configurações para os tipos **ferro**, **ou
 /bw admin arena <nome_da_arena> teams
 ```
 
+> O comando `status` mostra quantos times a arena tem e **quais modos ela suporta**. Um modo é válido quando o número de times é divisível pelo tamanho do time (ex.: arena com 2 times aceita `solo` e `dupla`, mas não `trio`).
+
 ### 12. Adicionar NPC da loja
 
 Instale o **FancyNPCs** no servidor. Durante a edição da arena, posicione-se onde o NPC deverá ficar e execute:
@@ -189,28 +191,34 @@ Após concluir toda a configuração:
 ### 14. Jogar na arena
 
 ```bash
-/bw join <nome_da_arena>         # time automático
-/bw join <nome_da_arena> azul    # time específico
-/bw start <nome_da_arena>        # iniciar manualmente
-/bw leave                        # sair da partida
+/bw join <nome_da_arena>              # partida livre (time automático)
+/bw join <nome_da_arena> azul         # partida livre, time específico
+/bw join <nome_da_arena> dupla        # partida no modo dupla (2 por time)
+/bw join <nome_da_arena> solo         # partida no modo solo (1 por time)
+/bw start <nome_da_arena>             # iniciar manualmente (partida livre)
+/bw leave                             # sair da partida
 ```
 
+> O modo é escolhido **na hora de entrar**, não fica fixo na arena. `solo`, `dupla`, `trio` e `quarteto` definem quantos jogadores cabem por time. Quem entra sem modo joga numa partida **livre** (capacidade derivada do `min_players` da arena).
+>
 > Enquanto um administrador estiver editando a arena, jogadores **não podem** entrar na partida.
 
 ### 14.1 Partidas simultâneas no mesmo mapa
 
-Uma única arena pode hospedar **várias partidas ao mesmo tempo**. Ao entrar em uma arena que já está com sala cheia (ou em andamento), o plugin **cria automaticamente uma nova instância** com um mundo próprio:
+Uma única arena pode hospedar **várias partidas ao mesmo tempo**, inclusive em modos diferentes. Ao entrar em uma arena que já está com sala cheia (ou em andamento), o plugin **cria automaticamente uma nova instância** com um mundo próprio:
 
 ```
-/bw join <nome_da_arena>
+/bw join <nome_da_arena> [modo]
 ```
 
 - Cada partida roda em um mundo dedicado `bw_<arena>_<id>` (ex.: `bw_lush_0`, `bw_lush_1`, `bw_lush_2`...), clonado do schematic da arena.
 - Jogadores que chegam enquanto a sala atual não está cheia entram nela; quando a sala atinge a capacidade, a próxima partida é criada em outra instância.
+- Jogadores que especificam um modo só entram (ou criam) partidas **daquele modo**; quem não especifica entra em partidas livres.
+- Um modo é rejeitado se o número de times da arena não for divisível pelo tamanho do time (ex.: 2 times → `solo` e `dupla` ok; `trio` e `quarteto` bloqueados).
 - Ao fim da partida o mundo da instância é descartado (unload + delete) e um novo mundo é recriado do schematic para a próxima partida.
 - Nada é persistido em disco durante a partida: o arquivo da arena (`arenas/<nome>.yml`) continua sendo apenas a configuração, e o schematic continua uma única vez em `maps/`.
 
-Isso permite, por exemplo, rodar **3 solo + 2 duplas + 1 trio + 4 quartetos** do mesmo mapa ao mesmo tempo apenas com `/bw join` — cada sala lotada gera uma nova instância automaticamente.
+Isso permite, por exemplo, rodar **partidas solo, dupla e quarteto** do mesmo mapa ao mesmo tempo apenas com `/bw join <arena> <modo>` — cada sala lotada gera uma nova instância automaticamente.
 
 ### 15. Configurar a loja da arena
 

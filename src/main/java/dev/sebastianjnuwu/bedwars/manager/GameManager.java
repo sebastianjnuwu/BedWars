@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.game.Game;
@@ -117,15 +118,24 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public void joinGame(final Player player, final String arenaName) {
-        this.joinGame(player, arenaName, null);
+        this.joinGame(player, arenaName, null, null, true);
     }
 
     @Override
     public void joinGame(final Player player, final String arenaName, final @Nullable String teamName) {
-        this.joinGame(player, arenaName, teamName, true);
+        this.joinGame(player, arenaName, teamName, null, true);
+    }
+
+    @Override
+    public void joinGame(final Player player, final String arenaName, final @Nullable ArenaMode mode) {
+        this.joinGame(player, arenaName, null, mode, true);
     }
 
     public void joinGame(final Player player, final String arenaName, final @Nullable String teamName, final boolean teleport) {
+        this.joinGame(player, arenaName, teamName, null, teleport);
+    }
+
+    public void joinGame(final Player player, final String arenaName, final @Nullable String teamName, final @Nullable ArenaMode mode, final boolean teleport) {
         if (this.isInGame(player)) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_game"));
             return;
@@ -135,13 +145,17 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.arena_not_found", arenaName));
             return;
         }
+        if (mode != null && !mode.isValidFor(arena.getTeams().size())) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.mode_not_supported", mode.name().toLowerCase(), arenaName));
+            return;
+        }
 
         if (this.editorManager.isBeingEdited(arenaName)) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.arena_being_edited", arenaName));
             return;
         }
 
-        Game game = this.findOpenGame(arenaName);
+        Game game = this.findOpenGame(arenaName, mode);
         if (game == null) {
             final Arena instance = this.arenaManager.createInstance(arenaName);
             if (instance == null) {
@@ -157,7 +171,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
                 }
                 return;
             }
-            game = new Game(this, instance, getShopNpcManager());
+            game = new Game(this, instance, getShopNpcManager(), mode);
             this.games.put(this.gameKey(instance), game);
         }
 
@@ -191,7 +205,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public void startGame(final String arenaName) {
-        Game game = this.findOpenGame(arenaName);
+        Game game = this.findOpenGame(arenaName, null);
         if (game == null) {
             final Arena arena = this.arenaManager.get(arenaName);
             if (arena == null) {
@@ -206,7 +220,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
                 this.arenaManager.deleteInstanceWorld(instance.getWorldName());
                 return;
             }
-            game = new Game(this, instance, this.shopNpcManager);
+            game = new Game(this, instance, this.shopNpcManager, null);
             this.games.put(this.gameKey(instance), game);
         }
         final List<String> missing = this.validateArena(game.getArena());
@@ -251,10 +265,11 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         return null;
     }
 
-    private @Nullable Game findOpenGame(final String arenaName) {
+    private @Nullable Game findOpenGame(final String arenaName, final @Nullable ArenaMode mode) {
         for (final Game game : this.games.values()) {
             final Arena arena = game.getArena();
             if (arena.getName().equals(arenaName)
+                    && game.getMode() == mode
                     && (game.getState() == GameState.WAITING || game.getState() == GameState.STARTING)
                     && !game.isFull()) {
                 return game;
