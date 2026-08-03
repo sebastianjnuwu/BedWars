@@ -49,6 +49,7 @@ public class AdminCommand extends BaseCommand {
         this.register("save", lifecycle);
         this.register("load", lifecycle);
         this.register("edit", lifecycle);
+        this.register("discard", lifecycle);
         this.register("reload", new ReloadCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
     }
 

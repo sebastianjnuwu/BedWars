@@ -160,7 +160,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 2) {
             final String first = args[0].toLowerCase();
             if (first.equals("admin")) {
-                completions.addAll(List.of("create", "delete", "list", "save", "load", "edit", "setlobby", "arena", "reload"));
+                completions.addAll(List.of("create", "delete", "list", "save", "load", "edit", "discard", "setlobby", "arena", "reload"));
             } else if (List.of("join", "start").contains(first)) {
                 completions.addAll(this.arenaManager.getNames());
             }
@@ -174,7 +174,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 3 && args[0].equalsIgnoreCase("admin")) {
             final String sub = args[1].toLowerCase();
             switch (sub) {
-                case "delete", "save", "load", "edit":
+                case "delete", "save", "load", "edit", "discard":
                     completions.addAll(this.arenaManager.getNames());
                     break;
                 case "arena":

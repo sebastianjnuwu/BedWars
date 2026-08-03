@@ -26,7 +26,7 @@ import dev.sebastianjnuwu.bedwars.session.EditorManager;
  * despacho com base no primeiro argumento do comando.
  * </p>
  * <p>
- * Exemplo de uso: {@code /bwadmin arena <create|delete|list|save|load|edit> ...}
+ * Exemplo de uso: {@code /bwadmin arena <create|delete|list|save|load|edit|discard> ...}
  * </p>
  *
  * <p><b>Thread safety:</b> Esta classe não é thread-safe. Deve ser usada
@@ -65,6 +65,7 @@ public class LifecycleRouter extends BaseCommand implements SubCommand {
         this.register("save", new SaveCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("load", new LoadCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("edit", new EditCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
+        this.register("discard", new DiscardCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
     }
 
     /**

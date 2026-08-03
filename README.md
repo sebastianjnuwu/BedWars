@@ -188,6 +188,16 @@ Após concluir toda a configuração:
 /bw admin save <nome_da_arena>
 ```
 
+### 13.1 Descartar a edição (sair sem salvar)
+
+Se quiser sair do modo de edição **sem salvar** as alterações de bloco feitas no mapa, use:
+
+```bash
+/bw admin discard <nome_da_arena>
+```
+
+> O comando encerra a sessão de edição, remove os NPCs da loja e restaura o mundo a partir do último schematic salvo, descartando as mudanças feitas durante a sessão.
+
 ### 14. Jogar na arena
 
 ```bash
@@ -306,6 +316,7 @@ Para gerenciar:
 | `/bw admin save <nome>` | Salva o schematic da arena | `bw.admin` |
 | `/bw admin load <nome>` | Carrega o schematic em um mundo void | `bw.admin` |
 | `/bw admin edit <nome>` | Entra no modo de edição da arena | `bw.admin` |
+| `/bw admin discard <nome>` | Sai do modo de edição sem salvar as alterações | `bw.admin` |
 | `/bw admin setlobby` | Define o lobby principal | `bw.admin` |
 | `/bw admin reload` | Recarrega arquivos de configuração | `bw.admin` |
 | `/bw admin arena <arena> spawn` | Define o spawn de espera | `bw.admin` |
