@@ -250,7 +250,12 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         applyTeamArmor(player, team);
 
         for (final Player online : Bukkit.getOnlinePlayers()) {
+            if (online == player) {
+                continue;
+            }
             if (this == this.gameManager.getPlayerGame(online)) {
+                player.showPlayer(this.gameManager.getPlugin(), online);
+                online.showPlayer(this.gameManager.getPlugin(), player);
                 continue;
             }
             player.hidePlayer(this.gameManager.getPlugin(), online);
