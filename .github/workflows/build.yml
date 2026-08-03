@@ -52,7 +52,7 @@ jobs:
         run: mvn -q clean package -DskipTests
 
       - name: Upload release asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: target/sBedWars-1.0.0.jar
           generate_release_notes: true
