@@ -200,16 +200,22 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (arena == null) {
             return null;
         }
-        final dev.sebastianjnuwu.bedwars.model.Arena template =
-                (dev.sebastianjnuwu.bedwars.model.Arena) arena;
+        final File file = new File(this.arenasFolder, arenaName + ".yml");
+        if (!file.exists()) {
+            return null;
+        }
         final String worldName = this.nextInstanceWorldName(arenaName);
-        final Arena instance = template.copy();
-        instance.setWorldName(worldName);
-        final World world = this.buildWorld(arenaName, worldName, instance, "log.arena_manager.load_error");
+
+        // Mundo construído com as configurações não-posicionais da arena em memória
+        // (paste, mapa, difficulty... — independem de locations resolvidas).
+        final World world = this.buildWorld(arenaName, worldName, arena, "log.arena_manager.load_error");
         if (world == null) {
             return null;
         }
-        this.applyInstanceLocations(instance, world);
+        // Instância reconstruída 100% do disco, com todas as locations rebasadas
+        // para o mundo de partida recém-criado.
+        final Arena instance = this.loadArenaFromFile(arenaName, file, world);
+        instance.setWorldName(worldName);
         this.restoreBeds(world, instance);
         return instance;
     }
@@ -236,46 +242,6 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         } while (new File(Bukkit.getWorldContainer(), worldName).exists());
         this.instanceCounters.put(arenaName, id);
         return worldName;
-    }
-
-    private void applyInstanceLocations(final Arena instance, final World world) {
-        final YamlConfiguration disk = this.diskConfigs.get(instance.getName());
-        if (disk == null) {
-            return;
-        }
-        if (disk.contains("arena_spawn")) {
-            instance.setArenaSpawn(this.rebaseLocation(disk.getString("arena_spawn"), world));
-        }
-        if (disk.contains("lobby")) {
-            instance.setLobby(this.rebaseLocation(disk.getString("lobby"), world));
-        }
-        for (final ArenaTeam team : instance.getTeams()) {
-            final String path = "teams." + team.getName();
-            if (disk.contains(path + ".spawn")) {
-                team.setSpawn(this.rebaseLocation(disk.getString(path + ".spawn"), world));
-            }
-            if (disk.contains(path + ".bed")) {
-                team.setBed(this.rebaseLocation(disk.getString(path + ".bed"), world));
-            }
-        }
-        for (final ArenaGenerator gen : instance.getGenerators()) {
-            final String path = "generators." + gen.getUniqueId();
-            if (disk.contains(path + ".location")) {
-                gen.setLocation(this.rebaseLocation(disk.getString(path + ".location"), world));
-            }
-        }
-        final List<ShopNpc> npcs = instance.getShopNpcs();
-        for (int i = 0; i < npcs.size(); i++) {
-            final String path = "shop_npcs." + i + ".location";
-            if (!disk.contains(path)) {
-                continue;
-            }
-            final ShopNpc old = npcs.get(i);
-            final Location loc = this.rebaseLocation(disk.getString(path), world);
-            if (loc != null) {
-                npcs.set(i, new ShopNpc(loc, old.skin(), old.displayName()));
-            }
-        }
     }
 
     private @Nullable Location rebaseLocation(final String str, final World world) {
@@ -738,8 +704,10 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
 
         // Generators — usa UUID como chave, ignora location null.
-        // Se a lista está vazia porque o mundo não está carregado, preserva a seção do disco.
-        if (!arena.getGenerators().isEmpty()) {
+        // Se nenhum gerador tem location resolvida (mundo não carregado), preserva a seção do disco.
+        final boolean hasResolvedGenerator = arena.getGenerators().stream()
+                .anyMatch(gen -> gen.getLocation() != null);
+        if (hasResolvedGenerator) {
             config.set("generators", null);
             for (final ArenaGenerator gen : arena.getGenerators()) {
                 if (gen.getLocation() == null) {
@@ -940,13 +908,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     }
 
     private Arena loadArenaFromFile(final String name, final File file) {
+        return this.loadArenaFromFile(name, file, null);
+    }
+
+    private Arena loadArenaFromFile(final String name, final File file, final @Nullable World targetWorld) {
         final YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 
         final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
         arena.setEnabled(config.getBoolean("enabled", false));
 
         if (config.contains("lobby")) {
-            arena.setLobby(this.parseLocation(config.getString("lobby")));
+            arena.setLobby(this.parseLocationFor(config.getString("lobby"), targetWorld));
         }
         if (config.contains("world")) {
             arena.setWorldName(config.getString("world"));
@@ -971,7 +943,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             );
         }
         if (config.contains("arena_spawn")) {
-            arena.setArenaSpawn(this.parseLocation(config.getString("arena_spawn")));
+            arena.setArenaSpawn(this.parseLocationFor(config.getString("arena_spawn"), targetWorld));
         }
         if (config.contains("spawn_block")) {
             arena.setSpawnBlockData(config.getString("spawn_block"));
@@ -997,13 +969,13 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 final String path = "teams." + key;
                 final var team = new dev.sebastianjnuwu.bedwars.model.ArenaTeam(key, config.getString(path + ".color"));
                 if (config.contains(path + ".spawn")) {
-                    team.setSpawn(this.parseLocation(config.getString(path + ".spawn")));
+                    team.setSpawn(this.parseLocationFor(config.getString(path + ".spawn"), targetWorld));
                 }
                 if (config.contains(path + ".spawn_block")) {
                     team.setSpawnBlockData(config.getString(path + ".spawn_block"));
                 }
                 if (config.contains(path + ".bed")) {
-                    team.setBed(this.parseLocation(config.getString(path + ".bed")));
+                    team.setBed(this.parseLocationFor(config.getString(path + ".bed"), targetWorld));
                 }
                 if (config.contains(path + ".bed_facing")) {
                     team.setBedFacing(config.getString(path + ".bed_facing"));
@@ -1014,11 +986,6 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (config.contains("generators")) {
             for (final String key : config.getConfigurationSection("generators").getKeys(false)) {
                 final String path = "generators." + key;
-                final Location loc = this.parseLocation(config.getString(path + ".location"));
-                // Skip entries with null location (corrupted)
-                if (loc == null) {
-                    continue;
-                }
                 final String type = config.getString(path + ".type");
                 if (type == null) {
                     continue;
@@ -1032,6 +999,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                     genUuid = UUID.randomUUID();
                 }
 
+                // A location fica null quando o mundo ainda não está carregado.
+                // O gerador é mantido em memória; instâncias são lidas do disco.
+                final Location loc = this.parseLocationFor(config.getString(path + ".location"), targetWorld);
                 final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(genUuid, type, loc);
                 if (config.contains(path + ".team")) {
                     gen.setTeam(config.getString(path + ".team"));
@@ -1060,7 +1030,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                     if (key.equals("skin") || key.equals("displayName")) {
                         continue;
                     }
-                    Location loc = this.parseLocation(config.getString("shop_npcs." + key + ".location"));
+                    Location loc = this.parseLocationFor(config.getString("shop_npcs." + key + ".location"), targetWorld);
                     if (loc == null) {
                         continue;
                     }
@@ -1125,10 +1095,11 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             }
         }
 
-        final World loadWorld = arena.getWorldName() != null ? Bukkit.getWorld(arena.getWorldName()) : null;
-        Bukkit.getPluginManager().callEvent(new ArenaLoadEvent(arena, loadWorld));
-
-        this.diskConfigs.put(name, config);
+        if (targetWorld == null) {
+            final World loadWorld = arena.getWorldName() != null ? Bukkit.getWorld(arena.getWorldName()) : null;
+            Bukkit.getPluginManager().callEvent(new ArenaLoadEvent(arena, loadWorld));
+            this.diskConfigs.put(name, config);
+        }
         return arena;
     }
 
@@ -1139,6 +1110,13 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 + "," + loc.getBlockZ()
                 + "," + loc.getYaw()
                 + "," + loc.getPitch();
+    }
+
+    private @Nullable Location parseLocationFor(final String str, final @Nullable World targetWorld) {
+        if (targetWorld != null) {
+            return this.rebaseLocation(str, targetWorld);
+        }
+        return this.parseLocation(str);
     }
 
     private @Nullable Location parseLocation(final String str) {
