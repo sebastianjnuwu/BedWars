@@ -48,7 +48,7 @@ public class UIListener implements Listener {
                 return;
             }
 
-            if (hand.getType() == Material.COMPASS) {
+            if (hand.getType().name().endsWith("_WOOL") || hand.getType() == Material.COMPASS) {
                 final Game game = (Game) this.gameManager.getPlayerGame(player);
                 if (game == null) {
                     return;

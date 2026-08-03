@@ -246,7 +246,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.setHealth(20);
         player.setFoodLevel(20);
         player.getInventory().setItem(8, createExitDoorItem());
-        player.getInventory().setItem(0, createTeamSelectorItem());
+        player.getInventory().setItem(0, createTeamSelectorItem(team));
         applyTeamArmor(player, team);
 
         for (final Player online : Bukkit.getOnlinePlayers()) {
@@ -307,6 +307,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.teams.get(newTeam).add(player.getUniqueId());
         gp.setTeam(newTeam);
         applyTeamArmor(player, newTeam);
+        player.getInventory().setItem(0, createTeamSelectorItem(newTeam));
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.switched_team", newTeam.getName()));
     }
 
@@ -417,6 +418,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 final Location spawn = spawnLoc.clone().add(index * 0.5, 0, 0);
                 LocationUtil.safeTeleport(player, spawn);
                 player.getInventory().clear();
+                applyTeamArmor(player, team);
                 player.setGameMode(GameMode.SURVIVAL);
                 player.setHealth(20);
                 player.setFoodLevel(20);
@@ -848,6 +850,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.setHealth(20);
         player.setFoodLevel(20);
         player.getInventory().clear();
+        applyTeamArmor(player, team);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.respawned"));
 
         final GamePlayer gp = this.players.get(player.getUniqueId());
@@ -992,6 +995,24 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         Bukkit.getPluginManager().callEvent(new GameEndEvent(this, winner));
 
+        // Coloca todos os jogadores em modo ADVENTURE no spawn para a celebracao final com suas armaduras
+        for (final UUID uuid : this.players.keySet()) {
+            final Player p = Bukkit.getPlayer(uuid);
+            if (p == null) {
+                continue;
+            }
+            p.setGameMode(GameMode.ADVENTURE);
+            p.getInventory().clear();
+            final ArenaTeam team = this.getPlayerTeam(p);
+            if (team != null) {
+                applyTeamArmor(p, team);
+            }
+            final Location spawn = this.arena.getArenaSpawn();
+            if (spawn != null) {
+                LocationUtil.safeTeleport(p, spawn);
+            }
+        }
+
         Bukkit.getScheduler().runTaskLater(
                 this.gameManager.getPlugin(),
                 () -> {
@@ -1019,7 +1040,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                             if (player == null) {
                                 continue;
                             }
-                            player.getInventory().clear();
+                            restoreInventory(player);
                             if (lobby != null && lobby.getWorld() != null) {
                                 player.teleport(lobby);
                             } else if (fallback != null) {
@@ -1041,6 +1062,16 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 },
                 200L
         );
+    }
+
+    private boolean hasValidOpponents() {
+        int nonEmptyTeamsCount = 0;
+        for (final var entry : this.teams.entrySet()) {
+            if (!entry.getValue().isEmpty()) {
+                nonEmptyTeamsCount++;
+            }
+        }
+        return nonEmptyTeamsCount >= 2;
     }
 
     private @Nullable ArenaTeam findSmallestTeam() {
@@ -1206,8 +1237,30 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return item;
     }
 
-    private ItemStack createTeamSelectorItem() {
-        final ItemStack item = new ItemStack(Material.COMPASS);
+    private static Material getWoolColor(final String dyeColor) {
+        if (dyeColor == null) {
+            return Material.WHITE_WOOL;
+        }
+        return switch (dyeColor.toUpperCase()) {
+            case "RED", "VERMELHO" -> Material.RED_WOOL;
+            case "BLUE", "AZUL" -> Material.BLUE_WOOL;
+            case "GREEN", "VERDE" -> Material.GREEN_WOOL;
+            case "YELLOW", "AMARELO" -> Material.YELLOW_WOOL;
+            case "PURPLE", "ROXO" -> Material.PURPLE_WOOL;
+            case "PINK", "ROSA" -> Material.PINK_WOOL;
+            case "ORANGE", "LARANJA" -> Material.ORANGE_WOOL;
+            case "CYAN", "CIANO" -> Material.CYAN_WOOL;
+            case "LIME" -> Material.LIME_WOOL;
+            case "LIGHT_BLUE", "AZUL_CLARO" -> Material.LIGHT_BLUE_WOOL;
+            case "GRAY", "CINZA" -> Material.GRAY_WOOL;
+            case "BLACK", "PRETO" -> Material.BLACK_WOOL;
+            default -> Material.WHITE_WOOL;
+        };
+    }
+
+    private ItemStack createTeamSelectorItem(final @Nullable ArenaTeam team) {
+        final Material material = team != null ? getWoolColor(team.getColor()) : Material.WHITE_WOOL;
+        final ItemStack item = new ItemStack(material);
         final ItemMeta meta = item.getItemMeta();
         meta.displayName(MM.deserialize(this.lang.raw("ui.team_selector.name")));
         meta.lore(List.of(

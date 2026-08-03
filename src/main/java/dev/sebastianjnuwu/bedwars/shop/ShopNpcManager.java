@@ -215,7 +215,8 @@ public class ShopNpcManager {
             }
             return this.spawnFancyNpc(arenaName, index, npc, context);
         } catch (final Exception e) {
-            this.plugin.getLogger().warning(this.lang.raw("log.shop_npc.spawn_error", String.valueOf(index), arenaName, e.getMessage()));
+            final String errorMsg = e.getMessage() != null ? e.getMessage() : "Erro desconhecido";
+            this.plugin.getLogger().warning(this.lang.raw("log.shop_npc.spawn_error", String.valueOf(index), arenaName, errorMsg));
             return null;
         }
     }
