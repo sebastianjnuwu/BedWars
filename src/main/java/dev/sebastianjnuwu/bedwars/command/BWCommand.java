@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.command.admin.AdminCommand;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
@@ -133,7 +134,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
      * <ul>
      *   <li>1 argumento: {@code admin}, {@code join}, {@code leave}, {@code start}</li>
      *   <li>2 argumentos: subcomandos do admin ou nomes de arena para join/start</li>
-     *   <li>3 argumentos: times da arena (join) ou operações admin/arena</li>
+     *   <li>3 argumentos: modos válidos e times da arena (join) ou operações admin/arena</li>
      *   <li>4 argumentos: ações da arena ({@code spawn}, {@code addteam}, etc.)</li>
      *   <li>5 argumentos: nomes de times, tipos de gerador ou as ações do
      *       subcomando {@code shop-npc} ({@code add}, {@code remove}, {@code list}, {@code displayname})</li>
@@ -167,6 +168,12 @@ public class BWCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 3 && args[0].equalsIgnoreCase("join")) {
             final Arena teamArena = this.arenaManager.get(args[1]);
             if (teamArena != null) {
+                final int teamCount = teamArena.getTeams().size();
+                for (final ArenaMode mode : ArenaMode.values()) {
+                    if (mode.isValidFor(teamCount)) {
+                        completions.add(mode.name().toLowerCase());
+                    }
+                }
                 for (final ArenaTeam at : teamArena.getTeams()) {
                     completions.add(at.getName());
                 }
