@@ -21,6 +21,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import dev.sebastianjnuwu.bedwars.api.events.PlayerPurchaseEvent;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
@@ -283,8 +284,20 @@ public class ShopGui implements InventoryHolder {
         return slots;
     }
 
+    private void applyTeamColor(final ItemStack stack) {
+        if (stack == null || this.game == null || stack.getType() != Material.WHITE_WOOL) {
+            return;
+        }
+        final ArenaTeam team = this.game.getPlayerTeam(this.player);
+        if (team == null) {
+            return;
+        }
+        stack.setType(Game.getWoolColor(team.getColor()));
+    }
+
     private ItemStack createDisplayItem(ShopItem item) {
         ItemStack stack = item.createItemStack();
+        applyTeamColor(stack);
         ItemMeta meta = stack.getItemMeta();
 
         // Add price lore
@@ -399,6 +412,7 @@ public class ShopGui implements InventoryHolder {
 
         // Handle upgrades
         ItemStack bought = item.createItemStack();
+        applyTeamColor(bought);
         if (item.getUpgrade() != null) {
             handleUpgrade(item);
         } else {

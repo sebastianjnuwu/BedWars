@@ -1273,7 +1273,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return item;
     }
 
-    private static Material getWoolColor(final String dyeColor) {
+    public static Material getWoolColor(final String dyeColor) {
         if (dyeColor == null) {
             return Material.WHITE_WOOL;
         }
