@@ -268,4 +268,8 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
     public LangManager getLang() {
         return this.lang;
     }
+
+    public dev.sebastianjnuwu.bedwars.shop.ShopManager getShopManager() {
+        return this.shopManager;
+    }
 }

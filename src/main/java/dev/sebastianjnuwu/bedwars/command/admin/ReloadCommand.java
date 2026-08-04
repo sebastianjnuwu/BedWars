@@ -45,6 +45,12 @@ public class ReloadCommand extends BaseCommand implements SubCommand {
         // Reload lang messages
         this.lang.load();
 
+        // Reload shop items (invalidate cache so GUIs rebuild from disk)
+        final dev.sebastianjnuwu.bedwars.BedWarsPlugin plugin =
+                org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class);
+        plugin.getShopManager().invalidateAll();
+        plugin.getShopManager().loadDefaults();
+
         sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.reload_success",
                 String.valueOf(this.arenaManager.getNames().size())));
     }
