@@ -345,11 +345,3 @@ categories:
             - "<gray>do seu time</gray>"
         price: 2 diamond
         upgrade: forge
-      - stack:
-          type: ENDER_PEARL
-          display-name: "<yellow>Dragon Buff</yellow>"
-          lore:
-            - "<gray>Ganha forca quando</gray>"
-            - "<gray>a cama e destruida</gray>"
-        price: 5 diamond
-        upgrade: dragon_buff
