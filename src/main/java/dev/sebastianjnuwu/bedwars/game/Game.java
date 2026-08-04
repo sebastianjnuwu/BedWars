@@ -1335,6 +1335,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final UUID uuid = player.getUniqueId();
         final ItemStack[] contents = this.savedInventories.remove(uuid);
         final ItemStack[] armor = this.savedArmor.remove(uuid);
+        if (contents == null && armor == null) {
+            return;
+        }
         player.getInventory().clear();
         if (contents != null) {
             player.getInventory().setContents(contents);
