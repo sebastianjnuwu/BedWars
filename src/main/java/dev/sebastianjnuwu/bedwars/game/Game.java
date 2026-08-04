@@ -935,6 +935,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private void checkWinCondition() {
+        if (this.state != GameState.PLAYING) {
+            return;
+        }
         ArenaTeam winner = null;
         int aliveTeams = 0;
         for (final var entry : this.teams.entrySet()) {
