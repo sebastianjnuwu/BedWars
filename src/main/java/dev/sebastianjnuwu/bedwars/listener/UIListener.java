@@ -53,6 +53,9 @@ public class UIListener implements Listener {
                 if (game == null) {
                     return;
                 }
+                if (game.getState() == GameState.PLAYING || game.getState() == GameState.ENDING) {
+                    return;
+                }
                 final var arena = game.getArena();
                 final TeamSelectionGui gui = new TeamSelectionGui(player, arena, lang, this.gameManager);
                 gui.open();
