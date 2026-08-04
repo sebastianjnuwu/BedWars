@@ -9,6 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -116,7 +117,7 @@ public class GameListener implements Listener {
      *
      * @param event o evento de renascimento (não nulo)
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerRespawn(final PlayerRespawnEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
@@ -395,8 +396,8 @@ public class GameListener implements Listener {
     }
 
     /**
-     * Impede que jogadores em partida dropem itens com a tecla Q.
-     * Sem isso o item some permanentemente do inventário.
+     * Permite que jogadores vivos dropem itens com a tecla Q.
+     * Spectators e jogadores mortos não podem dropar.
      */
     @EventHandler
     public void onPlayerDropItem(final PlayerDropItemEvent event) {
@@ -405,7 +406,9 @@ public class GameListener implements Listener {
         if (game == null) {
             return;
         }
-        event.setCancelled(true);
+        if (!game.isPlaying(player)) {
+            event.setCancelled(true);
+        }
     }
 
     /**
