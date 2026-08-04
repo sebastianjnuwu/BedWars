@@ -48,7 +48,7 @@ public class LangManager {
         }
 
         this.messages = YamlConfiguration.loadConfiguration(file);
-        this.plugin.getLogger().info("Idioma carregado: " + this.language);
+        this.plugin.getLogger().info(this.raw("log.lang.loaded", this.language));
     }
 
     private static final Pattern VAR_PATTERN = Pattern.compile("\\{(\\d+)\\}");
