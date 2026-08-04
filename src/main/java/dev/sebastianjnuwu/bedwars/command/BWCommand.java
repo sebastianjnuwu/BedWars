@@ -165,39 +165,8 @@ public class BWCommand implements CommandExecutor, TabCompleter {
             } else if (List.of("join", "start").contains(first)) {
                 completions.addAll(this.arenaManager.getNames());
             }
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("join")) {
-            completions.addAll(List.of("--mode", "--team"));
-            final Arena teamArena = this.arenaManager.get(args[1]);
-            if (teamArena != null) {
-                final int teamCount = teamArena.getTeams().size();
-                for (final ArenaMode mode : ArenaMode.values()) {
-                    if (mode.isValidFor(teamCount)) {
-                        completions.add(mode.name().toLowerCase());
-                    }
-                }
-                for (final ArenaTeam at : teamArena.getTeams()) {
-                    completions.add(at.getName());
-                }
-            }
-        } else if (args.length == 4 && args[0].equalsIgnoreCase("join")
-                && List.of("--mode", "--modo").contains(args[2].toLowerCase())) {
-            final Arena modeArena = this.arenaManager.get(args[1]);
-            if (modeArena != null) {
-                final int teamCount = modeArena.getTeams().size();
-                for (final ArenaMode mode : ArenaMode.values()) {
-                    if (mode.isValidFor(teamCount)) {
-                        completions.add(mode.name().toLowerCase());
-                    }
-                }
-            }
-        } else if (args.length == 4 && args[0].equalsIgnoreCase("join")
-                && List.of("--team", "--time").contains(args[2].toLowerCase())) {
-            final Arena teamArena = this.arenaManager.get(args[1]);
-            if (teamArena != null) {
-                for (final ArenaTeam at : teamArena.getTeams()) {
-                    completions.add(at.getName());
-                }
-            }
+        } else if (args[0].equalsIgnoreCase("join")) {
+            completions.addAll(this.joinCompletions(args));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("admin")) {
             final String sub = args[1].toLowerCase();
             switch (sub) {
@@ -234,5 +203,59 @@ public class BWCommand implements CommandExecutor, TabCompleter {
             }
         }
         return completions;
+    }
+
+    private List<String> joinCompletions(final String @NotNull [] args) {
+        final List<String> result = new ArrayList<>();
+        if (args.length < 3 || args.length > 6) {
+            return result;
+        }
+        final String prev = args[args.length - 2].toLowerCase();
+        if (List.of("--mode", "--modo").contains(prev)) {
+            addValidModes(result, this.arenaManager.get(args[1]));
+            return result;
+        }
+        if (List.of("--team", "--time").contains(prev)) {
+            addTeams(result, this.arenaManager.get(args[1]));
+            return result;
+        }
+        boolean modeUsed = false;
+        boolean teamUsed = false;
+        for (int i = 2; i < args.length - 1; i++) {
+            final String arg = args[i].toLowerCase();
+            if (List.of("--mode", "--modo").contains(arg)) {
+                modeUsed = true;
+            } else if (List.of("--team", "--time").contains(arg)) {
+                teamUsed = true;
+            }
+        }
+        if (!modeUsed) {
+            result.add("--mode");
+        }
+        if (!teamUsed) {
+            result.add("--team");
+        }
+        return result;
+    }
+
+    private static void addValidModes(final List<String> list, final Arena arena) {
+        if (arena == null) {
+            return;
+        }
+        final int teamCount = arena.getTeams().size();
+        for (final ArenaMode mode : ArenaMode.values()) {
+            if (mode.isValidFor(teamCount)) {
+                list.add(mode.name().toLowerCase());
+            }
+        }
+    }
+
+    private static void addTeams(final List<String> list, final Arena arena) {
+        if (arena == null) {
+            return;
+        }
+        for (final ArenaTeam team : arena.getTeams()) {
+            list.add(team.getName());
+        }
     }
 }

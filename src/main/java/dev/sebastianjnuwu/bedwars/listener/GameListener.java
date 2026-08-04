@@ -7,6 +7,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,6 +18,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -425,6 +427,14 @@ public class GameListener implements Listener {
         }
         if (!game.isPlaying(player)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPrepareCraft(final PrepareItemCraftEvent event) {
+        final HumanEntity viewer = event.getView().getPlayer();
+        if (viewer instanceof final Player player && this.gameManager.isInGame(player)) {
+            event.getInventory().setResult(null);
         }
     }
 
