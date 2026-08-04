@@ -398,16 +398,15 @@ public class ShopGui implements InventoryHolder {
         removeCurrency(player, currencyMaterial, price);
 
         // Handle upgrades
+        ItemStack bought = item.createItemStack();
         if (item.getUpgrade() != null) {
             handleUpgrade(item);
-        }
-
-        // Give items
-        ItemStack bought = item.createItemStack();
-        Map<Integer, ItemStack> leftover = player.getInventory().addItem(bought);
-        if (!leftover.isEmpty()) {
-            for (ItemStack drop : leftover.values()) {
-                player.getWorld().dropItem(player.getLocation(), drop);
+        } else {
+            Map<Integer, ItemStack> leftover = player.getInventory().addItem(bought);
+            if (!leftover.isEmpty()) {
+                for (ItemStack drop : leftover.values()) {
+                    player.getWorld().dropItem(player.getLocation(), drop);
+                }
             }
         }
 
