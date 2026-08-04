@@ -57,7 +57,7 @@ public class SlimeManager {
         try {
             AdvancedSlimePaperAPI.instance();
             return true;
-        } catch (final Exception e) {
+        } catch (final Throwable e) {
             return false;
         }
     }
