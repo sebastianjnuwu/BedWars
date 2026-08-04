@@ -160,7 +160,7 @@ admin:
 
 # ── game ──────────────────────────────
 game:
-  join_usage: "Uso: /bw join <arena> [modo|time]"
+  join_usage: "Uso: /bw join <arena> [--mode <modo>] [--team <time>]"
   mode_not_supported: "O modo {0} não é suportado por esta arena ({1}). Use /bw admin arena <arena> status para ver os modos disponíveis."
   already_in_game: "Você já está em uma partida."
   already_in_this_game: "Você já está nesta partida."

@@ -166,6 +166,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
                 completions.addAll(this.arenaManager.getNames());
             }
         } else if (args.length == 3 && args[0].equalsIgnoreCase("join")) {
+            completions.addAll(List.of("--mode", "--team"));
             final Arena teamArena = this.arenaManager.get(args[1]);
             if (teamArena != null) {
                 final int teamCount = teamArena.getTeams().size();
@@ -174,6 +175,25 @@ public class BWCommand implements CommandExecutor, TabCompleter {
                         completions.add(mode.name().toLowerCase());
                     }
                 }
+                for (final ArenaTeam at : teamArena.getTeams()) {
+                    completions.add(at.getName());
+                }
+            }
+        } else if (args.length == 4 && args[0].equalsIgnoreCase("join")
+                && List.of("--mode", "--modo").contains(args[2].toLowerCase())) {
+            final Arena modeArena = this.arenaManager.get(args[1]);
+            if (modeArena != null) {
+                final int teamCount = modeArena.getTeams().size();
+                for (final ArenaMode mode : ArenaMode.values()) {
+                    if (mode.isValidFor(teamCount)) {
+                        completions.add(mode.name().toLowerCase());
+                    }
+                }
+            }
+        } else if (args.length == 4 && args[0].equalsIgnoreCase("join")
+                && List.of("--team", "--time").contains(args[2].toLowerCase())) {
+            final Arena teamArena = this.arenaManager.get(args[1]);
+            if (teamArena != null) {
                 for (final ArenaTeam at : teamArena.getTeams()) {
                     completions.add(at.getName());
                 }

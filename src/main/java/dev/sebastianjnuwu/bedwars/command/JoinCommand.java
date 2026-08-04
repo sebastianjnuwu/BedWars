@@ -56,14 +56,16 @@ public class JoinCommand extends BaseCommand {
      * <p>
      * Verifica se o remetente é um {@link Player}. Se não for, envia uma mensagem
      * de erro. Se os argumentos forem insuficientes (menos de dois), exibe o uso
-     * correto. Se um terceiro argumento for fornecido, ele é interpretado como
-     * {@link ArenaMode} quando reconhecível; caso contrário, como o nome do time
-     * desejado; quando nenhum é fornecido, a seleção é automática em partida livre.
+     * correto. O segundo argumento é o nome da arena. Os argumentos seguintes podem
+     * usar as flags opcionais {@code --mode <modo>} e {@code --team <time>} (em
+     * qualquer ordem). Como fallback, argumentos posicionais são interpretados como
+     * {@link ArenaMode} quando reconhecíveis e como nome do time caso contrário.
+     * Quando nenhum é fornecido, a seleção é automática em partida livre.
      * </p>
      *
      * @param sender o remetente do comando (pode ser console)
      * @param args   argumentos do comando; espera-se {@code args[1]} como nome da arena
-     *               e opcionalmente {@code args[2]} como modo ou nome do time (não nulo)
+     *               e opcionalmente flags {@code --mode} e {@code --team} (não nulo)
      */
     public void execute(final CommandSender sender, final @NotNull String @NotNull [] args) {
         if (!(sender instanceof final Player player)) {
@@ -74,15 +76,34 @@ public class JoinCommand extends BaseCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.join_usage"));
             return;
         }
-        if (args.length >= 3) {
-            final ArenaMode mode = ArenaMode.fromAlias(args[2]);
-            if (mode != null) {
-                this.gameManager.joinGame(player, args[1], mode);
-            } else {
-                this.gameManager.joinGame(player, args[1], args[2]);
+
+        final String arenaName = args[1];
+        String teamName = null;
+        String modeArg = null;
+        boolean positional = true;
+        for (int i = 2; i < args.length; i++) {
+            final String arg = args[i];
+            if (arg.equalsIgnoreCase("--mode") || arg.equalsIgnoreCase("--modo")) {
+                if (i + 1 < args.length) {
+                    modeArg = args[++i];
+                    positional = false;
+                }
+            } else if (arg.equalsIgnoreCase("--team") || arg.equalsIgnoreCase("--time")) {
+                if (i + 1 < args.length) {
+                    teamName = args[++i];
+                    positional = false;
+                }
+            } else if (positional) {
+                final ArenaMode mode = ArenaMode.fromAlias(arg);
+                if (mode != null) {
+                    modeArg = arg;
+                } else {
+                    teamName = arg;
+                }
             }
-        } else {
-            this.gameManager.joinGame(player, args[1], (String) null);
         }
+
+        final ArenaMode mode = modeArg != null ? ArenaMode.fromAlias(modeArg) : null;
+        this.gameManager.joinGame(player, arenaName, teamName, mode, true);
     }
 }
