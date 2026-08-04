@@ -85,6 +85,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Map<ArenaGenerator, long[]> generatorTicks;
     private final Map<String, long[]> forgeTicks;
     private final Map<UUID, Integer> respawnTicks;
+    private final Set<String> placedBlocks;
     private GameState state;
     private BukkitTask gameTickTask;
     private int tick;
@@ -119,6 +120,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.generatorTicks = new HashMap<>();
         this.forgeTicks = new HashMap<>();
         this.respawnTicks = new HashMap<>();
+        this.placedBlocks = new HashSet<>();
         this.savedInventories = new HashMap<>();
         this.savedArmor = new HashMap<>();
         this.state = GameState.WAITING;
@@ -182,7 +184,20 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public boolean isPlaying(final Player player) {
         final GamePlayer gp = this.players.get(player.getUniqueId());
-        return gp != null && gp.isAlive();
+        return gp != null && gp.isAlive() && this.state == GameState.PLAYING;
+    }
+
+    public void trackPlacedBlock(final Location location) {
+        this.placedBlocks.add(blockKey(location));
+    }
+
+    public boolean isPlacedBlock(final Location location) {
+        return this.placedBlocks.contains(blockKey(location));
+    }
+
+    private static String blockKey(final Location location) {
+        return location.getWorld().getName() + ":" + location.getBlockX()
+                + ":" + location.getBlockY() + ":" + location.getBlockZ();
     }
 
     public void join(final Player player) {
@@ -1211,6 +1226,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.teams.values().forEach(List::clear);
         this.eliminatedTeams.clear();
         this.bedlessTeams.clear();
+        this.placedBlocks.clear();
         this.gameManager.removeGame(this.arena.getWorldName());
     }
 

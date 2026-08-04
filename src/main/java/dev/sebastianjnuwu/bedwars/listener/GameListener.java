@@ -225,6 +225,9 @@ public class GameListener implements Listener {
 
         final Block block = event.getBlock();
         if (!(block.getBlockData() instanceof final Bed bedData)) {
+            if (!game.isPlacedBlock(block.getLocation())) {
+                event.setCancelled(true);
+            }
             return;
         }
 
@@ -435,7 +438,9 @@ public class GameListener implements Listener {
         }
         if (!game.isPlaying(player)) {
             event.setCancelled(true);
+            return;
         }
+        game.trackPlacedBlock(event.getBlockPlaced().getLocation());
     }
 
     /**

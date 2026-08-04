@@ -21,6 +21,10 @@ public interface Game {
 
     boolean isPlaying(Player player);
 
+    void trackPlacedBlock(org.bukkit.Location location);
+
+    boolean isPlacedBlock(org.bukkit.Location location);
+
     int getPlayerCount();
 
     Collection<GamePlayer> getGamePlayers();
