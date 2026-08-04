@@ -163,19 +163,13 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
         Game game = this.findOpenGame(arenaName, mode);
         if (game == null) {
+            final Game active = this.findFirstByArenaName(arenaName);
+            if (active != null && active.getState() != GameState.WAITING && active.getState() != GameState.STARTING) {
+                active.joinAsSpectator(player);
+                this.playerGames.put(player.getUniqueId(), active);
+                return;
+            }
             this.enqueueJoin(player, arenaName, teamName, mode, teleport);
-            return;
-        }
-
-        if (game.getState() == GameState.ENDING) {
-            game.joinAsSpectator(player);
-            this.playerGames.put(player.getUniqueId(), game);
-            return;
-        }
-
-        if (game.getState() != GameState.WAITING && game.getState() != GameState.STARTING) {
-            game.joinAsSpectator(player);
-            this.playerGames.put(player.getUniqueId(), game);
             return;
         }
 

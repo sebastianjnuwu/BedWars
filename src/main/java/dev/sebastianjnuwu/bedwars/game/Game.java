@@ -156,7 +156,21 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         this.debug("debug.player_spectator", player.getName(), this.arena.getName());
-        this.leave(player);
+        this.spectators.add(player.getUniqueId());
+        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
+        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.setGameMode(GameMode.SPECTATOR);
+        player.setHealth(20);
+        player.setFoodLevel(20);
+        player.getInventory().setItem(8, createExitDoorItem());
+
+        final Location spawn = this.arena.getArenaSpawn();
+        if (spawn != null) {
+            LocationUtil.safeTeleport(player, spawn);
+        }
     }
 
     private void debug(final String key, final Object... args) {
@@ -1040,6 +1054,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                         if (player == null) {
                             continue;
                         }
+                        restoreInventory(player);
                         if (lobby != null && lobby.getWorld() != null) {
                             player.teleport(lobby);
                         } else if (fallback != null) {
@@ -1176,6 +1191,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public void forceEnd() {
         if (this.state == GameState.ENDING) {
+            this.cleanupPlayersAndClose();
             return;
         }
         this.stopGameTick();
@@ -1187,6 +1203,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.state = GameState.ENDING;
         this.debug("debug.game_force_ended", this.arena.getName());
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, prev, GameState.ENDING));
+        this.cleanupPlayersAndClose();
+    }
+
+    private void cleanupPlayersAndClose() {
+        final Location lobby = this.gameManager.getConfigManager().getLobby();
         for (final var entry : this.teams.entrySet()) {
             for (final UUID uuid : entry.getValue()) {
                 final Player player = Bukkit.getPlayer(uuid);
@@ -1194,7 +1215,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                     continue;
                 }
                 restoreInventory(player);
-                final Location lobby = this.gameManager.getConfigManager().getLobby();
                 if (lobby != null && lobby.getWorld() != null) {
                     player.teleport(lobby);
                 } else if (!Bukkit.getWorlds().isEmpty()) {
@@ -1205,7 +1225,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 this.gameManager.removePlayerMapping(player);
             }
         }
-        final Location lobby = this.gameManager.getConfigManager().getLobby();
         for (final UUID uuid : this.spectators) {
             final Player player = Bukkit.getPlayer(uuid);
             if (player == null) {
