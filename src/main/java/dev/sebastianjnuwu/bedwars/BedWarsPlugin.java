@@ -69,7 +69,7 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
                     this.getLogger(),
                     this.lang
             );
-            this.getServer().getScheduler().runTaskLater(this, checker::check, 1L);
+            this.getServer().getScheduler().runTaskAsynchronously(this, checker::check);
         } else {
             this.getLogger().info(this.lang.raw("version_check.disabled"));
         }

@@ -1145,7 +1145,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
 
         if (config.contains("enable-cmd")) {
-            arena.setEnabledCommands(config.getStringList("enable-cmd"));
+            arena.setEnabledCommands(this.parseEnabledCommands(config.get("enable-cmd")));
         }
 
         if (config.contains("shop_npcs")) {
@@ -1245,6 +1245,38 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             case "emerald" -> Material.EMERALD;
             default -> null;
         };
+    }
+
+    private static List<String> parseEnabledCommands(final Object raw) {
+        List<String> commands = new java.util.ArrayList<>();
+        if (raw instanceof List<?> list) {
+            for (final Object item : list) {
+                final String cmd = normalizeEnabledCommand(item);
+                if (cmd != null) {
+                    commands.add(cmd);
+                }
+            }
+        } else {
+            final String cmd = normalizeEnabledCommand(raw);
+            if (cmd != null) {
+                commands.add(cmd);
+            }
+        }
+        return commands;
+    }
+
+    private static @Nullable String normalizeEnabledCommand(final Object raw) {
+        if (raw == null) {
+            return null;
+        }
+        String cmd = String.valueOf(raw).trim();
+        if (cmd.startsWith("/")) {
+            cmd = cmd.substring(1);
+        }
+        if (cmd.isEmpty()) {
+            return null;
+        }
+        return cmd.toLowerCase();
     }
 
     private String serializeLocation(final Location loc) {
