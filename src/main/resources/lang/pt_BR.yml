@@ -181,6 +181,7 @@ game:
   leave_success: "Você saiu da partida."
   start_usage: "Uso: /bw start <arena>"
   countdown_cancelled: "Contagem cancelada. Jogadores insuficientes."
+  countdown_need_teams: "Contagem cancelada. Jogadores em pelo menos 2 times diferentes são necessários."
   started: "PARTIDA INICIADA!"
   bed_broken: "CAMA DO TIME {0} FOI DESTRUIDA!"
   team_eliminated: "TIME {0} FOI ELIMINADO!"

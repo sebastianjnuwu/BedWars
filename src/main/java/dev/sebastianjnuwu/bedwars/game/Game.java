@@ -298,10 +298,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
         }
 
-        if (this.state == GameState.WAITING && this.gameTickTask == null
-            && count >= this.arena.getMinPlayers()) {
-            this.startCountdown();
-        }
+        this.updateCountdownState();
     }
 
     public void switchTeam(final Player player, final String teamName) {
@@ -334,6 +331,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         applyTeamArmor(player, newTeam);
         player.getInventory().setItem(0, createTeamSelectorItem(newTeam));
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.switched_team", newTeam.getName()));
+        this.updateCountdownState();
     }
 
     public void leave(final Player player) {
@@ -401,9 +399,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         Bukkit.getPluginManager().callEvent(new PlayerLeaveGameEvent(this, player));
 
-        if (this.state == GameState.STARTING && this.players.size() < this.arena.getMinPlayers()) {
-            this.cancelCountdown();
-        }
+        this.updateCountdownState();
 
         if (this.bedlessTeams.contains(team) && this.getAliveCount(team) == 0) {
             this.eliminateTeam(team);
@@ -414,6 +410,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public void start() {
         if (this.state != GameState.WAITING && this.state != GameState.STARTING) {
+            return;
+        }
+        if (!this.hasAtLeastTwoTeams()) {
+            this.cancelCountdown();
             return;
         }
         final GameState prevState = this.state;
@@ -790,6 +790,41 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.startGameTick();
         this.debug("debug.countdown_started", this.arena.getName(),
                 this.countdownSeconds, this.players.size());
+    }
+
+    private boolean hasAtLeastTwoTeams() {
+        int filledTeams = 0;
+        for (final var entry : this.teams.entrySet()) {
+            if (!entry.getValue().isEmpty()) {
+                filledTeams++;
+            }
+        }
+        return filledTeams >= 2;
+    }
+
+    private void updateCountdownState() {
+        if (this.state != GameState.WAITING && this.state != GameState.STARTING) {
+            return;
+        }
+        if (this.players.size() < this.arena.getMinPlayers()) {
+            this.cancelCountdown();
+            return;
+        }
+        if (!this.hasAtLeastTwoTeams()) {
+            if (this.state == GameState.STARTING) {
+                this.cancelCountdown();
+                final Component msg = this.lang.text(NamedTextColor.RED, "game.countdown_need_teams");
+                Bukkit.getOnlinePlayers().forEach(p -> {
+                    if (this.players.containsKey(p.getUniqueId())) {
+                        p.sendMessage(msg);
+                    }
+                });
+            }
+            return;
+        }
+        if (this.state == GameState.WAITING && this.gameTickTask == null) {
+            this.startCountdown();
+        }
     }
 
     private void cancelCountdown() {
