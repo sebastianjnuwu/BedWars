@@ -93,36 +93,61 @@ generator_config:
 
 # ── Níveis da fornalha ──
 forge:
+  level-default: 1
   max-level: 10
+
   levels:
     1:
+      upgrade:
+        price: 3
+        material: iron
       iron_ingot:
         interval: 20
+
     2:
+      upgrade:
+        price: 5
+        material: iron
       iron_ingot:
         interval: 18
       gold_ingot:
         interval: 100
+
     3:
+      upgrade:
+        price: 8
+        material: iron
       iron_ingot:
         interval: 16
       gold_ingot:
         interval: 90
+
     4:
+      upgrade:
+        price: 10
+        material: iron
       iron_ingot:
         interval: 14
       gold_ingot:
         interval: 80
       diamond:
         interval: 1200
+
     5:
+      upgrade:
+        price: 15
+        material: iron
       iron_ingot:
         interval: 12
       gold_ingot:
         interval: 70
       diamond:
         interval: 1000
+
     6:
+      upgrade:
+        price: 20
+        material: gold
       iron_ingot:
         interval: 10
       gold_ingot:
@@ -131,7 +156,11 @@ forge:
         interval: 800
       emerald:
         interval: 2400
+
     7:
+      upgrade:
+        price: 25
+        material: gold
       iron_ingot:
         interval: 8
       gold_ingot:
@@ -140,7 +169,11 @@ forge:
         interval: 700
       emerald:
         interval: 2000
+
     8:
+      upgrade:
+        price: 30
+        material: gold
       iron_ingot:
         interval: 6
       gold_ingot:
@@ -149,7 +182,11 @@ forge:
         interval: 600
       emerald:
         interval: 1600
+
     9:
+      upgrade:
+        price: 40
+        material: gold
       iron_ingot:
         interval: 5
       gold_ingot:
@@ -158,6 +195,7 @@ forge:
         interval: 500
       emerald:
         interval: 1400
+
     10:
       iron_ingot:
         interval: 4

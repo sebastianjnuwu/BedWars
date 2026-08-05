@@ -16,12 +16,15 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import dev.sebastianjnuwu.bedwars.api.events.PlayerPurchaseEvent;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
@@ -294,17 +297,26 @@ public class ShopGui implements InventoryHolder {
         applyTeamColor(stack);
         ItemMeta meta = stack.getItemMeta();
 
-        // Add price lore
-        String currencyName = switch (item.getCurrency()) {
-            case IRON -> this.lang.raw("shop.currency_iron");
-            case GOLD -> this.lang.raw("shop.currency_gold");
-            case DIAMOND -> this.lang.raw("shop.currency_diamond");
-            case EMERALD -> this.lang.raw("shop.currency_emerald");
-        };
-
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
         lore.add(Component.empty());
-        lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(item.getPrice()), currencyName)));
+
+        if ("forge".equals(item.getUpgrade())) {
+            final ForgeLevel next = forgeUpgradeLevel();
+            if (next == null || next.upgradeMaterial() == null) {
+                lore.add(MM.deserialize(this.lang.raw("shop.forge_maxed")));
+            } else {
+                lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(next.upgradePrice()), this.currencyName(next.upgradeMaterial()))));
+                lore.add(MM.deserialize(this.lang.raw("shop.forge_next_level", String.valueOf(next.level()))));
+            }
+        } else {
+            String currencyName = switch (item.getCurrency()) {
+                case IRON -> this.lang.raw("shop.currency_iron");
+                case GOLD -> this.lang.raw("shop.currency_gold");
+                case DIAMOND -> this.lang.raw("shop.currency_diamond");
+                case EMERALD -> this.lang.raw("shop.currency_emerald");
+            };
+            lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(item.getPrice()), currencyName)));
+        }
 
         if (item.getUpgrade() != null) {
             lore.add(MM.deserialize(this.lang.raw("shop.team_upgrade")));
@@ -386,18 +398,31 @@ public class ShopGui implements InventoryHolder {
             return;
         }
 
-        Material currencyMaterial = switch (item.getCurrency()) {
-            case IRON -> Material.IRON_INGOT;
-            case GOLD -> Material.GOLD_INGOT;
-            case DIAMOND -> Material.DIAMOND;
-            case EMERALD -> Material.EMERALD;
-        };
+        final Material currencyMaterial;
+        final int price;
+        if ("forge".equals(item.getUpgrade())) {
+            final ForgeLevel next = forgeUpgradeLevel();
+            if (next == null || next.upgradeMaterial() == null) {
+                player.sendMessage(MM.deserialize(this.lang.raw("shop.forge_maxed")));
+                player.closeInventory();
+                return;
+            }
+            price = next.upgradePrice();
+            currencyMaterial = next.upgradeMaterial();
+        } else {
+            currencyMaterial = switch (item.getCurrency()) {
+                case IRON -> Material.IRON_INGOT;
+                case GOLD -> Material.GOLD_INGOT;
+                case DIAMOND -> Material.DIAMOND;
+                case EMERALD -> Material.EMERALD;
+            };
+            price = item.getPrice();
+        }
 
-        int price = item.getPrice();
         int has = countCurrency(player, currencyMaterial);
 
         if (has < price) {
-            player.sendMessage(MM.deserialize(this.lang.raw("shop.not_enough", item.getCurrency().name().toLowerCase())));
+            player.sendMessage(MM.deserialize(this.lang.raw("shop.not_enough", currencyMaterial.name().toLowerCase())));
             player.closeInventory();
             return;
         }
@@ -454,6 +479,37 @@ public class ShopGui implements InventoryHolder {
                 // Other upgrades can be implemented later
             }
         }
+    }
+
+    private @Nullable ForgeLevel forgeUpgradeLevel() {
+        final ArenaGenerator forge = findPlayerForge();
+        if (forge == null) {
+            return null;
+        }
+        return this.game.getForgeUpgradeLevel(forge);
+    }
+
+    private @Nullable ArenaGenerator findPlayerForge() {
+        final ArenaTeam team = this.game.getPlayerTeam(this.player);
+        if (team == null) {
+            return null;
+        }
+        for (final ArenaGenerator gen : this.game.getArena().getGenerators()) {
+            if (gen.getType().equalsIgnoreCase("forge") && team.getName().equalsIgnoreCase(gen.getTeam())) {
+                return gen;
+            }
+        }
+        return null;
+    }
+
+    private String currencyName(final Material material) {
+        return switch (material) {
+            case IRON_INGOT -> this.lang.raw("shop.currency_iron");
+            case GOLD_INGOT -> this.lang.raw("shop.currency_gold");
+            case DIAMOND -> this.lang.raw("shop.currency_diamond");
+            case EMERALD -> this.lang.raw("shop.currency_emerald");
+            default -> this.lang.raw("shop.currency_diamond");
+        };
     }
 
     private int countCurrency(Player player, Material material) {

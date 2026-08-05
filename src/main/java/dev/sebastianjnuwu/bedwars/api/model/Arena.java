@@ -134,6 +134,10 @@ public interface Arena {
 
     void setForgeMaxLevel(int maxLevel);
 
+    int getForgeDefaultLevel();
+
+    void setForgeDefaultLevel(int defaultLevel);
+
     List<ForgeLevel> getForgeLevels();
 
     void setForgeLevels(List<ForgeLevel> levels);

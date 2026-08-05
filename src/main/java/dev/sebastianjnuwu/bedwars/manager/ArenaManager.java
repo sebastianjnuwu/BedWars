@@ -797,8 +797,13 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
         // Forge levels
         config.set("forge.max-level", arena.getForgeMaxLevel());
+        config.set("forge.level-default", arena.getForgeDefaultLevel());
         for (ForgeLevel fl : arena.getForgeLevels()) {
             String levelPath = "forge.levels." + fl.level();
+            if (fl.upgradeMaterial() != null && fl.upgradePrice() > 0) {
+                config.set(levelPath + ".upgrade.price", fl.upgradePrice());
+                config.set(levelPath + ".upgrade.material", fl.upgradeMaterial().name().toLowerCase().replace("_ingot", ""));
+            }
             for (var entry : fl.intervals().entrySet()) {
                 config.set(levelPath + "." + entry.getKey().name().toLowerCase() + ".interval", entry.getValue());
             }
@@ -940,16 +945,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         arena.setGeneratorConfigs(genConfigs);
         // Default forge levels
         arena.setForgeMaxLevel(10);
+        arena.setForgeDefaultLevel(1);
         List<ForgeLevel> forgeLevels = new java.util.ArrayList<>();
-        forgeLevels.add(new ForgeLevel(1, Map.of(Material.IRON_INGOT, 20L)));
-        forgeLevels.add(new ForgeLevel(2, Map.of(Material.IRON_INGOT, 18L, Material.GOLD_INGOT, 100L)));
-        forgeLevels.add(new ForgeLevel(3, Map.of(Material.IRON_INGOT, 16L, Material.GOLD_INGOT, 90L)));
-        forgeLevels.add(new ForgeLevel(4, Map.of(Material.IRON_INGOT, 14L, Material.GOLD_INGOT, 80L, Material.DIAMOND, 1200L)));
-        forgeLevels.add(new ForgeLevel(5, Map.of(Material.IRON_INGOT, 12L, Material.GOLD_INGOT, 70L, Material.DIAMOND, 1000L)));
-        forgeLevels.add(new ForgeLevel(6, Map.of(Material.IRON_INGOT, 10L, Material.GOLD_INGOT, 60L, Material.DIAMOND, 800L, Material.EMERALD, 2400L)));
-        forgeLevels.add(new ForgeLevel(7, Map.of(Material.IRON_INGOT, 8L, Material.GOLD_INGOT, 50L, Material.DIAMOND, 700L, Material.EMERALD, 2000L)));
-        forgeLevels.add(new ForgeLevel(8, Map.of(Material.IRON_INGOT, 6L, Material.GOLD_INGOT, 40L, Material.DIAMOND, 600L, Material.EMERALD, 1600L)));
-        forgeLevels.add(new ForgeLevel(9, Map.of(Material.IRON_INGOT, 5L, Material.GOLD_INGOT, 30L, Material.DIAMOND, 500L, Material.EMERALD, 1400L)));
+        forgeLevels.add(new ForgeLevel(1, Map.of(Material.IRON_INGOT, 20L), 3, Material.IRON_INGOT));
+        forgeLevels.add(new ForgeLevel(2, Map.of(Material.IRON_INGOT, 18L, Material.GOLD_INGOT, 100L), 5, Material.IRON_INGOT));
+        forgeLevels.add(new ForgeLevel(3, Map.of(Material.IRON_INGOT, 16L, Material.GOLD_INGOT, 90L), 8, Material.IRON_INGOT));
+        forgeLevels.add(new ForgeLevel(4, Map.of(Material.IRON_INGOT, 14L, Material.GOLD_INGOT, 80L, Material.DIAMOND, 1200L), 10, Material.IRON_INGOT));
+        forgeLevels.add(new ForgeLevel(5, Map.of(Material.IRON_INGOT, 12L, Material.GOLD_INGOT, 70L, Material.DIAMOND, 1000L), 15, Material.IRON_INGOT));
+        forgeLevels.add(new ForgeLevel(6, Map.of(Material.IRON_INGOT, 10L, Material.GOLD_INGOT, 60L, Material.DIAMOND, 800L, Material.EMERALD, 2400L), 20, Material.GOLD_INGOT));
+        forgeLevels.add(new ForgeLevel(7, Map.of(Material.IRON_INGOT, 8L, Material.GOLD_INGOT, 50L, Material.DIAMOND, 700L, Material.EMERALD, 2000L), 25, Material.GOLD_INGOT));
+        forgeLevels.add(new ForgeLevel(8, Map.of(Material.IRON_INGOT, 6L, Material.GOLD_INGOT, 40L, Material.DIAMOND, 600L, Material.EMERALD, 1600L), 30, Material.GOLD_INGOT));
+        forgeLevels.add(new ForgeLevel(9, Map.of(Material.IRON_INGOT, 5L, Material.GOLD_INGOT, 30L, Material.DIAMOND, 500L, Material.EMERALD, 1400L), 40, Material.GOLD_INGOT));
         forgeLevels.add(new ForgeLevel(10, Map.of(Material.IRON_INGOT, 4L, Material.GOLD_INGOT, 20L, Material.DIAMOND, 400L, Material.EMERALD, 1200L)));
         arena.setForgeLevels(forgeLevels);
         this.arenas.put(name, arena);
@@ -1178,6 +1184,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
         if (config.contains("forge")) {
             arena.setForgeMaxLevel(config.getInt("forge.max-level", 10));
+            arena.setForgeDefaultLevel(config.getInt("forge.level-default", 1));
             List<ForgeLevel> levels = new java.util.ArrayList<>();
             ConfigurationSection forgeLevels = config.getConfigurationSection("forge.levels");
             if (forgeLevels != null) {
@@ -1200,7 +1207,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                             }
                         }
                         if (!intervals.isEmpty()) {
-                            levels.add(new ForgeLevel(level, intervals));
+                            int upgradePrice = config.getInt(levelPath + ".upgrade.price", 0);
+                            Material upgradeMaterial = forgeCurrencyMaterial(config.getString(levelPath + ".upgrade.material"));
+                            levels.add(new ForgeLevel(level, intervals, upgradePrice, upgradeMaterial));
                         }
                     } catch (NumberFormatException ignored) {
                     }
@@ -1217,6 +1226,19 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             this.diskConfigs.put(name, config);
         }
         return arena;
+    }
+
+    private static @Nullable Material forgeCurrencyMaterial(final @Nullable String name) {
+        if (name == null) {
+            return null;
+        }
+        return switch (name.trim().toLowerCase()) {
+            case "iron", "iron_ingot" -> Material.IRON_INGOT;
+            case "gold", "gold_ingot" -> Material.GOLD_INGOT;
+            case "diamond" -> Material.DIAMOND;
+            case "emerald" -> Material.EMERALD;
+            default -> null;
+        };
     }
 
     private String serializeLocation(final Location loc) {

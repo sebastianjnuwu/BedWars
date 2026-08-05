@@ -47,6 +47,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private String shop;
     private Map<String, GeneratorConfig> generatorConfigs;
     private int forgeMaxLevel;
+    private int forgeDefaultLevel;
     private List<ForgeLevel> forgeLevels;
     private List<ShopNpc> shopNpcs;
     private final List<ArenaTeam> teams;
@@ -434,6 +435,14 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.forgeMaxLevel = maxLevel;
     }
 
+    public int getForgeDefaultLevel() {
+        return forgeDefaultLevel;
+    }
+
+    public void setForgeDefaultLevel(int defaultLevel) {
+        this.forgeDefaultLevel = defaultLevel;
+    }
+
     public List<ForgeLevel> getForgeLevels() {
         return forgeLevels;
     }
@@ -515,6 +524,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         copy.shop = this.shop;
         copy.generatorConfigs = this.generatorConfigs != null ? new HashMap<>(this.generatorConfigs) : new HashMap<>();
         copy.forgeMaxLevel = this.forgeMaxLevel;
+        copy.forgeDefaultLevel = this.forgeDefaultLevel;
         copy.forgeLevels = this.forgeLevels != null ? new ArrayList<>(this.forgeLevels) : new ArrayList<>();
         copy.shopNpcs = this.shopNpcs != null ? new ArrayList<>(this.shopNpcs) : new ArrayList<>();
         for (final ArenaGenerator gen : this.generators) {

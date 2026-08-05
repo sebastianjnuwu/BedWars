@@ -50,6 +50,7 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.DeathCause;
+import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
@@ -502,6 +503,20 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.forgeLevels.getOrDefault(forge, 0);
     }
 
+    public @Nullable ForgeLevel getForgeUpgradeLevel(final ArenaGenerator forge) {
+        final int next = this.getForgeLevel(forge) + 1;
+        final List<ForgeLevel> levels = this.arena.getForgeLevels();
+        if (levels == null) {
+            return null;
+        }
+        for (final ForgeLevel fl : levels) {
+            if (fl.level() == next) {
+                return fl;
+            }
+        }
+        return null;
+    }
+
     public boolean upgradeForge(final ArenaGenerator forge) {
         final Integer level = this.forgeLevels.get(forge);
         if (level == null || level >= this.getForgeMaxLevel()) {
@@ -551,8 +566,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 this.gameManager.getPlugin().getLogger().warning(this.lang.raw("log.game.forge_skipped", forge.getUniqueId()));
                 continue;
             }
-            this.forgeLevels.put(forge, 1);
-            this.putForgeTicks(forge, 1);
+            this.forgeLevels.put(forge, Math.max(1, this.arena.getForgeDefaultLevel()));
+            this.putForgeTicks(forge, this.forgeLevels.get(forge));
         }
 
     }
