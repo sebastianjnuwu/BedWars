@@ -869,10 +869,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
     /**
      * Grava uma localização, preservando o valor anterior quando ela está null
-     * apenas porque o mundo referenciado ainda não foi carregado. Isso evita que
-     * um flush/save com o mundo descarregado remova permanentemente as chaves
-     * do arquivo. Remoções intencionais (feitas com o mundo carregado) continuam
-     * sendo persistidas como null.
+     * no cache (arena ainda sem mundo resolvido). Isso evita que um flush/save
+     * com referências não resolvidas remova permanentemente as chaves do arquivo,
+     * mesmo quando o mundo referenciado já está carregado.
      */
     private void writeLocation(final YamlConfiguration config, final YamlConfiguration disk,
                                final String path, final Location loc) {
@@ -883,11 +882,8 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (disk != null && disk.contains(path)) {
             final String stored = disk.getString(path);
             if (stored != null && !stored.isBlank()) {
-                final String storedWorld = stored.split(",", 2)[0];
-                if (Bukkit.getWorld(storedWorld) == null) {
-                    config.set(path, stored);
-                    return;
-                }
+                config.set(path, stored);
+                return;
             }
         }
         config.set(path, null);
