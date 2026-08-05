@@ -474,6 +474,8 @@ public class ShopGui implements InventoryHolder {
         Bukkit.getPluginManager().callEvent(purchaseEvent);
 
         player.sendMessage(MM.deserialize(this.lang.raw("shop.purchased")));
+
+        this.render();
     }
 
     private void handleUpgrade(ShopItem item) {
