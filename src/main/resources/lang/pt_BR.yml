@@ -82,6 +82,7 @@ no_lobby: "O lobby global não foi definido. Use /bw admin setlobby primeiro."
 admin:
   usage: "Uso: /bw admin <create|delete|list|save|load|edit|discard|setlobby|arena|reload>"
   unknown: "Subcomando admin desconhecido: {0}"
+  no_permission: "Você não tem permissão para executar este comando."
   reload_success: "Reload concluído! {0} arena(s) carregada(s)."
   setlobby:
     only_player: "Apenas jogadores podem definir o lobby."

@@ -2,25 +2,24 @@ name: ${project.name}
 version: ${project.version}
 main: dev.sebastianjnuwu.bedwars.BedWarsPlugin
 api-version: 1.21
-author: sebastianjnuwu
+authors: ${project.developers}
 softdepend: [WorldEdit, FancyNpcs]
 description: Plugin de sBedWars para Paper 1.21.4 usando SlimeWorld
 website: https://github.com/sebastianjnuwu
 
 commands:
   bw:
-    description: Comando principal do BedWars
-    aliases: [bedwars]
+    aliases:
+      - bedwars
     permission: bw.player
-    permission-message: Você não tem permissão para usar este comando.
+
   spawn:
-    description: Teleporta ao lobby do BedWars
-    aliases: [lobby]
+    aliases:
+      - lobby
 
 permissions:
   bw.admin:
-    description: Permissão para comandos administrativos
     default: op
+
   bw.player:
-    description: Permissão para jogar BedWars
     default: true

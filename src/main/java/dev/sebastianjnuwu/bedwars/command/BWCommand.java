@@ -26,8 +26,8 @@ import dev.sebastianjnuwu.bedwars.session.EditorManager;
  * Comando principal do BedWars (<b>/bw</b>).
  * <p>
  * Implementa {@link CommandExecutor} e {@link TabCompleter} para rotear
- * subcomandos como "admin", "join", "leave" e "start". Delega a execução
- * para instâncias especializadas ({@link JoinCommand}, {@link LeaveCommand},
+ * subcomandos como "admin", "join", "leave" e "start". Delega a execução para
+ * instâncias especializadas ({@link JoinCommand}, {@link LeaveCommand},
  * {@link StartCommand} e {@link AdminCommand}) e fornece sugestões de
  * tab-completion contextuais.
  * </p><p>
@@ -53,14 +53,15 @@ public class BWCommand implements CommandExecutor, TabCompleter {
     private final ArenaManager arenaManager;
 
     /**
-     * Construtor que cria todas as instâncias de subcomandos com as dependências fornecidas.
+     * Construtor que cria todas as instâncias de subcomandos com as
+     * dependências fornecidas.
      *
-     * @param arenaManager  gerenciador de arenas (não nulo)
+     * @param arenaManager gerenciador de arenas (não nulo)
      * @param editorManager gerenciador de edição de sessão (não nulo)
      * @param configManager gerenciador de configuração (não nulo)
-     * @param gameManager   gerenciador da lógica do jogo (não nulo)
-     * @param lang          gerenciador de internacionalização (não nulo)
-     * @param mapsFolder    diretório de mapas (não nulo)
+     * @param gameManager gerenciador da lógica do jogo (não nulo)
+     * @param lang gerenciador de internacionalização (não nulo)
+     * @param mapsFolder diretório de mapas (não nulo)
      */
     public BWCommand(
             final ArenaManager arenaManager,
@@ -81,17 +82,17 @@ public class BWCommand implements CommandExecutor, TabCompleter {
     /**
      * Executa o comando principal.
      * <p>
-     * Se nenhum argumento for fornecido, envia uma mensagem de uso. Caso contrário,
-     * roteia para o subcomando correspondente com base no primeiro argumento
-     * (case-insensitive). Subcomandos reconhecidos: {@code admin}, {@code join},
-     * {@code leave} e {@code start}. Para qualquer outro valor, exibe uma mensagem
-     * de subcomando desconhecido.
+     * Se nenhum argumento for fornecido, envia uma mensagem de uso. Caso
+     * contrário, roteia para o subcomando correspondente com base no primeiro
+     * argumento (case-insensitive). Subcomandos reconhecidos: {@code admin},
+     * {@code join}, {@code leave} e {@code start}. Para qualquer outro valor,
+     * exibe uma mensagem de subcomando desconhecido.
      * </p>
      *
-     * @param sender  a entidade que enviou o comando (não nulo)
+     * @param sender a entidade que enviou o comando (não nulo)
      * @param command o objeto do comando executado (não nulo)
-     * @param label   o rótulo do comando usado (não nulo)
-     * @param args    os argumentos do comando (não nulo, pode ser vazio)
+     * @param label o rótulo do comando usado (não nulo)
+     * @param args os argumentos do comando (não nulo, pode ser vazio)
      * @return {@code true} sempre, indicando que o comando foi processado
      */
     @Override
@@ -108,6 +109,14 @@ public class BWCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase()) {
             case "admin":
+
+                if (!sender.hasPermission("bw.admin")) {
+                    sender.sendMessage(
+                            this.lang.text(NamedTextColor.RED, "admin.no_permission")
+                    );
+                    return true;
+                }
+
                 this.adminCommand.execute(sender, args);
                 break;
             case "join":
@@ -132,20 +141,25 @@ public class BWCommand implements CommandExecutor, TabCompleter {
      * <p>
      * As sugestões variam conforme a profundidade dos argumentos:
      * <ul>
-     *   <li>1 argumento: {@code admin}, {@code join}, {@code leave}, {@code start}</li>
-     *   <li>2 argumentos: subcomandos do admin ou nomes de arena para join/start</li>
-     *   <li>3 argumentos: modos válidos e times da arena (join) ou operações admin/arena</li>
-     *   <li>4 argumentos: ações da arena ({@code spawn}, {@code addteam}, etc.)</li>
-     *   <li>5 argumentos: nomes de times, tipos de gerador ou as ações do
-     *       subcomando {@code shop-npc} ({@code add}, {@code remove}, {@code list}, {@code displayname})</li>
+     * <li>1 argumento: {@code admin}, {@code join}, {@code leave},
+     * {@code start}</li>
+     * <li>2 argumentos: subcomandos do admin ou nomes de arena para
+     * join/start</li>
+     * <li>3 argumentos: modos válidos e times da arena (join) ou operações
+     * admin/arena</li>
+     * <li>4 argumentos: ações da arena ({@code spawn}, {@code addteam},
+     * etc.)</li>
+     * <li>5 argumentos: nomes de times, tipos de gerador ou as ações do
+     * subcomando {@code shop-npc} ({@code add}, {@code remove}, {@code list},
+     * {@code displayname})</li>
      * </ul>
      * Retorna uma lista vazia se nenhuma sugestão for aplicável.
      * </p>
      *
-     * @param sender  a entidade que solicitou a complementação (não nulo)
+     * @param sender a entidade que solicitou a complementação (não nulo)
      * @param command o objeto do comando (não nulo)
-     * @param label   o rótulo do comando (não nulo)
-     * @param args    os argumentos atuais (não nulo, pode ser vazio)
+     * @param label o rótulo do comando (não nulo)
+     * @param args os argumentos atuais (não nulo, pode ser vazio)
      * @return lista de Strings com as sugestões de completação (nunca nula)
      */
     @Override
