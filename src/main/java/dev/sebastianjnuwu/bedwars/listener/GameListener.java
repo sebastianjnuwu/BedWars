@@ -137,7 +137,7 @@ public class GameListener implements Listener {
             if (lobby != null) {
                 event.setRespawnLocation(lobby);
                 player.setGameMode(GameMode.SURVIVAL);
-                Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> game.leave(player));
+                Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> this.gameManager.leaveGame(player));
             }
             return;
         }

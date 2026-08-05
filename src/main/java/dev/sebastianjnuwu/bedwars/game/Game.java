@@ -79,8 +79,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Set<ArenaTeam> eliminatedTeams;
     private final Set<ArenaTeam> bedlessTeams;
     private final Set<UUID> spectators;
-    private final Map<UUID, ItemStack[]> savedInventories;
-    private final Map<UUID, ItemStack[]> savedArmor;
+    private final Map<UUID, InventorySnapshot> savedInventories;
     private final Map<ArenaGenerator, Integer> forgeLevels;
     private final Map<ArenaGenerator, long[]> generatorTicks;
     private final Map<String, long[]> forgeTicks;
@@ -122,7 +121,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.respawnTicks = new HashMap<>();
         this.placedBlocks = new HashSet<>();
         this.savedInventories = new HashMap<>();
-        this.savedArmor = new HashMap<>();
         this.state = GameState.WAITING;
         for (final ArenaTeam team : arena.getTeams()) {
             this.teams.put(team, new ArrayList<>());
@@ -157,8 +155,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         this.debug("debug.player_spectator", player.getName(), this.arena.getName());
         this.spectators.add(player.getUniqueId());
-        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
-        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+        this.saveInventory(player);
 
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
@@ -258,10 +255,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.debug("debug.player_joined", player.getName(), this.arena.getName(),
                 team.getName(), this.players.size());
 
-        Bukkit.getPluginManager().callEvent(new PlayerJoinGameEvent(this, player));
+        this.saveInventory(player);
 
-        this.savedInventories.put(player.getUniqueId(), player.getInventory().getContents());
-        this.savedArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+        Bukkit.getPluginManager().callEvent(new PlayerJoinGameEvent(this, player));
 
         if (teleport) {
             final Location spawn = this.arena.getArenaSpawn();
@@ -342,6 +338,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public void leave(final Player player) {
         if (this.state == GameState.ENDING) {
+            restoreInventory(player);
+            this.gameManager.removePlayerMapping(player);
             return;
         }
 
@@ -1331,22 +1329,26 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     /**
-     * Restaura o inventario salvo do mundo normal do jogador.
+     * Salva o inventario do mundo normal do jogador, sem sobrescrever um snapshot
+     * ja existente.
      */
-    private void restoreInventory(final Player player) {
+    private void saveInventory(final Player player) {
         final UUID uuid = player.getUniqueId();
-        final ItemStack[] contents = this.savedInventories.remove(uuid);
-        final ItemStack[] armor = this.savedArmor.remove(uuid);
-        if (contents == null && armor == null) {
+        if (this.savedInventories.containsKey(uuid)) {
             return;
         }
-        player.getInventory().clear();
-        if (contents != null) {
-            player.getInventory().setContents(contents);
+        this.savedInventories.put(uuid, new InventorySnapshot(player));
+    }
+
+    /**
+     * Restaura o inventario do mundo normal do jogador.
+     */
+    private void restoreInventory(final Player player) {
+        final InventorySnapshot snapshot = this.savedInventories.remove(player.getUniqueId());
+        if (snapshot == null) {
+            return;
         }
-        if (armor != null) {
-            player.getInventory().setArmorContents(armor);
-        }
+        snapshot.restore(player);
         // Mostra jogadores de outras partidas novamente
         for (final Player online : Bukkit.getOnlinePlayers()) {
             if (this == this.gameManager.getPlayerGame(online)) {
@@ -1354,6 +1356,34 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
             player.showPlayer(this.gameManager.getPlugin(), online);
             online.showPlayer(this.gameManager.getPlugin(), player);
+        }
+    }
+
+    private static final class InventorySnapshot {
+        private final ItemStack[] contents;
+        private final ItemStack[] armor;
+        private final ItemStack[] extra;
+
+        private InventorySnapshot(final Player player) {
+            this.contents = cloneItems(player.getInventory().getContents());
+            this.armor = cloneItems(player.getInventory().getArmorContents());
+            this.extra = cloneItems(player.getInventory().getExtraContents());
+        }
+
+        private void restore(final Player player) {
+            player.getInventory().clear();
+            player.getInventory().setContents(this.contents);
+            player.getInventory().setArmorContents(this.armor);
+            player.getInventory().setExtraContents(this.extra);
+        }
+
+        private static ItemStack[] cloneItems(final ItemStack[] items) {
+            final ItemStack[] copy = new ItemStack[items.length];
+            for (int i = 0; i < items.length; i++) {
+                final ItemStack item = items[i];
+                copy[i] = item == null ? null : item.clone();
+            }
+            return copy;
         }
     }
 }
