@@ -10,7 +10,7 @@ import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
 public class VersionChecker {
 
-    private static final String JSON_URL = "https://raw.githubusercontent.com/sebastianjnuwu/BedWars/main/.github/version.json";
+    private static final String POM_URL = "https://raw.githubusercontent.com/sebastianjnuwu/BedWars/main/pom.xml";
 
     private final String currentVersion;
     private final Logger logger;
@@ -26,7 +26,7 @@ public class VersionChecker {
         this.logger.info(this.lang.raw("version_check.checking"));
 
         try {
-            final HttpURLConnection conn = (HttpURLConnection) URI.create(JSON_URL).toURL().openConnection();
+            final HttpURLConnection conn = (HttpURLConnection) URI.create(POM_URL).toURL().openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "BedWars");
             conn.setConnectTimeout(5000);
@@ -45,8 +45,7 @@ public class VersionChecker {
                     body.append(line);
                 }
 
-                final String latestVersion = parseVersion(body.toString());
-                if (latestVersion == null) {
+                final String latestVersion = parseVersion(body.toString());                if (latestVersion == null) {
                     this.logger.warning(this.lang.raw("version_check.error", "Resposta inválida"));
                     return;
                 }
@@ -92,24 +91,17 @@ public class VersionChecker {
         }
     }
 
-    private String parseVersion(final String json) {
-        final String key = "\"version\"";
-        final int start = json.indexOf(key);
+    private String parseVersion(final String xml) {
+        final String tag = "<version>";
+        final int start = xml.indexOf(tag);
         if (start == -1) {
             return null;
         }
-        final int colon = json.indexOf(":", start + key.length());
-        if (colon == -1) {
-            return null;
-        }
-        final int valueStart = json.indexOf("\"", colon + 1);
-        if (valueStart == -1) {
-            return null;
-        }
-        final int valueEnd = json.indexOf("\"", valueStart + 1);
+        final int valueStart = start + tag.length();
+        final int valueEnd = xml.indexOf("</version>", valueStart);
         if (valueEnd == -1) {
             return null;
         }
-        return json.substring(valueStart + 1, valueEnd);
+        return xml.substring(valueStart, valueEnd);
     }
 }
