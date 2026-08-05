@@ -273,55 +273,55 @@ log:
       forge_skipped: "Forge {0} ignorada (localização nula)"
       put_forge_ticks_warning: "putForgeTicks({0}, level={1}): intervalos nulos ou vazios, forgeLevels={2}"
     placeholder_missing: "Placeholder {0} não encontrado em args para a chave \"{1}\""
-  config_manager:
-    migrate_lobby: "Lobby migrado de config.yml para lobby.yml"
-    create_lobby_error: "Não foi possível criar lobby.yml: {0}"
-    migrate_lobby_error: "Não foi possível migrar lobby: {0}"
-    save_config_error: "Erro ao salvar config.yml: {0}"
-    save_lobby_error: "Erro ao salvar lobby.yml: {0}"
-  arena_manager:
-    loaded: "Arenas carregadas: {0}"
-    forge_duplicate: "Arena {0}: forge duplicado para o time '{1}' ignorado."
-    forge_duplicate_load: "Arena {0}: forge duplicado para o time '{1}' ignorado ao carregar."
-    save_error: "Erro ao salvar arena {0}: {1}"
-    reset_error: "Erro ao resetar arena {0}: {1}"
-    load_error: "Erro ao carregar mundo da arena {0}: {1}"
-    folder_not_exist: "Pasta de arenas não existe: {0}"
-    folder_create_fail: "Falha ao criar pasta de arenas: {0}"
-    folder_no_permission: "Sem permissão de escrita na pasta de arenas: {0}"
-    save_arena_error: "Erro ao salvar arena '{0}': {1}"
-  shop_manager:
-    migrate_shop: "shop.yml migrado para shop/default.yml"
-    migrate_shop_error: "Não foi possível migrar shop.yml antigo: {0}"
-    extract_default_error: "Não foi possível extrair shop padrão: {0}"
-    not_found: "Shop '{0}' não encontrado, usando padrão"
-    parse_error: "Falha ao processar item da loja: {0} - {1}"
-  shop_npc:
-    not_installed: "FancyNPCs não instalado, não foi possível spawnar NPCs da loja"
-    spawn_error: "Falha ao spawnar NPC da loja {0} para {1}: {2}"
-    skin_fallback: "Falha ao definir skin '{0}' para NPC '{1}': {2}. Usando skin padrão."
+    config_manager:
+      migrate_lobby: "Lobby migrado de config.yml para lobby.yml"
+      create_lobby_error: "Não foi possível criar lobby.yml: {0}"
+      migrate_lobby_error: "Não foi possível migrar lobby: {0}"
+      save_config_error: "Erro ao salvar config.yml: {0}"
+      save_lobby_error: "Erro ao salvar lobby.yml: {0}"
+    arena_manager:
+      loaded: "Arenas carregadas: {0}"
+      forge_duplicate: "Arena {0}: forge duplicado para o time '{1}' ignorado."
+      forge_duplicate_load: "Arena {0}: forge duplicado para o time '{1}' ignorado ao carregar."
+      save_error: "Erro ao salvar arena {0}: {1}"
+      reset_error: "Erro ao resetar arena {0}: {1}"
+      load_error: "Erro ao carregar mundo da arena {0}: {1}"
+      folder_not_exist: "Pasta de arenas não existe: {0}"
+      folder_create_fail: "Falha ao criar pasta de arenas: {0}"
+      folder_no_permission: "Sem permissão de escrita na pasta de arenas: {0}"
+      save_arena_error: "Erro ao salvar arena '{0}': {1}"
+    shop_manager:
+      migrate_shop: "shop.yml migrado para shop/default.yml"
+      migrate_shop_error: "Não foi possível migrar shop.yml antigo: {0}"
+      extract_default_error: "Não foi possível extrair shop padrão: {0}"
+      not_found: "Shop '{0}' não encontrado, usando padrão"
+      parse_error: "Falha ao processar item da loja: {0} - {1}"
+    shop_npc:
+      not_installed: "FancyNPCs não instalado, não foi possível spawnar NPCs da loja"
+      spawn_error: "Falha ao spawnar NPC da loja {0} para {1}: {2}"
+      skin_fallback: "Falha ao definir skin '{0}' para NPC '{1}': {2}. Usando skin padrão."
       remove_error: "Falha ao remover NPC da loja: {0}"
       cleanup_failed: "Falha ao limpar NPCs da loja remanescentes: {0}"
-  slime_manager:
-    template_saved: "Template salvo: {0}"
-    instance_unloaded: "Instância descarregada: {0}"
-    template_load_error: "Erro ao carregar template {0}: {1}"
-    world_create_error: "Erro ao criar mundo Bukkit: {0}"
-    directory_create_error: "Não foi possível criar diretório: {0}"
-    copy_error: "Erro ao copiar arquivo {0}: {1}"
-  editor_manager:
-    session_create_error: "Erro criando session.yml: {0}"
-  save_command:
-    auto_dimensions: "Área construída detectada automaticamente para arena '{0}': {1}x{2}x{3} (paste em {4},{5},{6})"
-    saving_schematic: "Salvando schematic da arena '{0}' em {1} (região: {2},{3},{4} a {5},{6},{7})"
-    schematic_saved: "Schematic salvo com sucesso: {0} ({1}x{2}x{3} blocos)"
-    slime_template_saved: "Template Slime salvo: {0}"
-    invalid_dimensions: "Dimensões inválidas do schematic para arena '{0}': {1}x{2}x{3}"
-    schematic_save_error: "Falha ao salvar schematic da arena '{0}': {1}"
-    slime_template_error: "Falha ao salvar template Slime para arena '{0}': {1}"
-    save_unexpected_error: "Erro inesperado ao salvar arena '{0}': {1}"
-  create_command:
-    world_create_error: "Falha ao criar mundo de edição"
+    slime_manager:
+      template_saved: "Template salvo: {0}"
+      instance_unloaded: "Instância descarregada: {0}"
+      template_load_error: "Erro ao carregar template {0}: {1}"
+      world_create_error: "Erro ao criar mundo Bukkit: {0}"
+      directory_create_error: "Não foi possível criar diretório: {0}"
+      copy_error: "Erro ao copiar arquivo {0}: {1}"
+    editor_manager:
+      session_create_error: "Erro criando session.yml: {0}"
+    save_command:
+      auto_dimensions: "Área construída detectada automaticamente para arena '{0}': {1}x{2}x{3} (paste em {4},{5},{6})"
+      saving_schematic: "Salvando schematic da arena '{0}' em {1} (região: {2},{3},{4} a {5},{6},{7})"
+      schematic_saved: "Schematic salvo com sucesso: {0} ({1}x{2}x{3} blocos)"
+      slime_template_saved: "Template Slime salvo: {0}"
+      invalid_dimensions: "Dimensões inválidas do schematic para arena '{0}': {1}x{2}x{3}"
+      schematic_save_error: "Falha ao salvar schematic da arena '{0}': {1}"
+      slime_template_error: "Falha ao salvar template Slime para arena '{0}': {1}"
+      save_unexpected_error: "Erro inesperado ao salvar arena '{0}': {1}"
+    create_command:
+      world_create_error: "Falha ao criar mundo de edição"
 
 # ── version_check ─────────────────────
 version_check:
