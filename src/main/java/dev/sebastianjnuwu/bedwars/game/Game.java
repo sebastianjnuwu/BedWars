@@ -58,6 +58,7 @@ import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.manager.PlayerStateManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
 import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 
@@ -82,7 +83,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Set<ArenaTeam> eliminatedTeams;
     private final Set<ArenaTeam> bedlessTeams;
     private final Set<UUID> spectators;
-    private final Map<UUID, InventorySnapshot> savedInventories;
     private final Map<ArenaGenerator, Integer> forgeLevels;
     private final Map<ArenaGenerator, long[]> generatorTicks;
     private final Map<String, long[]> forgeTicks;
@@ -124,7 +124,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.forgeTicks = new HashMap<>();
         this.respawnTicks = new HashMap<>();
         this.placedBlocks = new HashSet<>();
-        this.savedInventories = new HashMap<>();
         this.state = GameState.WAITING;
         for (final ArenaTeam team : arena.getTeams()) {
             this.teams.put(team, new ArrayList<>());
@@ -1423,62 +1422,25 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.getInventory().setBoots(coloredLeather(Material.LEATHER_BOOTS, color));
     }
 
-    /**
-     * Salva o inventario do mundo normal do jogador, sem sobrescrever um snapshot
-     * ja existente.
-     */
     private void saveInventory(final Player player) {
-        final UUID uuid = player.getUniqueId();
-        if (this.savedInventories.containsKey(uuid)) {
-            return;
+        final PlayerStateManager manager = this.gameManager.getPlayerStateManager();
+        if (manager.hasSavedState(player)) {
+            if (!this.players.containsKey(player.getUniqueId()) && !this.spectators.contains(player.getUniqueId())) {
+                this.gameManager.getPlugin().getLogger().warning(this.lang.raw("debug.player_orphan_snapshot", player.getUniqueId().toString()));
+                manager.restorePlayerState(player);
+            }
         }
-        this.savedInventories.put(uuid, new InventorySnapshot(player));
+        manager.savePlayerState(player);
     }
 
-    /**
-     * Restaura o inventario do mundo normal do jogador.
-     */
     private void restoreInventory(final Player player) {
-        final InventorySnapshot snapshot = this.savedInventories.remove(player.getUniqueId());
-        if (snapshot == null) {
-            return;
-        }
-        snapshot.restore(player);
-        // Mostra jogadores de outras partidas novamente
+        this.gameManager.getPlayerStateManager().restorePlayerState(player);
         for (final Player online : Bukkit.getOnlinePlayers()) {
             if (this == this.gameManager.getPlayerGame(online)) {
                 continue;
             }
             player.showPlayer(this.gameManager.getPlugin(), online);
             online.showPlayer(this.gameManager.getPlugin(), player);
-        }
-    }
-
-    private static final class InventorySnapshot {
-        private final ItemStack[] contents;
-        private final ItemStack[] armor;
-        private final ItemStack[] extra;
-
-        private InventorySnapshot(final Player player) {
-            this.contents = cloneItems(player.getInventory().getContents());
-            this.armor = cloneItems(player.getInventory().getArmorContents());
-            this.extra = cloneItems(player.getInventory().getExtraContents());
-        }
-
-        private void restore(final Player player) {
-            player.getInventory().clear();
-            player.getInventory().setContents(this.contents);
-            player.getInventory().setArmorContents(this.armor);
-            player.getInventory().setExtraContents(this.extra);
-        }
-
-        private static ItemStack[] cloneItems(final ItemStack[] items) {
-            final ItemStack[] copy = new ItemStack[items.length];
-            for (int i = 0; i < items.length; i++) {
-                final ItemStack item = items[i];
-                copy[i] = item == null ? null : item.clone();
-            }
-            return copy;
         }
     }
 }

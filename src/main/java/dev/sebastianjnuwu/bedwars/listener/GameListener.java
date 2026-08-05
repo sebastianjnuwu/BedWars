@@ -22,6 +22,7 @@ import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
@@ -474,6 +475,14 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent event) {
+        final Player player = event.getPlayer();
+        if (this.gameManager.isInGame(player)) {
+            this.gameManager.leaveGame(player);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerKick(final PlayerKickEvent event) {
         final Player player = event.getPlayer();
         if (this.gameManager.isInGame(player)) {
             this.gameManager.leaveGame(player);

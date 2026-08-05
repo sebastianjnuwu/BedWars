@@ -40,6 +40,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private final EditorManager editorManager;
     private final Set<String> buildingArenas;
     private final Map<String, List<PendingJoin>> pendingJoins;
+    private final PlayerStateManager playerStateManager;
 
     public GameManager(final JavaPlugin plugin, final ArenaManager arenaManager, final ConfigManager configManager, final LangManager lang, final EditorManager editorManager) {
         this.plugin = plugin;
@@ -52,6 +53,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         this.editorManager = editorManager;
         this.buildingArenas = new HashSet<>();
         this.pendingJoins = new HashMap<>();
+        this.playerStateManager = new PlayerStateManager(plugin, lang);
     }
 
     public JavaPlugin getPlugin() {
@@ -64,6 +66,10 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     public LangManager getLang() {
         return this.lang;
+    }
+
+    public PlayerStateManager getPlayerStateManager() {
+        return this.playerStateManager;
     }
 
     public ConfigManager getConfigManager() {
@@ -294,8 +300,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private record PendingJoin(UUID playerId, @Nullable String teamName, @Nullable ArenaMode mode, boolean teleport) {
     }
 
-    @Override
-    public void leaveGame(final Player player) {
+    public void cleanupPlayer(final Player player) {
         final Game game = (Game) this.playerGames.remove(player.getUniqueId());
         if (game != null) {
             game.leave(player);
@@ -304,6 +309,13 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
                 this.debug("debug.room_closed_empty", game.getArena().getName());
             }
         }
+        this.playerStateManager.restorePlayerState(player);
+        this.plugin.getLogger().info(this.lang.raw("debug.player_state_cleanup", player.getUniqueId().toString()));
+    }
+
+    @Override
+    public void leaveGame(final Player player) {
+        this.cleanupPlayer(player);
     }
 
     @Override
@@ -448,6 +460,11 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     public void forceEndAll() {
         for (final Game game : new ArrayList<>(this.games.values())) {
             game.forceEnd();
+        }
+        for (final Player player : Bukkit.getOnlinePlayers()) {
+            if (this.playerStateManager.hasSavedState(player)) {
+                this.playerStateManager.restorePlayerState(player);
+            }
         }
         this.games.clear();
         this.playerGames.clear();
