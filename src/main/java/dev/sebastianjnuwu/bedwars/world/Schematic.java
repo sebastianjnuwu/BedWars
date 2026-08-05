@@ -97,8 +97,9 @@ public class Schematic {
             Clipboard clipboard = reader.read();
 
             com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
-            try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-                Operation operation = new ClipboardHolder(clipboard)
+            try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld);
+                 ClipboardHolder holder = new ClipboardHolder(clipboard)) {
+                Operation operation = holder
                         .createPaste(editSession)
                         .to(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()))
                         .ignoreAirBlocks(false)

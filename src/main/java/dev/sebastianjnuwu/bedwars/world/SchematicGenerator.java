@@ -70,8 +70,9 @@ public class SchematicGenerator {
 
             // Usar FAWE queue para processar em segundo plano sem travar
             final com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
-            try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-                final Operation operation = new ClipboardHolder(clipboard)
+            try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld);
+                 ClipboardHolder holder = new ClipboardHolder(clipboard)) {
+                final Operation operation = holder
                         .createPaste(editSession)
                         .to(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()))
                         .ignoreAirBlocks(false)
