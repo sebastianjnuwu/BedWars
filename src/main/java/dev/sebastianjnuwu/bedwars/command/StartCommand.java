@@ -91,9 +91,18 @@ public class StartCommand extends BaseCommand {
             }
             return;
         }
+        final dev.sebastianjnuwu.bedwars.api.model.Game current = this.gameManager.getPlayerGame(player);
+        if (current != null) {
+            if (current.getArena().getName().equalsIgnoreCase(arenaName)) {
+                this.gameManager.forceStartGame(arenaName);
+            } else {
+                sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_game"));
+            }
+            return;
+        }
         this.gameManager.joinGame(player, arenaName);
         if (this.gameManager.isInGame(player)) {
-            this.gameManager.startGame(arenaName);
+            this.gameManager.forceStartGame(arenaName);
         }
     }
 }

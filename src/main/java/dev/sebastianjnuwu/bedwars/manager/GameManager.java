@@ -308,6 +308,10 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public void startGame(final String arenaName) {
+        this.startGame(arenaName, false);
+    }
+
+    private void startGame(final String arenaName, final boolean force) {
         Game game = this.findOpenGame(arenaName, null);
         if (game == null) {
             final Arena arena = this.arenaManager.get(arenaName);
@@ -330,7 +334,21 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         if (!missing.isEmpty()) {
             return;
         }
-        game.start();
+        if (force) {
+            game.forceStart();
+        } else {
+            game.start();
+        }
+    }
+
+    /**
+     * Inicia a partida imediatamente, ignorando a exigência de jogadores em
+     * pelo menos 2 times (comando de admin {@code /bw start}).
+     *
+     * @param arenaName nome da arena (não nulo)
+     */
+    public void forceStartGame(final String arenaName) {
+        this.startGame(arenaName, true);
     }
 
     @Override

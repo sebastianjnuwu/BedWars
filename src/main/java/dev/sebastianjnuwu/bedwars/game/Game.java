@@ -447,6 +447,21 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             this.cancelCountdown();
             return;
         }
+        this.startPlaying();
+    }
+
+    /**
+     * Inicia a partida imediatamente, ignorando a exigência de jogadores em
+     * pelo menos 2 times (usado pelo comando de admin /bw start).
+     */
+    public void forceStart() {
+        if (this.state != GameState.WAITING && this.state != GameState.STARTING) {
+            return;
+        }
+        this.startPlaying();
+    }
+
+    private void startPlaying() {
         final GameState prevState = this.state;
         this.state = GameState.PLAYING;
         this.tick = 0;
