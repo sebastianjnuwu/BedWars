@@ -12,10 +12,13 @@ commands:
     aliases:
       - bedwars
     permission: bw.player
+    permission-message: "Você não tem permissão para usar este comando."
 
   spawn:
     aliases:
       - lobby
+    permission: bw.player
+    permission-message: "Você não tem permissão para usar este comando."
 
 permissions:
   bw.admin:
