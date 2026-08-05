@@ -198,6 +198,22 @@ Se quiser sair do modo de edição **sem salvar** as alterações de bloco feita
 
 > O comando encerra a sessão de edição, remove os NPCs da loja e restaura o mundo a partir do último schematic salvo, descartando as mudanças feitas durante a sessão.
 
+### 13.2 Referência completa do YAML da arena
+
+Todos os comandos acima salvam as configurações no arquivo `arenas/<nome>.yml`. Para saber **o que cada opção significa**, consulte o arquivo `arenas/example.yml` (dentro do JAR ou em `src/main/resources/arenas/`) — ele é totalmente comentado e serve como referência.
+
+Destaques que você pode editar **direto no YAML** (sem comando):
+
+- `enable-cmd:` — lista de comandos liberados durante a partida (além de `/bw` e `/bedwars`). Ex.:
+  ```yaml
+  enable-cmd:
+    - "g"        # libera /g
+    - "msg"      # libera /msg e /msg <jogador> ...
+  ```
+- `forge:` — níveis da fornalha, preço e moeda de upgrade de cada nível.
+- `generator_config:` — intervalo (em ticks) de cada gerador.
+- `difficulty` / `time` / `cycle_day` / `cycle_weather` / `spawn_mobs` / `spawn_animals` — ambiente do mundo.
+
 ### 14. Jogar na arena
 
 ```bash
