@@ -45,7 +45,8 @@ public class VersionChecker {
                     body.append(line);
                 }
 
-                final String latestVersion = parseVersion(body.toString());                if (latestVersion == null) {
+                final String latestVersion = parseVersion(body.toString());
+                if (latestVersion == null) {
                     this.logger.warning(this.lang.raw("version_check.error", "Resposta inválida"));
                     return;
                 }
@@ -56,6 +57,8 @@ public class VersionChecker {
                 } else if (cmp < 0) {
                     this.logger.warning(this.lang.raw("version_check.new_version", latestVersion, this.currentVersion));
                     this.logger.warning(this.lang.raw("version_check.download", "https://github.com/sebastianjnuwu/BedWars"));
+                } else {
+                    this.logger.info(this.lang.raw("version_check.ahead", this.currentVersion, latestVersion));
                 }
             }
         } catch (final Exception e) {

@@ -333,6 +333,7 @@ log:
 version_check:
   checking: "Verificando atualizações..."
   up_to_date: "Você está na versão mais recente (v{0})."
+  ahead: "Versão local (v{0}) é mais nova que a publicada (v{1}) - build de desenvolvimento."
   new_version: "Nova versão disponível: v{0} (atual: v{1})"
   download: "Baixe em: {0}"
   error: "Erro ao verificar atualizações: {0}"
