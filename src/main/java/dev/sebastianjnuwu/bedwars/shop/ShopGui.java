@@ -40,10 +40,12 @@ public class ShopGui implements InventoryHolder {
     private final Player player;
     private final Game game;
 
-    private final Inventory inventory;
+    private Inventory inventory;
     private final List<ShopCategory> categories;
     private ShopCategory currentCategory;
     private int currentPage;
+    private final String baseTitle;
+    private Component currentTitleComponent;
 
     private static final Map<UUID, ShopGui> openGuis = new HashMap<>();
 
@@ -55,8 +57,9 @@ public class ShopGui implements InventoryHolder {
         this.currentPage = 0;
 
         final String displayName = shopManager.getDisplayName(shopName);
-        final String title = displayName != null ? displayName : this.lang.raw("shop.title");
-        this.inventory = Bukkit.createInventory(this, 54, MM.deserialize(title));
+        this.baseTitle = displayName != null ? displayName : this.lang.raw("shop.title");
+        this.inventory = Bukkit.createInventory(this, 54, MM.deserialize(baseTitle));
+        this.currentTitleComponent = MM.deserialize(baseTitle);
 
         openGuis.put(player.getUniqueId(), this);
         openMain();
@@ -89,6 +92,13 @@ public class ShopGui implements InventoryHolder {
     }
 
     private void render() {
+        final Component title = buildTitle();
+        if (!title.equals(this.currentTitleComponent)) {
+            this.inventory = Bukkit.createInventory(this, 54, title);
+            this.currentTitleComponent = title;
+            this.player.openInventory(this.inventory);
+        }
+
         inventory.clear();
 
         fillBorder();
@@ -98,6 +108,16 @@ public class ShopGui implements InventoryHolder {
         } else {
             renderCategoryItems();
         }
+    }
+
+    private Component buildTitle() {
+        if (currentCategory == null) {
+            return MM.deserialize(this.baseTitle);
+        }
+        final String categoryName = this.currentCategory.getDisplayName() != null
+                ? this.currentCategory.getDisplayName()
+                : this.currentCategory.getName();
+        return MM.deserialize(this.baseTitle + " > " + categoryName);
     }
 
     private void fillBorder() {
