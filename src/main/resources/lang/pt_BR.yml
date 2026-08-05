@@ -161,7 +161,7 @@ admin:
 
 # ── game ──────────────────────────────
 game:
-  join_usage: "Uso: /bw join <arena> [--mode <modo>] [--team <time>]"
+  join_usage: "Uso: /bw join <arena> [--mode <modo>] [--team <time>] [--code <codigo>]"
   mode_not_supported: "O modo {0} não é suportado por esta arena ({1}). Use /bw admin arena <arena> status para ver os modos disponíveis."
   already_in_game: "Você já está em uma partida."
   already_in_this_game: "Você já está nesta partida."
@@ -175,6 +175,9 @@ game:
   no_teams_available: "Não há times disponíveis nesta arena."
   team_not_found: "Time \"{0}\" não encontrado."
   team_full: "Este time já está cheio."
+  game_code: "Código da partida: <green>{0}</green>"
+  code_not_found: "<red>Partida com código {0} não encontrada.</red>"
+  code_full: "<red>Esta partida está cheia ou em andamento.</red>"
   join_broadcast: "{0} entrou na partida ({1}/{2})"
   leave_broadcast: "{0} saiu da partida."
   not_in_game: "Você não está em nenhuma partida."

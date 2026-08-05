@@ -80,6 +80,7 @@ public class JoinCommand extends BaseCommand {
         final String arenaName = args[1];
         String teamName = null;
         String modeArg = null;
+        String code = null;
         boolean positional = true;
         for (int i = 2; i < args.length; i++) {
             final String arg = args[i];
@@ -93,6 +94,11 @@ public class JoinCommand extends BaseCommand {
                     teamName = args[++i];
                     positional = false;
                 }
+            } else if (arg.equalsIgnoreCase("--code")) {
+                if (i + 1 < args.length) {
+                    code = args[++i];
+                    positional = false;
+                }
             } else if (positional) {
                 final ArenaMode mode = ArenaMode.fromAlias(arg);
                 if (mode != null) {
@@ -104,6 +110,6 @@ public class JoinCommand extends BaseCommand {
         }
 
         final ArenaMode mode = modeArg != null ? ArenaMode.fromAlias(modeArg) : null;
-        this.gameManager.joinGame(player, arenaName, teamName, mode, true);
+        this.gameManager.joinGame(player, arenaName, teamName, mode, code, true);
     }
 }

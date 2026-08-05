@@ -142,6 +142,28 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     }
 
     public void joinGame(final Player player, final String arenaName, final @Nullable String teamName, final @Nullable ArenaMode mode, final boolean teleport) {
+        this.joinGame(player, arenaName, teamName, mode, null, teleport);
+    }
+
+    public void joinGame(final Player player, final String arenaName, final @Nullable String teamName, final @Nullable ArenaMode mode, final @Nullable String code, final boolean teleport) {
+        if (code != null && !code.isBlank()) {
+            final Game target = this.findGameByCode(code);
+            if (target == null || !target.getArena().getName().equalsIgnoreCase(arenaName)) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.code_not_found", code));
+                return;
+            }
+            if (target.getState() != GameState.WAITING && target.getState() != GameState.STARTING) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.in_progress"));
+                return;
+            }
+            if (target.isFull()) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.code_full"));
+                return;
+            }
+            target.join(player, teamName, teleport);
+            this.playerGames.put(player.getUniqueId(), target);
+            return;
+        }
         if (this.isInGame(player)) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_game"));
             return;
@@ -344,6 +366,41 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             }
         }
         return null;
+    }
+
+    /**
+     * Busca uma partida pelo código público (case-insensitive).
+     *
+     * @param code código da partida (não nulo)
+     * @return a partida correspondente, ou {@code null} se não existir
+     */
+    private @Nullable Game findGameByCode(final String code) {
+        for (final Game game : this.games.values()) {
+            if (game.getCode().equalsIgnoreCase(code)) {
+                return game;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retorna os códigos das partidas abertas (em lobby/início) de uma arena,
+     * usado para autocompletar o argumento {@code --code}.
+     *
+     * @param arenaName nome da arena (não nulo)
+     * @return lista de códigos das partidas abertas (nunca nula)
+     */
+    public List<String> listOpenCodes(final String arenaName) {
+        final List<String> codes = new ArrayList<>();
+        for (final Game game : this.games.values()) {
+            final Arena arena = game.getArena();
+            if (arena.getName().equalsIgnoreCase(arenaName)
+                    && (game.getState() == GameState.WAITING || game.getState() == GameState.STARTING)
+                    && !game.isFull()) {
+                codes.add(game.getCode());
+            }
+        }
+        return codes;
     }
 
     private @Nullable Game findOpenGame(final String arenaName, final @Nullable ArenaMode mode) {

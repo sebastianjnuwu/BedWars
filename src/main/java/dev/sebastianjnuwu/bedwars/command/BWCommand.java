@@ -51,6 +51,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
     private final AdminCommand adminCommand;
     private final LangManager lang;
     private final ArenaManager arenaManager;
+    private final GameManager gameManager;
 
     /**
      * Construtor que cria todas as instâncias de subcomandos com as
@@ -73,6 +74,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
     ) {
         this.lang = lang;
         this.arenaManager = arenaManager;
+        this.gameManager = gameManager;
         this.joinCommand = new JoinCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
         this.leaveCommand = new LeaveCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
         this.startCommand = new StartCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
@@ -246,14 +248,21 @@ public class BWCommand implements CommandExecutor, TabCompleter {
             addTeams(result, this.arenaManager.get(args[1]));
             return result;
         }
+        if (prev.equals("--code")) {
+            result.addAll(this.gameManager.listOpenCodes(args[1]));
+            return result;
+        }
         boolean modeUsed = false;
         boolean teamUsed = false;
+        boolean codeUsed = false;
         for (int i = 2; i < args.length - 1; i++) {
             final String arg = args[i].toLowerCase();
             if (List.of("--mode", "--modo").contains(arg)) {
                 modeUsed = true;
             } else if (List.of("--team", "--time").contains(arg)) {
                 teamUsed = true;
+            } else if (arg.equals("--code")) {
+                codeUsed = true;
             }
         }
         if (!modeUsed) {
@@ -261,6 +270,9 @@ public class BWCommand implements CommandExecutor, TabCompleter {
         }
         if (!teamUsed) {
             result.add("--team");
+        }
+        if (!codeUsed) {
+            result.add("--code");
         }
         return result;
     }

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -75,6 +76,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final LangManager lang;
     private final Arena arena;
     private final ArenaMode mode;
+    private final String code;
     private final Map<ArenaTeam, List<UUID>> teams;
     private final Map<UUID, GamePlayer> players;
     private final Set<ArenaTeam> eliminatedTeams;
@@ -111,6 +113,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.lang = gameManager.getLang();
         this.arena = arena;
         this.mode = mode;
+        this.code = generateCode();
         this.teams = new HashMap<>();
         this.players = new HashMap<>();
         this.eliminatedTeams = new HashSet<>();
@@ -137,6 +140,29 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.arena;
     }
 
+    /**
+     * Retorna o código público da partida (6 caracteres, ex.: {@code ABC123}),
+     * usado para entrar numa sala específica.
+     *
+     * @return o código da partida (não nulo)
+     */
+    public String getCode() {
+        return this.code;
+    }
+
+    /**
+     * Gera um código aleatório de 6 caracteres alfanuméricos em maiúsculas.
+     */
+    private static String generateCode() {
+        final String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        final StringBuilder sb = new StringBuilder(6);
+        final ThreadLocalRandom random = ThreadLocalRandom.current();
+        for (int i = 0; i < 6; i++) {
+            sb.append(alphabet.charAt(random.nextInt(alphabet.length())));
+        }
+        return sb.toString();
+    }
+
     public GameState getState() {
         return this.state;
     }
@@ -157,6 +183,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.debug("debug.player_spectator", player.getName(), this.arena.getName());
         this.spectators.add(player.getUniqueId());
         this.saveInventory(player);
+
+        player.sendMessage(MM.deserialize(this.lang.raw("game.game_code", this.code)));
 
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
@@ -259,6 +287,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.saveInventory(player);
 
         Bukkit.getPluginManager().callEvent(new PlayerJoinGameEvent(this, player));
+
+        player.sendMessage(MM.deserialize(this.lang.raw("game.game_code", this.code)));
 
         if (teleport) {
             final Location spawn = this.arena.getArenaSpawn();
