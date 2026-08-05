@@ -169,6 +169,19 @@ public class BWCommand implements CommandExecutor, TabCompleter {
             final @NotNull String label,
             final @NotNull String @NotNull [] args
     ) {
+        try {
+            return this.tabComplete(sender, command, label, args);
+        } catch (final RuntimeException ex) {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<String> tabComplete(
+            final @NotNull CommandSender sender,
+            final @NotNull Command command,
+            final @NotNull String label,
+            final @NotNull String @NotNull [] args
+    ) {
         final List<String> completions = new ArrayList<>();
         if (args.length == 1) {
             completions.addAll(List.of("admin", "join", "leave", "start"));
