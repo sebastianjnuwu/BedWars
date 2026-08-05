@@ -15,7 +15,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 import com.infernalsuite.asp.api.AdvancedSlimePaperAPI;
 import com.infernalsuite.asp.api.world.SlimeWorld;
-import com.infernalsuite.asp.api.world.SlimeWorldInstance;
 import com.infernalsuite.asp.api.world.properties.SlimeProperties;
 import com.infernalsuite.asp.api.world.properties.SlimePropertyMap;
 import com.infernalsuite.asp.loaders.file.FileLoader;
@@ -123,7 +122,7 @@ public class SlimeManager {
 
         try {
             final AdvancedSlimePaperAPI api = AdvancedSlimePaperAPI.instance();
-            final SlimeWorldInstance worldInstance = api.loadWorld(slimeWorld, true);
+            api.loadWorld(slimeWorld, true);
 
             // Aguarda o mundo ser carregado
             int retries = 20;
@@ -166,7 +165,7 @@ public class SlimeManager {
 
                 // Carrega o mundo no servidor
                 final AdvancedSlimePaperAPI api = AdvancedSlimePaperAPI.instance();
-                final SlimeWorldInstance worldInstance = api.loadWorld(clonedWorld, true);
+                api.loadWorld(clonedWorld, true);
 
                 // Aguarda o mundo ser carregado
                 int retries = 20; // 1 segundo de espera máxima
@@ -260,13 +259,13 @@ public class SlimeManager {
      * @return array com nomes dos templates
      */
     public @NotNull String[] listTemplates() {
-        final File[] files = templatesFolder.listFiles(File::isDirectory);
+        final File[] files = templatesFolder.listFiles(f -> f.isDirectory());
         if (files == null) {
             return new String[0];
         }
 
         return java.util.Arrays.stream(files)
-                .map(File::getName)
+                .map(f -> f.getName())
                 .toArray(String[]::new);
     }
 

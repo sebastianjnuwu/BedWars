@@ -1,6 +1,5 @@
 package dev.sebastianjnuwu.bedwars.editor;
 
-import java.io.File;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -21,15 +20,9 @@ import dev.sebastianjnuwu.bedwars.slime.SlimeManager;
 public class ArenaCreator {
 
     private final SlimeManager slimeManager;
-    private final File pluginFolder;
-    private final File mapsFolder;
-    private final File templatesFolder;
 
-    public ArenaCreator(@NotNull SlimeManager slimeManager, @NotNull File pluginFolder, @NotNull File mapsFolder, @NotNull File templatesFolder) {
+    public ArenaCreator(@NotNull SlimeManager slimeManager) {
         this.slimeManager = slimeManager;
-        this.pluginFolder = pluginFolder;
-        this.mapsFolder = mapsFolder;
-        this.templatesFolder = templatesFolder;
     }
 
     /**

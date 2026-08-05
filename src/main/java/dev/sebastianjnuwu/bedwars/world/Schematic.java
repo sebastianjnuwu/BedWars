@@ -89,6 +89,9 @@ public class Schematic {
      */
     public void paste(final @NotNull World world, final @NotNull Location location, final @NotNull File schematicFile) throws WorldEditException, IOException {
         ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
+        if (format == null) {
+            throw new IOException("Formato de schematic inválido: " + schematicFile.getName());
+        }
 
         try (ClipboardReader reader = format.getReader(new FileInputStream(schematicFile))) {
             Clipboard clipboard = reader.read();

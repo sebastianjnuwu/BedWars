@@ -43,7 +43,6 @@ public class SimpleWorldManager implements
 
     private final File templatesFolder;
     private final File instancesFolder;
-    private final File pluginFolder;
 
     /**
      * Cria um novo gerenciador de mundos.
@@ -51,7 +50,6 @@ public class SimpleWorldManager implements
      * @param pluginFolder diretório do plugin
      */
     public SimpleWorldManager(@NotNull File pluginFolder) {
-        this.pluginFolder = pluginFolder;
         this.templatesFolder = new File(pluginFolder, "templates");
         this.templatesFolder.mkdirs();
         this.instancesFolder = new File(Bukkit.getWorldContainer(), "bedwars_instances");

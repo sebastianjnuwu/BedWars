@@ -610,7 +610,7 @@ public class Metrics {
         throw new IllegalArgumentException("JSON values must not be null");
       }
       String escapedValues =
-          Arrays.stream(values).map(JsonObject::toString).collect(Collectors.joining(","));
+          Arrays.stream(values).map(obj -> obj.toString()).collect(Collectors.joining(","));
       appendFieldUnescaped(key, "[" + escapedValues + "]");
       return this;
     }

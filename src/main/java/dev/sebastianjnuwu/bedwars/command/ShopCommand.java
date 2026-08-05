@@ -45,6 +45,6 @@ public class ShopCommand extends BaseCommand implements SubCommand {
             shopName = args[1];
         }
 
-        new ShopGui(gameManager, shopManager, lang, player, null, shopName);
+        new ShopGui(shopManager, lang, player, null, shopName);
     }
 }

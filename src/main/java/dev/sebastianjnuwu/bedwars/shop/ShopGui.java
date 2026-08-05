@@ -24,7 +24,6 @@ import dev.sebastianjnuwu.bedwars.api.events.PlayerPurchaseEvent;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
 
 public class ShopGui implements InventoryHolder {
 
@@ -34,12 +33,9 @@ public class ShopGui implements InventoryHolder {
     private static final int ITEMS_END = 44;
     private static final int ITEMS_PER_PAGE = 36;
 
-    private final GameManager gameManager;
-    private final ShopManager shopManager;
     private final LangManager lang;
     private final Player player;
     private final Game game;
-    private final String shopName;
 
     private final Inventory inventory;
     private final List<ShopCategory> categories;
@@ -48,13 +44,10 @@ public class ShopGui implements InventoryHolder {
 
     private static final Map<UUID, ShopGui> openGuis = new HashMap<>();
 
-    public ShopGui(GameManager gameManager, ShopManager shopManager, LangManager lang, Player player, Game game, String shopName) {
-        this.gameManager = gameManager;
-        this.shopManager = shopManager;
+    public ShopGui(ShopManager shopManager, LangManager lang, Player player, Game game, String shopName) {
         this.lang = lang;
         this.player = player;
         this.game = game;
-        this.shopName = shopName;
         this.categories = shopManager.getCategories(shopName);
         this.currentPage = 0;
 
@@ -284,6 +277,7 @@ public class ShopGui implements InventoryHolder {
         return slots;
     }
 
+    @SuppressWarnings("deprecation")
     private void applyTeamColor(final ItemStack stack) {
         if (stack == null || this.game == null || stack.getType() != Material.WHITE_WOOL) {
             return;

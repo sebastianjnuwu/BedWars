@@ -545,7 +545,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private void initForgeTicks() {
         this.forgeTicks.clear();
         this.forgeLevels.clear();
-        int forgeCount = 0;
         for (final ArenaGenerator forge : this.arena.getGenerators()) {
             if (!forge.getType().equalsIgnoreCase("forge")) {
                 continue;
@@ -554,7 +553,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 this.gameManager.getPlugin().getLogger().warning(this.lang.raw("log.game.forge_skipped", forge.getUniqueId()));
                 continue;
             }
-            forgeCount++;
             this.forgeLevels.put(forge, 1);
             this.putForgeTicks(forge, 1);
         }
@@ -686,14 +684,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private void handleForgeTicks() {
-        int spawned = 0;
-        int skipped = 0;
         for (final Map.Entry<String, long[]> entry : this.forgeTicks.entrySet()) {
             final long[] data = entry.getValue();
             final long lastSpawn = data[0];
             final long interval = data[1];
             if (this.tick - lastSpawn < interval) {
-                skipped++;
                 continue;
             }
             data[0] = this.tick;
@@ -734,7 +729,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 item.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
                 item.setPickupDelay(0);
             });
-            spawned++;
         }
     }
 
@@ -791,7 +785,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     private void startCountdown() {
         this.state = GameState.STARTING;
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.WAITING, GameState.STARTING));
@@ -1084,7 +1077,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                     }
                     this.shopNpcManager.removeGameNpcs(this.arena.getWorldName());
                     this.players.clear();
-                    this.teams.values().forEach(List::clear);
+                    this.teams.values().forEach(list -> list.clear());
                     this.eliminatedTeams.clear();
                     this.bedlessTeams.clear();
                     if (this.gameManager.getGameByWorld(this.arena.getWorldName()) == this) {
@@ -1093,16 +1086,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 },
                 200L
         );
-    }
-
-    private boolean hasValidOpponents() {
-        int nonEmptyTeamsCount = 0;
-        for (final var entry : this.teams.entrySet()) {
-            if (!entry.getValue().isEmpty()) {
-                nonEmptyTeamsCount++;
-            }
-        }
-        return nonEmptyTeamsCount >= 2;
     }
 
     private @Nullable ArenaTeam findSmallestTeam() {
@@ -1242,7 +1225,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.shopNpcManager.removeGameNpcs(this.arena.getWorldName());
         this.spectators.clear();
         this.players.clear();
-        this.teams.values().forEach(List::clear);
+        this.teams.values().forEach(list -> list.clear());
         this.eliminatedTeams.clear();
         this.bedlessTeams.clear();
         this.placedBlocks.clear();

@@ -58,11 +58,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     private final Map<String, YamlConfiguration> diskConfigs;
     private final Set<String> cleanWorlds;
     private final Map<String, Integer> instanceCounters;
-    private final DataManager dataManager;
 
-    public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder, final DataManager dataManager) {
+    public ArenaManager(final JavaPlugin plugin, final WorldManager worldManager, final File mapsFolder) {
         this.plugin = plugin;
-        this.dataManager = dataManager;
         this.lang = ((BedWarsPlugin) plugin).getLang();
         this.arenas = new HashMap<>();
         this.diskConfigs = new HashMap<>();

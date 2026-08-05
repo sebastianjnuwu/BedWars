@@ -135,10 +135,10 @@ public class ShopItem {
         }
         if (tag != null) {
             try {
-                var tagObj = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(tag);
+                net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(tag);
             } catch (Exception ignored) {
                 try {
-                    var compound = org.bukkit.Color.fromRGB(0);
+                    org.bukkit.Color.fromRGB(0);
                     stack = org.bukkit.inventory.ItemStack.of(stack.getType());
                 } catch (Exception ignoredEx) {}
             }

@@ -22,11 +22,9 @@ public class WorldManager {
             "uid.dat", "session.dat", "session.lock"
     ));
 
-    private final JavaPlugin plugin;
     private final File templatesFolder;
 
     public WorldManager(final JavaPlugin plugin) {
-        this.plugin = plugin;
         this.templatesFolder = new File(plugin.getDataFolder(), "templates");
         this.templatesFolder.mkdirs();
     }

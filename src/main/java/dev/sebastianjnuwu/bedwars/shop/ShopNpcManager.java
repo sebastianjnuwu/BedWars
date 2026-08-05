@@ -253,7 +253,7 @@ public class ShopNpcManager {
         if (entityName != null && entityName.startsWith("bw-shop-")) {
             return entityName;
         }
-        final String customName = entity.getCustomName();
+        final String customName = entity.getName();
         if (customName != null && customName.startsWith("bw-shop-")) {
             return customName;
         }

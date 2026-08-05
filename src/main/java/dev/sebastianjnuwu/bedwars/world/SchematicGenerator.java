@@ -60,6 +60,9 @@ public class SchematicGenerator {
         try {
             Clipboard clipboard;
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
+            if (format == null) {
+                throw new IOException("Formato de schematic inválido: " + schematicFile.getName());
+            }
 
             try (ClipboardReader reader = format.getReader(new FileInputStream(schematicFile))) {
                 clipboard = reader.read();

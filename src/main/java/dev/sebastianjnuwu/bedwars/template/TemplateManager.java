@@ -71,13 +71,13 @@ public class TemplateManager {
      * @return array com nomes dos templates
      */
     public @NotNull String[] listTemplates() {
-        final File[] files = templatesFolder.listFiles(File::isDirectory);
+        final File[] files = templatesFolder.listFiles(f -> f.isDirectory());
         if (files == null) {
             return new String[0];
         }
 
         return java.util.Arrays.stream(files)
-                .map(File::getName)
+                .map(f -> f.getName())
                 .toArray(String[]::new);
     }
 

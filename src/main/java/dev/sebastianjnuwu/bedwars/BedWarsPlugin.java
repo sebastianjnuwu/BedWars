@@ -78,7 +78,7 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         final File mapsFolder = new File(this.getDataFolder(), "maps");
         mapsFolder.mkdirs();
 
-        this.arenaManager = new ArenaManager(this, worldManager, mapsFolder, this.dataManager);
+        this.arenaManager = new ArenaManager(this, worldManager, mapsFolder);
         this.arenaManager.load();
         this.dataManager.register(this.arenaManager);
 

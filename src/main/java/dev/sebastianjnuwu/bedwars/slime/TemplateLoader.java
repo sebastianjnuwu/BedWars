@@ -1,9 +1,6 @@
 package dev.sebastianjnuwu.bedwars.slime;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,14 +82,14 @@ public class TemplateLoader {
      * @return array com nomes dos templates válidos
      */
     public @NotNull String[] listValidTemplates() {
-        final File[] files = templatesFolder.listFiles(File::isDirectory);
+        final File[] files = templatesFolder.listFiles(f -> f.isDirectory());
         if (files == null) {
             return new String[0];
         }
 
         return java.util.Arrays.stream(files)
                 .filter(this::isValidTemplate)
-                .map(File::getName)
+                .map(f -> f.getName())
                 .toArray(String[]::new);
     }
 
@@ -125,17 +122,6 @@ public class TemplateLoader {
     public boolean removeTemplate(@NotNull String name) {
         final File dir = getTemplateFile(name);
         return deleteFolder(dir);
-    }
-
-    private boolean deleteFolder(@NotNull Path path) {
-        try {
-            Files.walk(path)
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-            return Files.deleteIfExists(path);
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     private boolean deleteFolder(@NotNull File path) {

@@ -52,6 +52,6 @@ public class NpcListener implements Listener {
         if (shopName == null) {
             shopName = "default";
         }
-        new ShopGui(this.gameManager, this.shopManager, this.lang, player, game, shopName);
+        new ShopGui(this.shopManager, this.lang, player, game, shopName);
     }
 }
