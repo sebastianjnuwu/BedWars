@@ -78,7 +78,12 @@ public class StartCommand extends BaseCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.arena_not_found", arenaName));
             return;
         }
-        final List<String> missing = this.gameManager.validateArena(arena);
+        if (this.arenaManager.ensureWorldLoaded(arena) == null) {
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.world_not_ready", arenaName));
+            return;
+        }
+        final Arena refreshed = this.arenaManager.get(arenaName);
+        final List<String> missing = this.gameManager.validateArena(refreshed);
         if (!missing.isEmpty()) {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "game.not_ready", arenaName));
             for (final String msg : missing) {
