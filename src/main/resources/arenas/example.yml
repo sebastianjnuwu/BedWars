@@ -32,6 +32,9 @@ cycle_day: true
 cycle_weather: true
 spawn_mobs: true
 spawn_animals: true
+# Comandos liberados durante a partida (além de /bw e /bedwars)
+enable-cmd:
+  - "g"
 difficulty: "EASY"
 time: "DAY"
 

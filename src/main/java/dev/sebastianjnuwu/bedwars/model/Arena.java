@@ -50,6 +50,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private int forgeDefaultLevel;
     private List<ForgeLevel> forgeLevels;
     private List<ShopNpc> shopNpcs;
+    private List<String> enabledCommands;
     private final List<ArenaTeam> teams;
     private final List<ArenaGenerator> generators;
 
@@ -64,6 +65,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.generatorConfigs = new HashMap<>();
         this.forgeLevels = new ArrayList<>();
         this.shopNpcs = new ArrayList<>();
+        this.enabledCommands = new ArrayList<>();
         this.teams = new ArrayList<>();
         this.generators = new ArrayList<>();
     }
@@ -470,6 +472,24 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     }
 
     /**
+     * Retorna os comandos permitidos durante a partida nesta arena.
+     *
+     * @return lista de comandos permitidos (ex.: "g")
+     */
+    public List<String> getEnabledCommands() {
+        return this.enabledCommands;
+    }
+
+    /**
+     * Define os comandos permitidos durante a partida nesta arena.
+     *
+     * @param commands lista de comandos permitidos
+     */
+    public void setEnabledCommands(List<String> commands) {
+        this.enabledCommands = commands != null ? commands : new ArrayList<>();
+    }
+
+    /**
      * Restaura o bloco original abaixo do spawn (remove a esmeralda).
      */
     public void restoreSpawnBlock() {
@@ -527,6 +547,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         copy.forgeDefaultLevel = this.forgeDefaultLevel;
         copy.forgeLevels = this.forgeLevels != null ? new ArrayList<>(this.forgeLevels) : new ArrayList<>();
         copy.shopNpcs = this.shopNpcs != null ? new ArrayList<>(this.shopNpcs) : new ArrayList<>();
+        copy.enabledCommands = this.enabledCommands != null ? new ArrayList<>(this.enabledCommands) : new ArrayList<>();
         for (final ArenaGenerator gen : this.generators) {
             final dev.sebastianjnuwu.bedwars.model.ArenaGenerator genCopy =
                     new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(gen.getUniqueId(), gen.getType(), gen.getLocation());

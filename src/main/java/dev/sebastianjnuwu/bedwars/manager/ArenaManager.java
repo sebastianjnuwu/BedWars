@@ -770,6 +770,12 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             config.set("shop", arena.getShop());
         }
 
+        if (arena.getEnabledCommands() != null && !arena.getEnabledCommands().isEmpty()) {
+            config.set("enable-cmd", arena.getEnabledCommands());
+        } else {
+            config.set("enable-cmd", null);
+        }
+
         // Shop NPCs — se vazio porque o mundo não está carregado, preserva a seção do disco
         List<ShopNpc> shopNpcs = arena.getShopNpcs();
         if (shopNpcs != null && !shopNpcs.isEmpty()) {
@@ -1136,6 +1142,10 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
 
         if (config.contains("shop")) {
             arena.setShop(config.getString("shop"));
+        }
+
+        if (config.contains("enable-cmd")) {
+            arena.setEnabledCommands(config.getStringList("enable-cmd"));
         }
 
         if (config.contains("shop_npcs")) {

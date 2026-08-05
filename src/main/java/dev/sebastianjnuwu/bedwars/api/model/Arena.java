@@ -155,4 +155,20 @@ public interface Arena {
      * @param npcs lista de NPCs de loja
      */
     void setShopNpcs(List<ShopNpc> npcs);
+
+    /**
+     * Retorna os comandos permitidos durante a partida nesta arena
+     * (config {@code enable-cmd}). Comandos listados (ex.: {@code "g"})
+     * não são bloqueados pelo listener de comandos da partida.
+     *
+     * @return lista de comandos permitidos (nunca nula)
+     */
+    List<String> getEnabledCommands();
+
+    /**
+     * Define os comandos permitidos durante a partida nesta arena.
+     *
+     * @param commands lista de comandos permitidos (ex.: {@code "g"})
+     */
+    void setEnabledCommands(List<String> commands);
 }

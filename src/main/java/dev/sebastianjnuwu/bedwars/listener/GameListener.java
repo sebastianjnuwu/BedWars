@@ -393,6 +393,13 @@ public class GameListener implements Listener {
             return;
         }
 
+        for (final String allowed : game.getArena().getEnabledCommands()) {
+            final String base = "/" + allowed.toLowerCase();
+            if (cmd.equals(base) || cmd.startsWith(base + " ")) {
+                return;
+            }
+        }
+
         event.setCancelled(true);
         player.sendMessage(this.lang.text(NamedTextColor.RED, "game.commands_blocked"));
     }
