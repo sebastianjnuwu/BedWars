@@ -196,6 +196,8 @@ categories:
             - "<gray>• Calça de Ferro</gray>"
             - "<gray>• Botas de Ferro</gray>"
             - ""
+            - "<green>Proteção I</green>"
+            - ""
             - "<yellow>Clique para comprar</yellow>"
 
           items:
@@ -203,18 +205,26 @@ categories:
             - stack:
                 type: IRON_HELMET
                 display-name: "<white>Capacete de Ferro</white>"
+                enchants:
+                  protection: 1
 
             - stack:
                 type: IRON_CHESTPLATE
                 display-name: "<white>Peitoral de Ferro</white>"
+                enchants:
+                  protection: 1
 
             - stack:
                 type: IRON_LEGGINGS
                 display-name: "<white>Calça de Ferro</white>"
+                enchants:
+                  protection: 1
 
             - stack:
                 type: IRON_BOOTS
                 display-name: "<white>Botas de Ferro</white>"
+                enchants:
+                  protection: 1
 
         price: 4 gold
 
@@ -235,6 +245,8 @@ categories:
             - "<gray>• Calça de Ouro</gray>"
             - "<gray>• Botas de Ouro</gray>"
             - ""
+            - "<green>Proteção II</green>"
+            - ""
             - "<yellow>Clique para comprar</yellow>"
 
           items:
@@ -242,18 +254,26 @@ categories:
             - stack:
                 type: GOLDEN_HELMET
                 display-name: "<yellow>Capacete de Ouro</yellow>"
+                enchants:
+                  protection: 2
 
             - stack:
                 type: GOLDEN_CHESTPLATE
                 display-name: "<yellow>Peitoral de Ouro</yellow>"
+                enchants:
+                  protection: 2
 
             - stack:
                 type: GOLDEN_LEGGINGS
                 display-name: "<yellow>Calça de Ouro</yellow>"
+                enchants:
+                  protection: 2
 
             - stack:
                 type: GOLDEN_BOOTS
                 display-name: "<yellow>Botas de Ouro</yellow>"
+                enchants:
+                  protection: 2
 
         price: 6 gold
 
@@ -274,6 +294,8 @@ categories:
             - "<gray>• Calça de Diamante</gray>"
             - "<gray>• Botas de Diamante</gray>"
             - ""
+            - "<green>Proteção III</green>"
+            - ""
             - "<yellow>Clique para comprar</yellow>"
 
           items:
@@ -281,18 +303,26 @@ categories:
             - stack:
                 type: DIAMOND_HELMET
                 display-name: "<aqua>Capacete de Diamante</aqua>"
+                enchants:
+                  protection: 3
 
             - stack:
                 type: DIAMOND_CHESTPLATE
                 display-name: "<aqua>Peitoral de Diamante</aqua>"
+                enchants:
+                  protection: 3
 
             - stack:
                 type: DIAMOND_LEGGINGS
                 display-name: "<aqua>Calça de Diamante</aqua>"
+                enchants:
+                  protection: 3
 
             - stack:
                 type: DIAMOND_BOOTS
                 display-name: "<aqua>Botas de Diamante</aqua>"
+                enchants:
+                  protection: 3
 
         price: 8 emerald
 
