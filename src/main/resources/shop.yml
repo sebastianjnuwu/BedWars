@@ -20,14 +20,26 @@
 #              pagebreak (before/after/both), absolute
 
 displayName: "Loja > Compra"
+
 categories:
+
+  # ═══════════════════════════════════════
+  # BLOCOS
+  # ═══════════════════════════════════════
+
   blocks:
     display-name: "<bold><red>Blocos</red></bold>"
     icon: SANDSTONE
     lore:
       - "<gray>Compre blocos para</gray>"
       - "<gray>pontes e construcao</gray>"
+
+    positioning:
+      type: row
+      center: true
+
     items:
+
       - stack:
           type: WHITE_WOOL
           amount: 4
@@ -49,7 +61,7 @@ categories:
       - stack:
           type: END_STONE
           amount: 8
-          display-name: "<yellow>Esfumaçado</yellow>"
+          display-name: "<yellow>Pedra do Fim</yellow>"
         price: 8 iron
 
       - stack:
@@ -70,105 +82,224 @@ categories:
           display-name: "<yellow>Obsidiana</yellow>"
         price: 1 emerald
 
+
+  # ═══════════════════════════════════════
+  # ARMAS
+  # ═══════════════════════════════════════
+
   weapons:
     display-name: "<bold><red>Armas</red></bold>"
     icon: IRON_SWORD
     lore:
       - "<gray>Compre armas para</gray>"
       - "<gray>derrotar seus inimigos</gray>"
+
+    positioning:
+      type: row
+      center: true
+
     items:
+
       - stack:
           type: STONE_SWORD
           display-name: "<yellow>Espada de Pedra</yellow>"
         price: 10 iron
+
       - stack:
           type: IRON_SWORD
           display-name: "<yellow>Espada de Ferro</yellow>"
         price: 3 gold
+
       - stack:
           type: DIAMOND_SWORD
           display-name: "<yellow>Espada de Diamante</yellow>"
         price: 2 emerald
+
       - stack:
           type: BOW
           display-name: "<yellow>Arco</yellow>"
         price: 4 gold
+
       - stack:
           type: ARROW
           amount: 8
           display-name: "<yellow>Flechas</yellow>"
         price: 1 gold
+
       - stack:
           type: IRON_AXE
           display-name: "<yellow>Machado de Ferro</yellow>"
         price: 1 gold
+
       - stack:
           type: DIAMOND_AXE
           display-name: "<yellow>Machado de Diamante</yellow>"
         price: 2 emerald
+
       - stack:
           type: STONE_PICKAXE
+          display-name: "<yellow>Picareta de Pedra</yellow>"
         price: 10 iron
+
       - stack:
           type: SHEARS
+          display-name: "<yellow>Tesoura</yellow>"
         price: 10 iron
+
       - stack:
           type: STICK
           amount: 2
           display-name: "<yellow>Vara de Empurrar</yellow>"
         price: 2 gold
+
       - stack:
           type: FISHING_ROD
-          display-name: "<yellow>Vara de Pescar (Knockback)</yellow>"
+          display-name: "<yellow>Vara de Pescar</yellow>"
         price: 3 gold
+
       - stack:
           type: FIRE_CHARGE
           display-name: "<yellow>Bola de Fogo</yellow>"
         price: 1 gold
 
+
+  # ═══════════════════════════════════════
+  # ARMADURAS
+  # ═══════════════════════════════════════
+
   armor:
     display-name: "<bold><red>Armaduras</red></bold>"
-    icon: CHAINMAIL_BOOTS
+    icon: DIAMOND_CHESTPLATE
     lore:
-      - "<gray>Compre armaduras</gray>"
-      - "<gray>para se proteger</gray>"
+      - "<gray>Compre conjuntos completos</gray>"
+      - "<gray>de armaduras para sua batalha</gray>"
+
+    positioning:
+      type: row
+      center: true
+
     items:
-      - stack:
-          type: CHAINMAIL_BOOTS
-        price: 8 iron
-      - stack:
-          type: CHAINMAIL_LEGGINGS
-        price: 10 iron
-      - stack:
-          type: CHAINMAIL_CHESTPLATE
-        price: 12 iron
-      - stack:
-          type: CHAINMAIL_HELMET
-        price: 8 iron
-      - stack:
-          type: IRON_BOOTS
-        price: 1 gold
-      - stack:
-          type: IRON_LEGGINGS
-        price: 1 gold
+
+      # ─────────────────────────────────
+      # FERRO
+      # ─────────────────────────────────
+
       - stack:
           type: IRON_CHESTPLATE
-        price: 2 gold
+          display-name: "<white><bold>Conjunto de Ferro</bold></white>"
+          lore:
+            - "<gray>Armadura completa de ferro</gray>"
+            - ""
+            - "<white>Contém:</white>"
+            - "<gray>• Capacete de Ferro</gray>"
+            - "<gray>• Peitoral de Ferro</gray>"
+            - "<gray>• Calça de Ferro</gray>"
+            - "<gray>• Botas de Ferro</gray>"
+            - ""
+            - "<yellow>Clique para comprar</yellow>"
+
+          items:
+
+            - stack:
+                type: IRON_HELMET
+                display-name: "<white>Capacete de Ferro</white>"
+
+            - stack:
+                type: IRON_CHESTPLATE
+                display-name: "<white>Peitoral de Ferro</white>"
+
+            - stack:
+                type: IRON_LEGGINGS
+                display-name: "<white>Calça de Ferro</white>"
+
+            - stack:
+                type: IRON_BOOTS
+                display-name: "<white>Botas de Ferro</white>"
+
+        price: 4 gold
+
+
+      # ─────────────────────────────────
+      # OURO
+      # ─────────────────────────────────
+
       - stack:
-          type: IRON_HELMET
-        price: 1 gold
-      - stack:
-          type: DIAMOND_BOOTS
-        price: 2 gold
-      - stack:
-          type: DIAMOND_LEGGINGS
-        price: 2 gold
+          type: GOLDEN_CHESTPLATE
+          display-name: "<yellow><bold>Conjunto de Ouro</bold></yellow>"
+          lore:
+            - "<gray>Armadura completa de ouro</gray>"
+            - ""
+            - "<yellow>Contém:</yellow>"
+            - "<gray>• Capacete de Ouro</gray>"
+            - "<gray>• Peitoral de Ouro</gray>"
+            - "<gray>• Calça de Ouro</gray>"
+            - "<gray>• Botas de Ouro</gray>"
+            - ""
+            - "<yellow>Clique para comprar</yellow>"
+
+          items:
+
+            - stack:
+                type: GOLDEN_HELMET
+                display-name: "<yellow>Capacete de Ouro</yellow>"
+
+            - stack:
+                type: GOLDEN_CHESTPLATE
+                display-name: "<yellow>Peitoral de Ouro</yellow>"
+
+            - stack:
+                type: GOLDEN_LEGGINGS
+                display-name: "<yellow>Calça de Ouro</yellow>"
+
+            - stack:
+                type: GOLDEN_BOOTS
+                display-name: "<yellow>Botas de Ouro</yellow>"
+
+        price: 6 gold
+
+
+      # ─────────────────────────────────
+      # DIAMANTE
+      # ─────────────────────────────────
+
       - stack:
           type: DIAMOND_CHESTPLATE
-        price: 3 gold
-      - stack:
-          type: DIAMOND_HELMET
-        price: 2 gold
+          display-name: "<aqua><bold>Conjunto de Diamante</bold></aqua>"
+          lore:
+            - "<gray>Armadura completa de diamante</gray>"
+            - ""
+            - "<aqua>Contém:</aqua>"
+            - "<gray>• Capacete de Diamante</gray>"
+            - "<gray>• Peitoral de Diamante</gray>"
+            - "<gray>• Calça de Diamante</gray>"
+            - "<gray>• Botas de Diamante</gray>"
+            - ""
+            - "<yellow>Clique para comprar</yellow>"
+
+          items:
+
+            - stack:
+                type: DIAMOND_HELMET
+                display-name: "<aqua>Capacete de Diamante</aqua>"
+
+            - stack:
+                type: DIAMOND_CHESTPLATE
+                display-name: "<aqua>Peitoral de Diamante</aqua>"
+
+            - stack:
+                type: DIAMOND_LEGGINGS
+                display-name: "<aqua>Calça de Diamante</aqua>"
+
+            - stack:
+                type: DIAMOND_BOOTS
+                display-name: "<aqua>Botas de Diamante</aqua>"
+
+        price: 8 emerald
+
+
+  # ═══════════════════════════════════════
+  # FERRAMENTAS
+  # ═══════════════════════════════════════
 
   tools:
     display-name: "<bold><red>Ferramentas</red></bold>"
@@ -176,40 +307,57 @@ categories:
     lore:
       - "<gray>Compre ferramentas</gray>"
       - "<gray>para coletar recursos</gray>"
+
+    positioning:
+      type: row
+      center: true
+
     items:
+
       - stack:
           type: WOODEN_PICKAXE
           display-name: "<yellow>Picareta</yellow>"
           enchants:
             efficiency: 1
         price: 5 iron
+
       - stack:
           type: IRON_PICKAXE
           display-name: "<yellow>Picareta de Ferro</yellow>"
           enchants:
             efficiency: 2
         price: 1 gold
+
       - stack:
           type: GOLDEN_PICKAXE
           display-name: "<yellow>Picareta de Ouro</yellow>"
           enchants:
             efficiency: 3
         price: 2 gold
+
       - stack:
           type: DIAMOND_PICKAXE
           display-name: "<yellow>Picareta de Diamante</yellow>"
           enchants:
             efficiency: 3
         price: 3 gold
+
       - stack:
           type: WOODEN_AXE
           display-name: "<yellow>Machado</yellow>"
           enchants:
             efficiency: 1
         price: 5 iron
+
       - stack:
           type: SHEARS
+          display-name: "<yellow>Tesoura</yellow>"
         price: 10 iron
+
+
+  # ═══════════════════════════════════════
+  # COMIDA
+  # ═══════════════════════════════════════
 
   food:
     display-name: "<bold><red>Comida</red></bold>"
@@ -217,17 +365,32 @@ categories:
     lore:
       - "<gray>Compre comida para</gray>"
       - "<gray>recuperar vida</gray>"
+
+    positioning:
+      type: row
+      center: true
+
     items:
+
       - stack: APPLE;4
         price: 1 iron
+
       - stack: BREAD;2
         price: 1 iron
+
       - stack: COOKED_BEEF;2
         price: 2 iron
+
       - stack: GOLDEN_APPLE
         price: 3 gold
+
       - stack: CAKE
         price: 5 iron
+
+
+  # ═══════════════════════════════════════
+  # UTILIDADES
+  # ═══════════════════════════════════════
 
   utils:
     display-name: "<bold><red>Utilidades</red></bold>"
@@ -235,36 +398,53 @@ categories:
     lore:
       - "<gray>Itens de utilidade</gray>"
       - "<gray>para vencer a partida</gray>"
+
+    positioning:
+      type: row
+      center: true
+
     items:
+
       - stack:
           type: WATER_BUCKET
           display-name: "<yellow>Balde de Agua</yellow>"
         price: 1 gold
+
       - stack:
           type: LAVA_BUCKET
           display-name: "<yellow>Balde de Lava</yellow>"
         price: 2 gold
+
       - stack:
           type: ENDER_PEARL
           display-name: "<yellow>Perola do Fim</yellow>"
         price: 2 emerald
+
       - stack:
           type: TNT
           display-name: "<yellow>Dinamite</yellow>"
         price: 2 gold
+
       - stack:
           type: IRON_TRAPDOOR
           display-name: "<yellow>Alcapao de Ferro</yellow>"
         price: 4 iron
+
       - stack:
           type: FIRE_CHARGE
           display-name: "<yellow>Bola de Fogo</yellow>"
         price: 1 gold
+
       - stack:
           type: SPLASH_POTION
           display-name: "<yellow>Pot. Veneno</yellow>"
           tag: '{potion_contents:{potion:"minecraft:poison"}}'
         price: 2 emerald
+
+
+  # ═══════════════════════════════════════
+  # MELHORIAS
+  # ═══════════════════════════════════════
 
   upgrades:
     display-name: "<bold><red>Melhorias</red></bold>"
@@ -272,7 +452,13 @@ categories:
     lore:
       - "<gray>Compre melhorias</gray>"
       - "<gray>para seu time</gray>"
+
+    positioning:
+      type: row
+      center: true
+
     items:
+
       - stack:
           type: DIAMOND
           display-name: "<yellow>Afiacao</yellow>"
@@ -281,6 +467,7 @@ categories:
             - "<gray>do seu time</gray>"
         price: 2 diamond
         upgrade: sharpness
+
       - stack:
           type: DIAMOND_CHESTPLATE
           display-name: "<yellow>Protecao</yellow>"
@@ -289,6 +476,7 @@ categories:
             - "<gray>do seu time</gray>"
         price: 2 diamond
         upgrade: protection
+
       - stack:
           type: FURNACE
           display-name: "<yellow>Fornalha</yellow>"
@@ -297,6 +485,7 @@ categories:
             - "<gray>do seu time</gray>"
         price: 1 diamond
         upgrade: forge
+
       - stack:
           type: ENDER_PEARL
           display-name: "<yellow>Dragon Buff</yellow>"

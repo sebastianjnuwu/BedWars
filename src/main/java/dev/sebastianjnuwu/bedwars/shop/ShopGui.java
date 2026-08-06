@@ -9,12 +9,16 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -451,18 +455,16 @@ public class ShopGui implements InventoryHolder {
 
         // Handle upgrades
         ItemStack bought = item.createItemStack();
-        applyTeamColor(bought);
         if (item.getUpgrade() != null) {
             handleUpgrade(item);
         } else if (item.hasContents()) {
             giveContents(item);
         } else if (item.getArmorSet() != null) {
             for (ItemStack piece : item.createArmorSetItems()) {
-                applyTeamColor(piece);
-                giveOrDrop(piece);
+                deliverItem(piece);
             }
         } else {
-            giveOrDrop(bought);
+            deliverItem(bought);
         }
 
         // Fire event
@@ -486,15 +488,102 @@ public class ShopGui implements InventoryHolder {
                 giveContents(child);
             } else if (child.getArmorSet() != null) {
                 for (ItemStack piece : child.createArmorSetItems()) {
-                    applyTeamColor(piece);
-                    giveOrDrop(piece);
+                    deliverItem(piece);
                 }
             } else {
-                ItemStack stack = child.createItemStack();
-                applyTeamColor(stack);
-                giveOrDrop(stack);
+                deliverItem(child.createItemStack());
             }
         }
+    }
+
+    private void deliverItem(final ItemStack stack) {
+        if (leatherFor(stack.getType()) != null) {
+            equipTeamArmor(stack);
+        } else {
+            applyTeamColor(stack);
+            giveOrDrop(stack);
+        }
+    }
+
+    private void equipTeamArmor(final ItemStack stack) {
+        final Material leather = leatherFor(stack.getType());
+        final ArenaTeam team = this.game.getPlayerTeam(this.player);
+        if (leather == null || team == null || team.getColor() == null) {
+            giveOrDrop(stack);
+            return;
+        }
+        final ItemStack colored = new ItemStack(leather);
+        final ItemMeta sourceMeta = stack.getItemMeta();
+        final LeatherArmorMeta meta = (LeatherArmorMeta) colored.getItemMeta();
+        if (sourceMeta != null) {
+            meta.displayName(sourceMeta.displayName());
+            if (sourceMeta.hasLore()) {
+                meta.lore(sourceMeta.lore());
+            }
+            sourceMeta.getEnchants().forEach((enchant, level) -> meta.addEnchant(enchant, level, true));
+        }
+        meta.setColor(Game.getArmorColor(team.getColor()));
+        meta.setUnbreakable(true);
+        final int delta = armorPoints(stack.getType()) - armorPoints(leather);
+        if (delta > 0) {
+            meta.addAttributeModifier(Attribute.ARMOR, new AttributeModifier(
+                    NamespacedKey.minecraft("bw_armor"),
+                    delta,
+                    AttributeModifier.Operation.ADD_NUMBER));
+        }
+        final int toughness = armorToughness(stack.getType());
+        if (toughness > 0) {
+            meta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS, new AttributeModifier(
+                    NamespacedKey.minecraft("bw_toughness"),
+                    toughness,
+                    AttributeModifier.Operation.ADD_NUMBER));
+        }
+        colored.setItemMeta(meta);
+        switch (leather) {
+            case LEATHER_HELMET -> this.player.getInventory().setHelmet(colored);
+            case LEATHER_CHESTPLATE -> this.player.getInventory().setChestplate(colored);
+            case LEATHER_LEGGINGS -> this.player.getInventory().setLeggings(colored);
+            case LEATHER_BOOTS -> this.player.getInventory().setBoots(colored);
+            default -> { }
+        }
+    }
+
+    private static Material leatherFor(final Material mat) {
+        final String name = mat.name();
+        if (name.endsWith("_HELMET")) {
+            return Material.LEATHER_HELMET;
+        }
+        if (name.endsWith("_CHESTPLATE")) {
+            return Material.LEATHER_CHESTPLATE;
+        }
+        if (name.endsWith("_LEGGINGS")) {
+            return Material.LEATHER_LEGGINGS;
+        }
+        if (name.endsWith("_BOOTS")) {
+            return Material.LEATHER_BOOTS;
+        }
+        return null;
+    }
+
+    private static int armorPoints(final Material mat) {
+        return switch (mat) {
+            case LEATHER_HELMET, LEATHER_BOOTS, GOLDEN_BOOTS, CHAINMAIL_BOOTS -> 1;
+            case GOLDEN_HELMET, CHAINMAIL_HELMET, IRON_HELMET, LEATHER_LEGGINGS, IRON_BOOTS -> 2;
+            case LEATHER_CHESTPLATE, DIAMOND_HELMET, NETHERITE_HELMET, GOLDEN_LEGGINGS,
+                    CHAINMAIL_LEGGINGS, DIAMOND_BOOTS, NETHERITE_BOOTS -> 3;
+            case GOLDEN_CHESTPLATE, CHAINMAIL_CHESTPLATE, IRON_LEGGINGS -> 5;
+            case IRON_CHESTPLATE, DIAMOND_LEGGINGS, NETHERITE_LEGGINGS -> 6;
+            case DIAMOND_CHESTPLATE, NETHERITE_CHESTPLATE -> 8;
+            default -> 0;
+        };
+    }
+
+    private static int armorToughness(final Material mat) {
+        return switch (mat) {
+            case DIAMOND_HELMET, DIAMOND_CHESTPLATE, DIAMOND_LEGGINGS, DIAMOND_BOOTS -> 2;
+            case NETHERITE_HELMET, NETHERITE_CHESTPLATE, NETHERITE_LEGGINGS, NETHERITE_BOOTS -> 3;
+            default -> 0;
+        };
     }
 
     private void giveOrDrop(ItemStack stack) {

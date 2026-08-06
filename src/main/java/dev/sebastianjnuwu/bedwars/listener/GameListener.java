@@ -5,6 +5,7 @@ import java.time.Duration;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.HumanEntity;
@@ -19,6 +20,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -26,6 +30,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -417,9 +423,63 @@ public class GameListener implements Listener {
         if (game == null) {
             return;
         }
+        if (isArmorPiece(event.getItemDrop().getItemStack().getType())) {
+            event.setCancelled(true);
+            return;
+        }
         if (!game.isPlaying(player)) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onInventoryClick(final InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof final Player player)) {
+            return;
+        }
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null || !game.isPlaying(player)) {
+            return;
+        }
+        if (!(event.getView().getTopInventory() instanceof PlayerInventory)) {
+            return;
+        }
+        if (event.getSlotType() == InventoryType.SlotType.ARMOR) {
+            event.setCancelled(true);
+            return;
+        }
+        final ItemStack current = event.getCurrentItem();
+        if (event.isShiftClick() && current != null && isArmorPiece(current.getType())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onInventoryDrag(final InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof final Player player)) {
+            return;
+        }
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null || !game.isPlaying(player)) {
+            return;
+        }
+        if (!(event.getView().getTopInventory() instanceof PlayerInventory)) {
+            return;
+        }
+        for (final int slot : event.getRawSlots()) {
+            if (slot >= 36 && slot <= 39) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    private static boolean isArmorPiece(final Material material) {
+        final String name = material.name();
+        return name.endsWith("_HELMET")
+                || name.endsWith("_CHESTPLATE")
+                || name.endsWith("_LEGGINGS")
+                || name.endsWith("_BOOTS");
     }
 
     /**

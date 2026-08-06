@@ -1381,7 +1381,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return item;
     }
 
-    private static Color getArmorColor(final String dyeColor) {
+    public static Color getArmorColor(final String dyeColor) {
         if (dyeColor == null) {
             return Color.WHITE;
         }
