@@ -143,47 +143,23 @@ categories:
 
   armor:
     display-name: "<bold><red>Armaduras</red></bold>"
-    icon: CHAINMAIL_BOOTS
+    icon: CHAINMAIL_CHESTPLATE
     lore:
-      - "<gray>Compre armaduras</gray>"
+      - "<gray>Compre armaduras completas</gray>"
       - "<gray>para se proteger</gray>"
     items:
       - stack:
-          type: CHAINMAIL_BOOTS
-        price: 20 iron
-      - stack:
-          type: CHAINMAIL_LEGGINGS
-        price: 30 iron
-      - stack:
-          type: CHAINMAIL_CHESTPLATE
+          type: CHAINMAIL
+          display-name: "<yellow>Armadura de Cota</yellow>"
         price: 40 iron
       - stack:
-          type: CHAINMAIL_HELMET
-        price: 20 iron
-      - stack:
-          type: IRON_BOOTS
-        price: 1 gold
-      - stack:
-          type: IRON_LEGGINGS
-        price: 1 gold
-      - stack:
-          type: IRON_CHESTPLATE
-        price: 2 gold
-      - stack:
-          type: IRON_HELMET
-        price: 1 gold
-      - stack:
-          type: DIAMOND_BOOTS
-        price: 3 gold
-      - stack:
-          type: DIAMOND_LEGGINGS
-        price: 3 gold
-      - stack:
-          type: DIAMOND_CHESTPLATE
+          type: IRON
+          display-name: "<yellow>Armadura de Ferro</yellow>"
         price: 4 gold
       - stack:
-          type: DIAMOND_HELMET
-        price: 3 gold
+          type: DIAMOND
+          display-name: "<aqua>Armadura de Diamante</aqua>"
+        price: 8 emerald
 
   tools:
     display-name: "<bold><red>Ferramentas</red></bold>"
@@ -322,7 +298,7 @@ categories:
       - "<gray>para seu time</gray>"
     items:
       - stack:
-          type: DIAMOND
+          type: DIAMOND_SWORD
           display-name: "<yellow>Afiacao</yellow>"
           lore:
             - "<gray>Melhora as armas</gray>"

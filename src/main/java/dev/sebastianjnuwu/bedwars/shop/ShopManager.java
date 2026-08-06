@@ -239,9 +239,16 @@ public class ShopManager {
 
     private void parseLongStack(Map<String, Object> stackMap, ShopItem.Builder builder) {
         if (stackMap.containsKey("type")) {
-            Material mat = Material.matchMaterial(stackMap.get("type").toString());
-            if (mat != null) {
-                builder.material(mat);
+            String type = stackMap.get("type").toString();
+            List<Material> armorSet = armorSetFor(type);
+            if (armorSet != null) {
+                builder.material(armorSet.get(1));
+                builder.armorSet(armorSet);
+            } else {
+                Material mat = Material.matchMaterial(type);
+                if (mat != null) {
+                    builder.material(mat);
+                }
             }
         }
         if (stackMap.containsKey("amount")) {
@@ -278,9 +285,16 @@ public class ShopManager {
     private void parseShortStackInternal(String stack, ShopItem.Builder builder) {
         String[] parts = stack.split(";");
         if (parts.length > 0) {
-            Material mat = Material.matchMaterial(parts[0].trim());
-            if (mat != null) {
-                builder.material(mat);
+            String type = parts[0].trim();
+            List<Material> armorSet = armorSetFor(type);
+            if (armorSet != null) {
+                builder.material(armorSet.get(1));
+                builder.armorSet(armorSet);
+            } else {
+                Material mat = Material.matchMaterial(type);
+                if (mat != null) {
+                    builder.material(mat);
+                }
             }
         }
         if (parts.length > 1) {
@@ -329,6 +343,24 @@ public class ShopManager {
             case "diamond" -> CurrencyType.DIAMOND;
             case "emerald" -> CurrencyType.EMERALD;
             default -> CurrencyType.IRON;
+        };
+    }
+
+    private static List<Material> armorSetFor(String type) {
+        return switch (type.toUpperCase()) {
+            case "LEATHER" -> List.of(Material.LEATHER_HELMET, Material.LEATHER_CHESTPLATE,
+                    Material.LEATHER_LEGGINGS, Material.LEATHER_BOOTS);
+            case "CHAINMAIL" -> List.of(Material.CHAINMAIL_HELMET, Material.CHAINMAIL_CHESTPLATE,
+                    Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_BOOTS);
+            case "IRON" -> List.of(Material.IRON_HELMET, Material.IRON_CHESTPLATE,
+                    Material.IRON_LEGGINGS, Material.IRON_BOOTS);
+            case "GOLD", "GOLDEN" -> List.of(Material.GOLDEN_HELMET, Material.GOLDEN_CHESTPLATE,
+                    Material.GOLDEN_LEGGINGS, Material.GOLDEN_BOOTS);
+            case "DIAMOND" -> List.of(Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE,
+                    Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS);
+            case "NETHERITE" -> List.of(Material.NETHERITE_HELMET, Material.NETHERITE_CHESTPLATE,
+                    Material.NETHERITE_LEGGINGS, Material.NETHERITE_BOOTS);
+            default -> null;
         };
     }
 }

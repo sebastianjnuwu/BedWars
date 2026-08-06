@@ -454,13 +454,13 @@ public class ShopGui implements InventoryHolder {
         applyTeamColor(bought);
         if (item.getUpgrade() != null) {
             handleUpgrade(item);
-        } else {
-            Map<Integer, ItemStack> leftover = player.getInventory().addItem(bought);
-            if (!leftover.isEmpty()) {
-                for (ItemStack drop : leftover.values()) {
-                    player.getWorld().dropItem(player.getLocation(), drop);
-                }
+        } else if (item.getArmorSet() != null) {
+            for (ItemStack piece : item.createArmorSetItems()) {
+                applyTeamColor(piece);
+                giveOrDrop(piece);
             }
+        } else {
+            giveOrDrop(bought);
         }
 
         // Fire event
@@ -476,6 +476,15 @@ public class ShopGui implements InventoryHolder {
         player.sendMessage(MM.deserialize(this.lang.raw("shop.purchased")));
 
         this.render();
+    }
+
+    private void giveOrDrop(ItemStack stack) {
+        Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
+        if (!leftover.isEmpty()) {
+            for (ItemStack drop : leftover.values()) {
+                player.getWorld().dropItem(player.getLocation(), drop);
+            }
+        }
     }
 
     private void handleUpgrade(ShopItem item) {

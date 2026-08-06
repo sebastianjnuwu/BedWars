@@ -1,5 +1,6 @@
 package dev.sebastianjnuwu.bedwars.shop;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
 public class ShopItem {
 
     private final Material material;
+    private final List<Material> armorSet;
     private final int amount;
     private final String displayName;
     private final List<String> lore;
@@ -30,6 +32,7 @@ public class ShopItem {
 
     private ShopItem(Builder builder) {
         this.material = builder.material;
+        this.armorSet = builder.armorSet;
         this.amount = builder.amount;
         this.displayName = builder.displayName;
         this.lore = builder.lore;
@@ -48,6 +51,10 @@ public class ShopItem {
 
     public Material getMaterial() {
         return material;
+    }
+
+    public List<Material> getArmorSet() {
+        return armorSet;
     }
 
     public int getAmount() {
@@ -110,6 +117,34 @@ public class ShopItem {
     public ItemStack createItemStack() {
         Material mat = material != null ? material : Material.BARRIER;
         ItemStack stack = new ItemStack(mat, amount);
+        applyDisplayMeta(stack);
+        if (tag != null) {
+            try {
+                net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(tag);
+            } catch (Exception ignored) {
+                try {
+                    org.bukkit.Color.fromRGB(0);
+                    stack = org.bukkit.inventory.ItemStack.of(stack.getType());
+                } catch (Exception ignoredEx) {}
+            }
+        }
+        return stack;
+    }
+
+    public List<ItemStack> createArmorSetItems() {
+        if (armorSet == null) {
+            return List.of(createItemStack());
+        }
+        List<ItemStack> pieces = new ArrayList<>(armorSet.size());
+        for (Material mat : armorSet) {
+            ItemStack stack = new ItemStack(mat);
+            applyDisplayMeta(stack);
+            pieces.add(stack);
+        }
+        return pieces;
+    }
+
+    private void applyDisplayMeta(ItemStack stack) {
         if (displayName != null || lore != null || (enchants != null && !enchants.isEmpty()) || tag != null) {
             var meta = stack.getItemMeta();
             if (displayName != null) {
@@ -133,21 +168,11 @@ public class ShopItem {
             }
             stack.setItemMeta(meta);
         }
-        if (tag != null) {
-            try {
-                net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(tag);
-            } catch (Exception ignored) {
-                try {
-                    org.bukkit.Color.fromRGB(0);
-                    stack = org.bukkit.inventory.ItemStack.of(stack.getType());
-                } catch (Exception ignoredEx) {}
-            }
-        }
-        return stack;
     }
 
     public static class Builder {
         private Material material;
+        private List<Material> armorSet;
         private int amount = 1;
         private String displayName;
         private List<String> lore;
@@ -165,6 +190,11 @@ public class ShopItem {
 
         public Builder material(Material material) {
             this.material = material;
+            return this;
+        }
+
+        public Builder armorSet(List<Material> armorSet) {
+            this.armorSet = armorSet;
             return this;
         }
 
