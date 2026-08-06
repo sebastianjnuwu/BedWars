@@ -11,8 +11,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -665,8 +667,8 @@ public class ShopGui implements InventoryHolder {
             return false;
         }
         for (final ItemStack piece : pieces) {
-            final int current = effectivePoints(equippedArmor(piece.getType()));
-            if (armorPoints(piece.getType()) > current) {
+            final ItemStack equipped = equippedArmor(piece.getType());
+            if (effectivePoints(piece) > effectivePoints(equipped)) {
                 return false;
             }
         }
@@ -699,16 +701,12 @@ public class ShopGui implements InventoryHolder {
         };
     }
 
-    private static int effectivePoints(final ItemStack equipped) {
-        if (equipped == null) {
+    private static int effectivePoints(final ItemStack stack) {
+        if (stack == null) {
             return 0;
         }
-        final Material leather = leatherFor(equipped.getType());
-        if (leather == null) {
-            return armorPoints(equipped.getType());
-        }
-        int points = armorPoints(leather);
-        final ItemMeta meta = equipped.getItemMeta();
+        int points = armorPoints(stack.getType());
+        final ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             final var modifiers = meta.getAttributeModifiers(Attribute.ARMOR);
             if (modifiers != null) {
@@ -718,8 +716,17 @@ public class ShopGui implements InventoryHolder {
                     }
                 }
             }
+            points += protectionWeight(meta);
         }
         return points;
+    }
+
+    private static int protectionWeight(final ItemMeta meta) {
+        final Enchantment protection = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("protection"));
+        if (protection == null) {
+            return 0;
+        }
+        return meta.getEnchantLevel(protection) * 2;
     }
 
     private void deliverItem(final ItemStack stack) {
