@@ -486,11 +486,3 @@ categories:
         price: 1 diamond
         upgrade: forge
 
-      - stack:
-          type: ENDER_PEARL
-          display-name: "<yellow>Dragon Buff</yellow>"
-          lore:
-            - "<gray>Ganha forca quando</gray>"
-            - "<gray>a cama e destruida</gray>"
-        price: 3 diamond
-        upgrade: dragon_buff
