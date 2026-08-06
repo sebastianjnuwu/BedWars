@@ -24,6 +24,9 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 - 👥 Gerenciamento de equipes
 - ⚙️ Configuração totalmente personalizável
 - ⛏️ Geradores de recursos configuráveis
+- 🛍️ Loja personalizável por arena (kits, upgrade de fornalha, conjuntos de armadura, posicionamento por linha/coluna)
+- 🥋 Armadura de time: compras viram couro na cor do time, presa no slot e com bloqueio de recompra
+- 💣 TNT destrói apenas blocos colocados por jogadores (mapa, camas e geradores protegidos)
 - 📦 Arquitetura modular para facilitar manutenção e expansão
 
 ## 📦 Requisitos
@@ -212,6 +215,12 @@ Destaques que você pode editar **direto no YAML** (sem comando):
   ```
 - `forge:` — níveis da fornalha, preço e moeda de upgrade de cada nível.
 - `generator_config:` — intervalo (em ticks) de cada gerador.
+- `spawn_item:` — itens entregues ao jogador no **início da partida e em cada respawn**. Ex.:
+  ```yaml
+  spawn_item:
+    - WOODEN_SWORD
+    - SHEARS
+  ```
 - `difficulty` / `time` / `cycle_day` / `cycle_weather` / `spawn_mobs` / `spawn_animals` — ambiente do mundo.
 
 ### 14. Jogar na arena
@@ -296,7 +305,14 @@ categories:
 - **Long stack:** `stack: { type, amount, display-name, lore, enchants, tag }` + `price: "<preco> <moeda>"`
 - **Moedas:** `iron`, `gold`, `diamond`, `emerald`
 - **Upgrade de forja:** `upgrade: forge`
-- **Posicionamento:** `skip`, `column`, `row`, `linebreak`, `absolute`
+- **Conjunto de armadura:** `type: IRON` (ou `CHAINMAIL`, `GOLD`, `LEATHER`, `NETHERITE`) entrega as 4 peças de uma vez — e qualquer peça comprada vira **couro na cor do time** (veja abaixo)
+- **Kit recursivo:** `items:` dentro do `stack:` entrega vários itens de uma vez (itens dentro de itens)
+- **Posicionamento do item:** `skip`, `column`, `row`, `linebreak`, `pagebreak`, `absolute`
+- **Posicionamento da categoria:** bloco `positioning:` no nível da categoria — `type: row` (padrão) ou `column` e `center: true` para centralizar os itens na linha/coluna
+
+**Armadura de time:** toda armadura comprada (exceto couro já colorido) é convertida em couro tingido com a cor do time (`color:` no YAML da arena), marcada como `unbreakable` e com os atributos de proteção do material original. Ela fica **presa no slot** (não pode ser removida nem dropada) e **não dá para recomprar** a mesma armadura ou uma pior — apenas upgrades da fornalha liberam a compra.
+
+**TNT:** na partida, a TNT destrói apenas blocos colocados por jogadores — o mapa, as camas e os geradores ficam protegidos.
 #### Vincular loja à arena
 
 ```bash

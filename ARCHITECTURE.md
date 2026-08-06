@@ -5,6 +5,8 @@
 Este documento define a arquitetura técnica oficial do sistema de mapas do plugin BedWars.
 O objetivo é garantir um sistema escalável, isolado e performático, evitando a carga desnecessária de WorldEdit/Schematics durante o tempo de execução (runtime) de partidas.
 
+> ⚠️ **Sistemas de mundos — IMPORTANTE.** O sistema **ativo** em runtime é o baseado em **schematic**: `manager/ArenaManager` + `world/WorldManager` + `world/Schematic`. As arenas são persistidas em `arenas/<nome>.yml`, os mapas como schematics FAWE em `maps/`, e os mundos de partida `bw_<nome>` são recriados via unload/delete verificado + `VoidGenerator` + paste do schematic a cada reset (`ArenaManager.resetArenaMap`). O sistema **Slime/ASP descrito nos diagramas abaixo é uma implementação paralela e NÃO ativa** (`arena/ArenaManager`, `reset/ResetManager`, `slime/*`, `template/*`, `world/SimpleWorldManager`) — não está conectado no `BedWarsPlugin.onEnable()`. Alterações devem priorizar o sistema Schematic; o Slime não deve ser tratado como produção.
+
 ## Pilares Tecnológicos
 
 - **AdvancedSlimePaper / SlimeWorld:** Núcleo de gerenciamento de mundos para carregamento/descarregamento rápido de templates.
@@ -174,17 +176,20 @@ dev.sebastianjnuwu.bedwars
 ├── command/        # Sistema de comandos (BaseCommand, SubCommand)
 ├── editor/         # Lógica específica do editor de arenas
 ├── game/           # Core do jogo e estados de partida
+├── lang/           # Internacionalização (lang/pt_BR.yml) via LangManager
+├── libs/           # Código embarcado (bStats)
 ├── listener/       # Eventos do Bukkit (Arena, Game, UI)
 ├── manager/        # Managers singleton (ArenaManager, GameManager, etc.)
 ├── model/          # POJOs e modelos de dados
 ├── queue/          # Gerenciamento de filas de espera
 ├── reset/          # Lógica de descarte de instâncias após partida
 ├── session/        # Sessões de edição ativa
-├── slime/          # Wrapper para SlimeWorld e carregamento de templates
-├── template/       # Gerenciamento de persistência de templates
+├── shop/           # Loja (ShopManager, ShopCategory, ShopItem, ShopGui) e NPCs
+├── slime/          # Wrapper para SlimeWorld e carregamento de templates (NÃO ativo)
+├── template/       # Gerenciamento de persistência de templates (NÃO ativo)
 ├── ui/             # Interfaces de usuário (GUIs)
 ├── util/           # Utilitários (LocationUtil)
-└── world/          # Abstrações de Mundo (VoidGenerator, Managers)
+└── world/          # Abstrações de Mundo (WorldManager, VoidGenerator, Schematic)
 ```
 
 ---
@@ -196,17 +201,20 @@ dev.sebastianjnuwu.bedwars
 Utiliza `ArenaCreator` para gerar mundos `VOID` sem física.
 O `ArenaEditorValidator` garante que a arena possua todos os requisitos (spawns, camas, geradores) antes de permitir o `save`.
 
-### 2. Sistema de Mundos (`slime/`, `world/`)
+### 2. Sistema de Mundos (`world/`, `manager/`)
 
-A interface `WorldManager` abstrai a criação de mundos. Implementações:
+Sistema **ativo** baseado em schematic:
 
-- `SlimeWorldManager`: Gerencia instâncias baseadas em templates.
-- `VoidGenerator`: Garante o estado inicial limpo.
+- `world/WorldManager`: cria mundos void (`bw_<nome>` via `WorldCreator` + `VoidGenerator`), salva/copia templates e descarrega mundos com verificação.
+- `world/Schematic`: captura e aplica schematics FAWE (`.schem`/`.bwmap`) em `maps/` — usado apenas no load/save/restore, nunca em runtime.
+- `manager/ArenaManager`: `resetArenaMap(name)` executa o ciclo de reset — unload + delete verificados (`WorldManager.deleteWorld`) → novo mundo void → `Schematic.paste` → `flush`. Retorna `boolean`; em falha loga `log.arena_manager.reset_error`.
+
+Implementação paralela **NÃO ativa**: `world/SimpleWorldManager`, `slime/SlimeWorldManager`, `slime/SlimeManager` (ver aviso no início).
 
 ### 3. Gerenciamento de Partidas (`game/`, `arena/`)
 
 O `GameManager` coordena a transição entre `GameState` (READY -> STARTING -> PLAYING -> ENDING -> RESETTING).
-O `ResetManager` é crucial: ele não limpa blocos, ele solicita o descarregamento da instância `SlimeWorld` e remove o arquivo temporário, garantindo integridade total para a próxima partida.
+O `ResetManager` (sistema Slime, não ativo) não limpa blocos: solicita o descarregamento da instância `SlimeWorld` e remove o arquivo temporário. No sistema **ativo**, o reset é feito por `ArenaManager.resetArenaMap(name)` chamado por `Game.forceEnd()`/`endGame()` — recria o mundo do schematic a cada partida, garantindo integridade total para a próxima.
 
 ---
 
