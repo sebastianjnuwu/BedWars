@@ -10,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.SmallFireball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -315,6 +316,41 @@ public class GameListener implements Listener {
             return;
         }
         event.setCancelled(true);
+    }
+
+    /**
+     * Lança uma bola de fogo ({@link SmallFireball}) ao usar o item
+     * {@code FIRE_CHARGE} da loja durante uma partida.
+     * <p>
+     * Sem esse tratamento, o item cai no comportamento padrão de ignição
+     * (funciona como um isqueiro) em vez de disparar o projétil.
+     * </p>
+     *
+     * @param event o evento de interação (não nulo)
+     */
+    @EventHandler
+    public void onFireballUse(final PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
+            return;
+        }
+        final ItemStack item = event.getItem();
+        if (item == null || item.getType() != Material.FIRE_CHARGE) {
+            return;
+        }
+        final Player player = event.getPlayer();
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null || !game.isPlaying(player)) {
+            return;
+        }
+        event.setCancelled(true);
+        final SmallFireball fireball = player.launchProjectile(
+                SmallFireball.class, player.getLocation().getDirection().multiply(1.5));
+        fireball.setShooter(player);
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+        } else {
+            player.getInventory().setItemInMainHand(null);
+        }
     }
 
     /**
