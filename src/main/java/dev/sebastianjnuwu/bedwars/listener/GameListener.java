@@ -31,7 +31,6 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -445,10 +444,11 @@ public class GameListener implements Listener {
     }
 
     /**
-     * Impede a remoção de armaduras pelo inventário.
+     * Impede a remoção ou troca de armaduras pelo inventário.
      * <p>
      * Cancela cliques no slot de armadura e shift-clicks sobre peças de
-     * armadura, mantendo a armadura de time presa no jogador.
+     * armadura, mantendo a armadura de time presa no jogador em qualquer
+     * inventário aberto.
      * </p>
      */
     @EventHandler
@@ -458,9 +458,6 @@ public class GameListener implements Listener {
         }
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null || !game.isPlaying(player)) {
-            return;
-        }
-        if (!(event.getView().getTopInventory() instanceof PlayerInventory)) {
             return;
         }
         if (event.getSlotType() == InventoryType.SlotType.ARMOR) {
@@ -475,7 +472,7 @@ public class GameListener implements Listener {
 
     /**
      * Impede que peças de armadura sejam movidas para o slot de armadura
-     * através de arrastar/soltar.
+     * através de arrastar/soltar, em qualquer inventário aberto.
      */
     @EventHandler
     public void onInventoryDrag(final InventoryDragEvent event) {
@@ -486,11 +483,8 @@ public class GameListener implements Listener {
         if (game == null || !game.isPlaying(player)) {
             return;
         }
-        if (!(event.getView().getTopInventory() instanceof PlayerInventory)) {
-            return;
-        }
-        for (final int slot : event.getRawSlots()) {
-            if (slot >= 36 && slot <= 39) {
+        for (final int rawSlot : event.getRawSlots()) {
+            if (event.getView().getSlotType(rawSlot) == InventoryType.SlotType.ARMOR) {
                 event.setCancelled(true);
                 return;
             }
