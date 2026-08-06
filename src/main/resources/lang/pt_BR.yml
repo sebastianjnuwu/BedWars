@@ -260,6 +260,7 @@ shop:
   team_upgrade: "<aqua>Upgrade do time</aqua>"
   not_enough: "<red>Você não tem {0} suficiente!</red>"
   purchased: "<green>Comprado!</green>"
+  armor_already_owned: "<red>Você já tem essa armadura (ou uma melhor)!</red>"
   currency_iron: "Ferro"
   currency_gold: "Ouro"
   currency_diamond: "Diamante"

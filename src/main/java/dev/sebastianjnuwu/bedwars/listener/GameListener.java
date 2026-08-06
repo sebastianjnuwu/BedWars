@@ -413,8 +413,11 @@ public class GameListener implements Listener {
     }
 
     /**
-     * Permite que jogadores vivos dropem itens com a tecla Q.
-     * Spectators e jogadores mortos não podem dropar.
+     * Controla o drop de itens durante a partida.
+     * <p>
+     * Bloqueia o drop de armaduras (protegendo a armadura de time) e de
+     * jogadores mortos/espectadores.
+     * </p>
      */
     @EventHandler
     public void onPlayerDropItem(final PlayerDropItemEvent event) {
@@ -432,6 +435,13 @@ public class GameListener implements Listener {
         }
     }
 
+    /**
+     * Impede a remoção de armaduras pelo inventário.
+     * <p>
+     * Cancela cliques no slot de armadura e shift-clicks sobre peças de
+     * armadura, mantendo a armadura de time presa no jogador.
+     * </p>
+     */
     @EventHandler
     public void onInventoryClick(final InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof final Player player)) {
@@ -454,6 +464,10 @@ public class GameListener implements Listener {
         }
     }
 
+    /**
+     * Impede que peças de armadura sejam movidas para o slot de armadura
+     * através de arrastar/soltar.
+     */
     @EventHandler
     public void onInventoryDrag(final InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof final Player player)) {
@@ -474,6 +488,12 @@ public class GameListener implements Listener {
         }
     }
 
+    /**
+     * Verifica se o material é uma peça de armadura.
+     *
+     * @param material material a verificar
+     * @return {@code true} se é capacete, peitoral, calça ou botas
+     */
     private static boolean isArmorPiece(final Material material) {
         final String name = material.name();
         return name.endsWith("_HELMET")
@@ -525,6 +545,14 @@ public class GameListener implements Listener {
         game.trackPlacedBlock(event.getBlockPlaced().getLocation());
     }
 
+    /**
+     * Controla explosões de entidades (ex.: TNT) nas partidas.
+     * <p>
+     * Remove da lista de blocos destruídos todo bloco que não foi colocado
+     * pelo jogador, protegendo o mapa original (camas, geradores e plataformas)
+     * e mantendo o dano aos jogadores.
+     * </p>
+     */
     @EventHandler
     public void onEntityExplode(final EntityExplodeEvent event) {
         if (!event.getEntity().getWorld().getName().startsWith("bw_")) {

@@ -1088,6 +1088,16 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         arena.setCycleWeather(config.getBoolean("cycle_weather", true));
         arena.setSpawnMobs(config.getBoolean("spawn_mobs", true));
         arena.setSpawnAnimals(config.getBoolean("spawn_animals", true));
+        if (config.contains("spawn_item")) {
+            final List<Material> spawnItems = new ArrayList<>();
+            for (final String itemName : config.getStringList("spawn_item")) {
+                final Material mat = Material.matchMaterial(itemName);
+                if (mat != null) {
+                    spawnItems.add(mat);
+                }
+            }
+            arena.setSpawnItems(spawnItems);
+        }
         if (config.contains("teams")) {
             for (final String key : config.getConfigurationSection("teams").getKeys(false)) {
                 final String path = "teams." + key;
@@ -1145,7 +1155,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
 
         if (config.contains("enable-cmd")) {
-            arena.setEnabledCommands(this.parseEnabledCommands(config.get("enable-cmd")));
+            arena.setEnabledCommands(parseEnabledCommands(config.get("enable-cmd")));
         }
 
         if (config.contains("shop_npcs")) {

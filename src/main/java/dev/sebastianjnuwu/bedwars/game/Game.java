@@ -491,6 +491,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 LocationUtil.safeTeleport(player, spawn);
                 player.getInventory().clear();
                 applyTeamArmor(player, team);
+                giveSpawnItems(player);
                 player.setGameMode(GameMode.SURVIVAL);
                 player.setHealth(20);
                 player.setFoodLevel(20);
@@ -963,6 +964,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.setFoodLevel(20);
         player.getInventory().clear();
         applyTeamArmor(player, team);
+        giveSpawnItems(player);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.respawned"));
 
         final GamePlayer gp = this.players.get(player.getUniqueId());
@@ -1348,6 +1350,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return item;
     }
 
+    /**
+     * Converte uma cor de time (ex.: {@code "BLUE"}) no material de lã
+     * correspondente.
+     *
+     * @param dyeColor cor do time ou {@code null}
+     * @return material de lã (branco se a cor for desconhecida)
+     */
     public static Material getWoolColor(final String dyeColor) {
         if (dyeColor == null) {
             return Material.WHITE_WOOL;
@@ -1381,6 +1390,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return item;
     }
 
+    /**
+     * Converte uma cor de time (ex.: {@code "BLUE"}) na cor de armadura de
+     * couro correspondente.
+     *
+     * @param dyeColor cor do time ou {@code null}
+     * @return cor da armadura (branco se a cor for desconhecida)
+     */
     public static Color getArmorColor(final String dyeColor) {
         if (dyeColor == null) {
             return Color.WHITE;
@@ -1420,6 +1436,33 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.getInventory().setChestplate(coloredLeather(Material.LEATHER_CHESTPLATE, color));
         player.getInventory().setLeggings(coloredLeather(Material.LEATHER_LEGGINGS, color));
         player.getInventory().setBoots(coloredLeather(Material.LEATHER_BOOTS, color));
+    }
+
+    /**
+     * Dá ao jogador os itens de spawn configurados na arena ({@code spawn_item}).
+     * <p>
+     * Itens que não couberem no inventário são dropados no chão.
+     * </p>
+     *
+     * @param player jogador que recebe os itens
+     */
+    private void giveSpawnItems(final Player player) {
+        final List<Material> items = this.arena.getSpawnItems();
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        for (final Material material : items) {
+            if (material == null) {
+                continue;
+            }
+            final ItemStack stack = new ItemStack(material);
+            final Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
+            if (!leftover.isEmpty()) {
+                for (final ItemStack drop : leftover.values()) {
+                    player.getWorld().dropItem(player.getLocation(), drop);
+                }
+            }
+        }
     }
 
     private void saveInventory(final Player player) {

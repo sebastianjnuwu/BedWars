@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -171,4 +172,19 @@ public interface Arena {
      * @param commands lista de comandos permitidos (ex.: {@code "g"})
      */
     void setEnabledCommands(List<String> commands);
+
+    /**
+     * Retorna os itens dados ao jogador no início da partida e em cada respawn
+     * (config {@code spawn_item}).
+     *
+     * @return lista de materiais de spawn (nunca nula)
+     */
+    List<Material> getSpawnItems();
+
+    /**
+     * Define os itens dados ao jogador no início da partida e em cada respawn.
+     *
+     * @param spawnItems lista de materiais de spawn
+     */
+    void setSpawnItems(List<Material> spawnItems);
 }

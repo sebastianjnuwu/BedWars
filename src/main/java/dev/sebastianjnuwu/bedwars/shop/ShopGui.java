@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -32,6 +33,14 @@ import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
+/**
+ * GUI da loja de BedWars.
+ * <p>
+ * Controla a renderização das categorias e itens, paginação, posicionamento
+ * (linhas/colunas/centralização), compra de itens, kits recursivos, armaduras
+ * de time e upgrades.
+ * </p>
+ */
 public class ShopGui implements InventoryHolder {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -53,6 +62,15 @@ public class ShopGui implements InventoryHolder {
 
     private static final Map<UUID, ShopGui> openGuis = new HashMap<>();
 
+    /**
+     * Cria e abre a loja para o jogador.
+     *
+     * @param shopManager gerenciador de lojas
+     * @param lang        gerenciador de idiomas
+     * @param player      jogador que abriu a loja
+     * @param game        partida em que o jogador está
+     * @param shopName    nome da loja a abrir
+     */
     public ShopGui(ShopManager shopManager, LangManager lang, Player player, Game game, String shopName) {
         this.lang = lang;
         this.player = player;
@@ -70,10 +88,21 @@ public class ShopGui implements InventoryHolder {
         player.openInventory(inventory);
     }
 
+    /**
+     * Retorna a loja aberta de um jogador, se houver.
+     *
+     * @param player jogador
+     * @return loja aberta ou {@code null}
+     */
     public static ShopGui getOpenGui(Player player) {
         return openGuis.get(player.getUniqueId());
     }
 
+    /**
+     * Remove o registro da loja aberta de um jogador.
+     *
+     * @param player jogador
+     */
     public static void removeOpenGui(Player player) {
         openGuis.remove(player.getUniqueId());
     }
@@ -83,12 +112,20 @@ public class ShopGui implements InventoryHolder {
         return inventory;
     }
 
+    /**
+     * Abre a lista principal de categorias.
+     */
     public void openMain() {
         this.currentCategory = null;
         this.currentPage = 0;
         render();
     }
 
+    /**
+     * Abre uma categoria (ou subcategoria) específica.
+     *
+     * @param category categoria a abrir
+     */
     public void openCategory(ShopCategory category) {
         this.currentCategory = category;
         this.currentPage = 0;
@@ -448,6 +485,15 @@ public class ShopGui implements InventoryHolder {
         return stack;
     }
 
+    /**
+     * Processa um clique na GUI da loja.
+     * <p>
+     * Trata botões de voltar, navegação de página, abertura de categorias e
+     * compra de itens.
+     * </p>
+     *
+     * @param event evento de clique
+     */
     public void handleClick(InventoryClickEvent event) {
         event.setCancelled(true);
         int slot = event.getRawSlot();
@@ -514,6 +560,16 @@ public class ShopGui implements InventoryHolder {
         }
     }
 
+    /**
+     * Executa a compra de um item da loja.
+     * <p>
+     * Valida o saldo do jogador, bloqueia recompra de armadura já equipada
+     * (mesma ou melhor) e entrega o item (upgrade, kit recursivo, conjunto de
+     * armadura ou item simples), disparando {@link PlayerPurchaseEvent}.
+     * </p>
+     *
+     * @param item item a ser comprado
+     */
     private void purchaseItem(ShopItem item) {
         if (game == null) {
             return;
@@ -538,6 +594,12 @@ public class ShopGui implements InventoryHolder {
                 case EMERALD -> Material.EMERALD;
             };
             price = item.getPrice();
+        }
+
+        if (alreadyHasArmor(item)) {
+            player.sendMessage(MM.deserialize(this.lang.raw("shop.armor_already_owned")));
+            player.closeInventory();
+            return;
         }
 
         int has = countCurrency(player, currencyMaterial);
@@ -593,6 +655,73 @@ public class ShopGui implements InventoryHolder {
         }
     }
 
+    private boolean alreadyHasArmor(final ShopItem item) {
+        if (item.getUpgrade() != null) {
+            return false;
+        }
+        final List<ItemStack> pieces = new ArrayList<>();
+        collectArmorPieces(item, pieces);
+        if (pieces.isEmpty()) {
+            return false;
+        }
+        for (final ItemStack piece : pieces) {
+            final int current = effectivePoints(equippedArmor(piece.getType()));
+            if (armorPoints(piece.getType()) > current) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void collectArmorPieces(final ShopItem item, final List<ItemStack> pieces) {
+        if (item.hasContents()) {
+            for (final ShopItem child : item.getContents()) {
+                collectArmorPieces(child, pieces);
+            }
+        } else if (item.getArmorSet() != null) {
+            pieces.addAll(item.createArmorSetItems());
+        } else if (item.getMaterial() != null && leatherFor(item.getMaterial()) != null) {
+            pieces.add(item.createItemStack());
+        }
+    }
+
+    private ItemStack equippedArmor(final Material material) {
+        final Material leather = leatherFor(material);
+        if (leather == null) {
+            return null;
+        }
+        return switch (leather) {
+            case LEATHER_HELMET -> this.player.getInventory().getHelmet();
+            case LEATHER_CHESTPLATE -> this.player.getInventory().getChestplate();
+            case LEATHER_LEGGINGS -> this.player.getInventory().getLeggings();
+            case LEATHER_BOOTS -> this.player.getInventory().getBoots();
+            default -> null;
+        };
+    }
+
+    private static int effectivePoints(final ItemStack equipped) {
+        if (equipped == null) {
+            return 0;
+        }
+        final Material leather = leatherFor(equipped.getType());
+        if (leather == null) {
+            return armorPoints(equipped.getType());
+        }
+        int points = armorPoints(leather);
+        final ItemMeta meta = equipped.getItemMeta();
+        if (meta != null) {
+            final var modifiers = meta.getAttributeModifiers(Attribute.ARMOR);
+            if (modifiers != null) {
+                for (final AttributeModifier modifier : modifiers) {
+                    if (modifier.getKey().equals(NamespacedKey.minecraft("bw_armor"))) {
+                        points += (int) modifier.getAmount();
+                    }
+                }
+            }
+        }
+        return points;
+    }
+
     private void deliverItem(final ItemStack stack) {
         if (leatherFor(stack.getType()) != null) {
             equipTeamArmor(stack);
@@ -604,11 +733,13 @@ public class ShopGui implements InventoryHolder {
 
     private void equipTeamArmor(final ItemStack stack) {
         final Material leather = leatherFor(stack.getType());
-        final ArenaTeam team = this.game.getPlayerTeam(this.player);
-        if (leather == null || team == null || team.getColor() == null) {
+        if (leather == null) {
+            applyTeamColor(stack);
             giveOrDrop(stack);
             return;
         }
+        final ArenaTeam team = this.game.getPlayerTeam(this.player);
+        final Color color = team != null ? Game.getArmorColor(team.getColor()) : Color.WHITE;
         final ItemStack colored = new ItemStack(leather);
         final ItemMeta sourceMeta = stack.getItemMeta();
         final LeatherArmorMeta meta = (LeatherArmorMeta) colored.getItemMeta();
@@ -619,7 +750,7 @@ public class ShopGui implements InventoryHolder {
             }
             sourceMeta.getEnchants().forEach((enchant, level) -> meta.addEnchant(enchant, level, true));
         }
-        meta.setColor(Game.getArmorColor(team.getColor()));
+        meta.setColor(color);
         meta.setUnbreakable(true);
         final int delta = armorPoints(stack.getType()) - armorPoints(leather);
         if (delta > 0) {

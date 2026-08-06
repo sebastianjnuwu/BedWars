@@ -55,7 +55,8 @@ cycle_day: true        # true = o ciclo dia/noite continua normal
 cycle_weather: true    # true = o clima pode mudar
 spawn_mobs: true       # true = mobs hostis podem spawnar naturalmente
 spawn_animals: true    # true = animais podem spawnar naturalmente
-
+spawn_item:
+  - WOODEN_SWORD
 # Comandos liberados durante a partida (além de /bw e /bedwars).
 # O jogador poderá executar apenas estes comandos enquanto estiver na partida.
 # Formato: nome do comando SEM a barra "/" (aceita com barra também).

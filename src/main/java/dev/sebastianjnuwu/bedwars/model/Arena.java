@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
 
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
@@ -51,6 +52,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private List<ForgeLevel> forgeLevels;
     private List<ShopNpc> shopNpcs;
     private List<String> enabledCommands;
+    private List<Material> spawnItems;
     private final List<ArenaTeam> teams;
     private final List<ArenaGenerator> generators;
 
@@ -66,6 +68,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.forgeLevels = new ArrayList<>();
         this.shopNpcs = new ArrayList<>();
         this.enabledCommands = new ArrayList<>();
+        this.spawnItems = new ArrayList<>();
         this.teams = new ArrayList<>();
         this.generators = new ArrayList<>();
     }
@@ -490,6 +493,24 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     }
 
     /**
+     * Retorna os itens dados ao jogador no início da partida e em cada respawn.
+     *
+     * @return lista de materiais de spawn
+     */
+    public List<Material> getSpawnItems() {
+        return this.spawnItems;
+    }
+
+    /**
+     * Define os itens dados ao jogador no início da partida e em cada respawn.
+     *
+     * @param spawnItems lista de materiais de spawn
+     */
+    public void setSpawnItems(List<Material> spawnItems) {
+        this.spawnItems = spawnItems != null ? spawnItems : new ArrayList<>();
+    }
+
+    /**
      * Restaura o bloco original abaixo do spawn (remove a esmeralda).
      */
     public void restoreSpawnBlock() {
@@ -548,6 +569,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         copy.forgeLevels = this.forgeLevels != null ? new ArrayList<>(this.forgeLevels) : new ArrayList<>();
         copy.shopNpcs = this.shopNpcs != null ? new ArrayList<>(this.shopNpcs) : new ArrayList<>();
         copy.enabledCommands = this.enabledCommands != null ? new ArrayList<>(this.enabledCommands) : new ArrayList<>();
+        copy.spawnItems = this.spawnItems != null ? new ArrayList<>(this.spawnItems) : new ArrayList<>();
         for (final ArenaGenerator gen : this.generators) {
             final dev.sebastianjnuwu.bedwars.model.ArenaGenerator genCopy =
                     new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(gen.getUniqueId(), gen.getType(), gen.getLocation());

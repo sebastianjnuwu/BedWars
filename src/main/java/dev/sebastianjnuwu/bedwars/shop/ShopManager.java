@@ -17,6 +17,13 @@ import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 
+/**
+ * Gerencia as lojas do plugin.
+ * <p>
+ * Extrai e carrega os arquivos YAML do diretório {@code shop/}, faz a migração
+ * do antigo {@code shop.yml} e mantém um cache das lojas carregadas.
+ * </p>
+ */
 public class ShopManager {
 
     private final JavaPlugin plugin;
@@ -32,6 +39,14 @@ public class ShopManager {
         this.shopCache = new HashMap<>();
     }
 
+    /**
+     * Garante que a loja padrão exista e a pré-carrega no cache.
+     * <p>
+     * Migra o antigo {@code shop.yml} para {@code shop/default.yml} quando o
+     * arquivo padrão ainda não existe e extrai o YAML embutido caso nenhum
+     * arquivo esteja presente.
+     * </p>
+     */
     public void loadDefaults() {
         File defaultShop = new File(shopFolder, "default.yml");
 
@@ -62,6 +77,12 @@ public class ShopManager {
         loadShop("default");
     }
 
+    /**
+     * Carrega uma loja do diretório {@code shop/}, usando o cache quando possível.
+     *
+     * @param name nome do arquivo da loja (sem extensão)
+     * @return categorias da loja (a loja padrão se o arquivo não existir)
+     */
     public List<ShopCategory> loadShop(String name) {
         List<ShopCategory> cached = shopCache.get(name);
         if (cached != null) {
@@ -95,6 +116,12 @@ public class ShopManager {
         return categories;
     }
 
+    /**
+     * Retorna as categorias de uma loja, carregando-a se necessário.
+     *
+     * @param shopName nome da loja
+     * @return categorias da loja
+     */
     public List<ShopCategory> getCategories(String shopName) {
         List<ShopCategory> cached = shopCache.get(shopName);
         if (cached != null) {
@@ -118,18 +145,38 @@ public class ShopManager {
         return config.getString("displayName");
     }
 
+    /**
+     * Invalida o cache de uma loja específica.
+     *
+     * @param name nome da loja
+     */
     public void invalidateCache(String name) {
         shopCache.remove(name);
     }
 
+    /**
+     * Invalida o cache de todas as lojas carregadas.
+     */
     public void invalidateAll() {
         shopCache.clear();
     }
 
+    /**
+     * Retorna o diretório onde as lojas ficam armazenadas.
+     *
+     * @return pasta {@code shop/}
+     */
     public File getShopFolder() {
         return shopFolder;
     }
 
+    /**
+     * Carrega uma categoria (ou subcategoria) a partir da sua seção de configuração.
+     *
+     * @param name    nome da categoria
+     * @param section seção YAML da categoria
+     * @return categoria carregada
+     */
     private ShopCategory loadCategory(String name, ConfigurationSection section) {
         String displayName = section.getString("display-name");
         String iconName = section.getString("icon");
@@ -185,6 +232,12 @@ public class ShopManager {
         return category;
     }
 
+    /**
+     * Converte um mapa YAML de um item da loja em um {@link ShopItem}.
+     *
+     * @param entry mapa do item
+     * @return item parseado ou {@code null} em caso de erro
+     */
     private ShopItem parseItem(Map<?, ?> entry) {
         try {
             ShopItem.Builder builder = new ShopItem.Builder();
@@ -248,6 +301,12 @@ public class ShopManager {
         }
     }
 
+    /**
+     * Parseia o mapa {@code stack:} de um item da loja (formato longo).
+     *
+     * @param stackMap mapa do stack
+     * @param builder  builder a ser preenchido
+     */
     private void parseLongStack(Map<String, Object> stackMap, ShopItem.Builder builder) {
         if (stackMap.containsKey("type")) {
             String type = stackMap.get("type").toString();
