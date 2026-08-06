@@ -252,7 +252,7 @@ public class ShopGui implements InventoryHolder {
         }
 
         // Back button (goes to main category list, not to parent)
-        ItemStack back = new ItemStack(Material.BARRIER);
+        ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
         backMeta.displayName(MM.deserialize(this.lang.raw("shop.back_categories")));
         back.setItemMeta(backMeta);
