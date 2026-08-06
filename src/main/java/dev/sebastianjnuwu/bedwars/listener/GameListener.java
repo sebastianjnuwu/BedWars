@@ -17,6 +17,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -462,6 +463,19 @@ public class GameListener implements Listener {
             return;
         }
         game.trackPlacedBlock(event.getBlockPlaced().getLocation());
+    }
+
+    @EventHandler
+    public void onEntityExplode(final EntityExplodeEvent event) {
+        if (!event.getEntity().getWorld().getName().startsWith("bw_")) {
+            return;
+        }
+        final Game game = this.gameManager.getGameByWorld(event.getEntity().getWorld().getName());
+        if (game == null) {
+            event.blockList().clear();
+            return;
+        }
+        event.blockList().removeIf(block -> !game.isPlacedBlock(block.getLocation()));
     }
 
     /**
