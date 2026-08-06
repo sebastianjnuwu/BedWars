@@ -140,12 +140,16 @@ public class GameListener implements Listener {
         }
 
         if (game.isBedless(team)) {
-            final var lobby = this.gameManager.getConfigManager().getLobby();
-            if (lobby != null) {
-                event.setRespawnLocation(lobby);
-                player.setGameMode(GameMode.SURVIVAL);
-                Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> this.gameManager.leaveGame(player));
+            Location target = this.gameManager.getConfigManager().getLobby();
+            if (target == null || target.getWorld() == null) {
+                target = !Bukkit.getWorlds().isEmpty()
+                        ? Bukkit.getWorlds().getFirst().getSpawnLocation() : null;
             }
+            if (target != null) {
+                event.setRespawnLocation(target);
+            }
+            player.setGameMode(GameMode.SURVIVAL);
+            Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> this.gameManager.leaveGame(player));
             return;
         }
 

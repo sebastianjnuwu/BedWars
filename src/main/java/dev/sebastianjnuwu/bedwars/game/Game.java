@@ -920,10 +920,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         if (this.bedlessTeams.contains(team)) {
             Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, gp, null));
-            player.setGameMode(GameMode.SPECTATOR);
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.no_bed"));
             this.debug("debug.player_eliminated", player.getName(), this.arena.getName(),
                     team.getName());
+            Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> {
+                if (player.isOnline()) {
+                    player.spigot().respawn();
+                }
+            });
             if (this.getAliveCount(team) == 0) {
                 this.eliminateTeam(team);
             }
@@ -950,8 +954,16 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
         if (this.bedlessTeams.contains(team)) {
-            player.setGameMode(GameMode.SPECTATOR);
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.no_bed"));
+            final Location lobby = this.gameManager.getConfigManager().getLobby();
+            final Location target = lobby != null
+                    ? lobby
+                    : (!Bukkit.getWorlds().isEmpty() ? Bukkit.getWorlds().getFirst().getSpawnLocation() : null);
+            if (target != null) {
+                player.teleport(target);
+            }
+            player.setGameMode(GameMode.SURVIVAL);
+            this.gameManager.leaveGame(player);
             return;
         }
         if (team.getSpawn() == null) {
