@@ -13,6 +13,7 @@ public class ShopItem {
 
     private final Material material;
     private final List<Material> armorSet;
+    private final List<ShopItem> contents;
     private final int amount;
     private final String displayName;
     private final List<String> lore;
@@ -33,6 +34,7 @@ public class ShopItem {
     private ShopItem(Builder builder) {
         this.material = builder.material;
         this.armorSet = builder.armorSet;
+        this.contents = builder.contents;
         this.amount = builder.amount;
         this.displayName = builder.displayName;
         this.lore = builder.lore;
@@ -55,6 +57,14 @@ public class ShopItem {
 
     public List<Material> getArmorSet() {
         return armorSet;
+    }
+
+    public List<ShopItem> getContents() {
+        return contents;
+    }
+
+    public boolean hasContents() {
+        return contents != null && !contents.isEmpty();
     }
 
     public int getAmount() {
@@ -173,6 +183,7 @@ public class ShopItem {
     public static class Builder {
         private Material material;
         private List<Material> armorSet;
+        private List<ShopItem> contents;
         private int amount = 1;
         private String displayName;
         private List<String> lore;
@@ -195,6 +206,11 @@ public class ShopItem {
 
         public Builder armorSet(List<Material> armorSet) {
             this.armorSet = armorSet;
+            return this;
+        }
+
+        public Builder contents(List<ShopItem> contents) {
+            this.contents = contents;
             return this;
         }
 

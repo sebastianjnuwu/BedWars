@@ -454,6 +454,8 @@ public class ShopGui implements InventoryHolder {
         applyTeamColor(bought);
         if (item.getUpgrade() != null) {
             handleUpgrade(item);
+        } else if (item.hasContents()) {
+            giveContents(item);
         } else if (item.getArmorSet() != null) {
             for (ItemStack piece : item.createArmorSetItems()) {
                 applyTeamColor(piece);
@@ -476,6 +478,23 @@ public class ShopGui implements InventoryHolder {
         player.sendMessage(MM.deserialize(this.lang.raw("shop.purchased")));
 
         this.render();
+    }
+
+    private void giveContents(ShopItem item) {
+        for (ShopItem child : item.getContents()) {
+            if (child.hasContents()) {
+                giveContents(child);
+            } else if (child.getArmorSet() != null) {
+                for (ItemStack piece : child.createArmorSetItems()) {
+                    applyTeamColor(piece);
+                    giveOrDrop(piece);
+                }
+            } else {
+                ItemStack stack = child.createItemStack();
+                applyTeamColor(stack);
+                giveOrDrop(stack);
+            }
+        }
     }
 
     private void giveOrDrop(ItemStack stack) {

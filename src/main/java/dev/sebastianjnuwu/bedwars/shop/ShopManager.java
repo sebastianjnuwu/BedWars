@@ -280,6 +280,23 @@ public class ShopManager {
         if (stackMap.containsKey("tag")) {
             builder.tag(stackMap.get("tag").toString());
         }
+        if (stackMap.containsKey("items")) {
+            Object itemsObj = stackMap.get("items");
+            if (itemsObj instanceof List) {
+                List<ShopItem> contents = new ArrayList<>();
+                for (Object entry : (List<?>) itemsObj) {
+                    if (entry instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> childMap = (Map<String, Object>) entry;
+                        ShopItem child = parseItem(childMap);
+                        if (child != null) {
+                            contents.add(child);
+                        }
+                    }
+                }
+                builder.contents(contents);
+            }
+        }
     }
 
     private void parseShortStackInternal(String stack, ShopItem.Builder builder) {

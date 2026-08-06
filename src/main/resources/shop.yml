@@ -321,3 +321,56 @@ categories:
             - "<gray>do seu time</gray>"
         price: 2 diamond
         upgrade: forge
+
+  kits:
+    display-name: "<bold><red>Kits</red></bold>"
+    icon: CHEST
+    lore:
+      - "<gray>Kits completos</gray>"
+      - "<gray>com encantamentos</gray>"
+    items:
+      - stack:
+          type: DIAMOND_CHESTPLATE
+          display-name: "<aqua>Armadura de Diamante</aqua>"
+          items:
+            - stack:
+                type: DIAMOND_HELMET
+                enchants:
+                  protection: 2
+            - stack:
+                type: DIAMOND_CHESTPLATE
+                enchants:
+                  protection: 2
+            - stack:
+                type: DIAMOND_LEGGINGS
+                enchants:
+                  protection: 2
+            - stack:
+                type: DIAMOND_BOOTS
+                enchants:
+                  protection: 2
+                  feather_falling: 2
+        price: 8 emerald
+      - stack:
+          type: CHEST
+          display-name: "<gold>Kit Guerreiro</gold>"
+          items:
+            - stack:
+                type: DIAMOND_SWORD
+                enchants:
+                  sharpness: 2
+            - stack:
+                type: GOLDEN_APPLE
+                amount: 2
+            - stack:
+                type: BOW
+                enchants:
+                  power: 3
+        price: 6 emerald
+      - stack:
+          type: DIAMOND_SWORD
+          display-name: "<aqua>Espada Poderosa</aqua>"
+          enchants:
+            sharpness: 3
+            fire_aspect: 1
+        price: 5 emerald
