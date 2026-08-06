@@ -766,6 +766,16 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         config.set("spawn_mobs", arena.isSpawnMobs());
         config.set("spawn_animals", arena.isSpawnAnimals());
 
+        if (arena.getSpawnItems() != null && !arena.getSpawnItems().isEmpty()) {
+            final List<String> spawnItemNames = new ArrayList<>();
+            for (final Material material : arena.getSpawnItems()) {
+                spawnItemNames.add(material.name());
+            }
+            config.set("spawn_item", spawnItemNames);
+        } else {
+            config.set("spawn_item", null);
+        }
+
         if (arena.getShop() != null) {
             config.set("shop", arena.getShop());
         }

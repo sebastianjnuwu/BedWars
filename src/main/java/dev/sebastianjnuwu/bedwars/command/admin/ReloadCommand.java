@@ -37,9 +37,8 @@ public class ReloadCommand extends BaseCommand implements SubCommand {
 
     @Override
     public void execute(final CommandSender sender, final @NotNull String @NotNull [] args) {
-        // Flush pending changes before reloading from disk
-        this.arenaManager.flush();
-        // Reload all arena YMLs
+        // Reload all arena YMLs directly from disk (sem flush: o flush sobrescreveria
+        // edições manuais feitas nos .yml, como spawn_item)
         this.arenaManager.load();
 
         // Reload lang messages
