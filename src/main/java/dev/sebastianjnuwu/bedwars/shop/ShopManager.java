@@ -373,8 +373,6 @@ public class ShopManager {
                     Material.IRON_LEGGINGS, Material.IRON_BOOTS);
             case "GOLD", "GOLDEN" -> List.of(Material.GOLDEN_HELMET, Material.GOLDEN_CHESTPLATE,
                     Material.GOLDEN_LEGGINGS, Material.GOLDEN_BOOTS);
-            case "DIAMOND" -> List.of(Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE,
-                    Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS);
             case "NETHERITE" -> List.of(Material.NETHERITE_HELMET, Material.NETHERITE_CHESTPLATE,
                     Material.NETHERITE_LEGGINGS, Material.NETHERITE_BOOTS);
             default -> null;

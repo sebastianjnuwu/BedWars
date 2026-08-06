@@ -28,62 +28,47 @@ categories:
       - "<gray>Compre blocos para</gray>"
       - "<gray>pontes e construcao</gray>"
     items:
-      - stack: WOOL
-        price: 4 iron
-      - stack: SANDSTONE;2
-        price: 4 iron
-      - stack: END_STONE
-        price: 6 iron
+      - stack:
+          type: WHITE_WOOL
+          amount: 4
+          display-name: "<yellow>Bloco de lã</yellow>"
+        price: 1 iron
+
       - stack:
           type: GLASS
-          display-name: "<yellow>Barreira de Vidro</yellow>"
-        price: 3 iron
-      - stack:
-          type: GLASS_PANE
-          display-name: "<yellow>Moldura de Vidro</yellow>"
+          amount: 8
+          display-name: "<yellow>Vidro</yellow>"
         price: 2 iron
-      - stack: OAK_PLANKS
-        price: 3 iron
-      - stack: CHEST
-        price: 20 iron
-      - stack: LADDER
+
+      - stack:
+          type: DIRT
+          amount: 16
+          display-name: "<yellow>Terra</yellow>"
         price: 4 iron
-      - stack: OBSIDIAN
-        price: 20 gold
-      - stack: BRICK
+
+      - stack:
+          type: END_STONE
+          amount: 8
+          display-name: "<yellow>Esfumaçado</yellow>"
         price: 8 iron
-      - stack: IRON_BARS
-        price: 8 iron
-      - stack: NETHERRACK
-        price: 8 iron
-      - stack: BLUE_WOOL
-        price: 4 iron
-      - stack: RED_WOOL
-        price: 4 iron
-      - stack: GREEN_WOOL
-        price: 4 iron
-      - stack: GRAY_WOOL
-        price: 4 iron
+
       - stack:
-          type: STAINED_GLASS_PANE
-          display-name: "<yellow>Vidro Colorido</yellow>"
-        price: 4 iron
+          type: OAK_FENCE
+          amount: 6
+          display-name: "<yellow>Cerca</yellow>"
+        price: 1 gold
+
       - stack:
-          type: COBBLESTONE
-          display-name: "<yellow>Pedregulho</yellow>"
-        price: 6 iron
+          type: OAK_PLANKS
+          amount: 6
+          display-name: "<yellow>Tábuas</yellow>"
+        price: 2 gold
+
       - stack:
-          type: STONE
-          display-name: "<yellow>Pedra</yellow>"
-        price: 6 iron
-      - stack:
-          type: CLAY
-          display-name: "<yellow>Argila</yellow>"
-        price: 8 iron
-      - stack:
-          type: COBWEB
-          display-name: "<yellow>Teia de Aranha</yellow>"
-        price: 20 iron
+          type: OBSIDIAN
+          amount: 1
+          display-name: "<yellow>Obsidiana</yellow>"
+        price: 1 emerald
 
   weapons:
     display-name: "<bold><red>Armas</red></bold>"
@@ -99,43 +84,43 @@ categories:
       - stack:
           type: IRON_SWORD
           display-name: "<yellow>Espada de Ferro</yellow>"
-        price: 1 gold
+        price: 3 gold
       - stack:
           type: DIAMOND_SWORD
           display-name: "<yellow>Espada de Diamante</yellow>"
-        price: 4 gold
+        price: 2 emerald
       - stack:
           type: BOW
           display-name: "<yellow>Arco</yellow>"
-        price: 12 gold
+        price: 4 gold
       - stack:
           type: ARROW
           amount: 8
           display-name: "<yellow>Flechas</yellow>"
-        price: 2 gold
+        price: 1 gold
       - stack:
           type: IRON_AXE
           display-name: "<yellow>Machado de Ferro</yellow>"
-        price: 2 gold
+        price: 1 gold
       - stack:
           type: DIAMOND_AXE
           display-name: "<yellow>Machado de Diamante</yellow>"
-        price: 6 gold
+        price: 2 emerald
       - stack:
           type: STONE_PICKAXE
         price: 10 iron
       - stack:
           type: SHEARS
-        price: 20 iron
+        price: 10 iron
       - stack:
           type: STICK
           amount: 2
           display-name: "<yellow>Vara de Empurrar</yellow>"
-        price: 5 gold
+        price: 2 gold
       - stack:
           type: FISHING_ROD
           display-name: "<yellow>Vara de Pescar (Knockback)</yellow>"
-        price: 6 gold
+        price: 3 gold
       - stack:
           type: FIRE_CHARGE
           display-name: "<yellow>Bola de Fogo</yellow>"
@@ -143,23 +128,47 @@ categories:
 
   armor:
     display-name: "<bold><red>Armaduras</red></bold>"
-    icon: CHAINMAIL_CHESTPLATE
+    icon: CHAINMAIL_BOOTS
     lore:
-      - "<gray>Compre armaduras completas</gray>"
+      - "<gray>Compre armaduras</gray>"
       - "<gray>para se proteger</gray>"
     items:
       - stack:
-          type: CHAINMAIL
-          display-name: "<yellow>Armadura de Cota</yellow>"
-        price: 40 iron
+          type: CHAINMAIL_BOOTS
+        price: 8 iron
       - stack:
-          type: IRON
-          display-name: "<yellow>Armadura de Ferro</yellow>"
-        price: 4 gold
+          type: CHAINMAIL_LEGGINGS
+        price: 10 iron
       - stack:
-          type: DIAMOND
-          display-name: "<aqua>Armadura de Diamante</aqua>"
-        price: 8 emerald
+          type: CHAINMAIL_CHESTPLATE
+        price: 12 iron
+      - stack:
+          type: CHAINMAIL_HELMET
+        price: 8 iron
+      - stack:
+          type: IRON_BOOTS
+        price: 1 gold
+      - stack:
+          type: IRON_LEGGINGS
+        price: 1 gold
+      - stack:
+          type: IRON_CHESTPLATE
+        price: 2 gold
+      - stack:
+          type: IRON_HELMET
+        price: 1 gold
+      - stack:
+          type: DIAMOND_BOOTS
+        price: 2 gold
+      - stack:
+          type: DIAMOND_LEGGINGS
+        price: 2 gold
+      - stack:
+          type: DIAMOND_CHESTPLATE
+        price: 3 gold
+      - stack:
+          type: DIAMOND_HELMET
+        price: 2 gold
 
   tools:
     display-name: "<bold><red>Ferramentas</red></bold>"
@@ -173,7 +182,7 @@ categories:
           display-name: "<yellow>Picareta</yellow>"
           enchants:
             efficiency: 1
-        price: 10 iron
+        price: 5 iron
       - stack:
           type: IRON_PICKAXE
           display-name: "<yellow>Picareta de Ferro</yellow>"
@@ -185,22 +194,22 @@ categories:
           display-name: "<yellow>Picareta de Ouro</yellow>"
           enchants:
             efficiency: 3
-        price: 3 gold
+        price: 2 gold
       - stack:
           type: DIAMOND_PICKAXE
           display-name: "<yellow>Picareta de Diamante</yellow>"
           enchants:
             efficiency: 3
-        price: 6 gold
+        price: 3 gold
       - stack:
           type: WOODEN_AXE
           display-name: "<yellow>Machado</yellow>"
           enchants:
             efficiency: 1
-        price: 10 iron
+        price: 5 iron
       - stack:
           type: SHEARS
-        price: 20 iron
+        price: 10 iron
 
   food:
     display-name: "<bold><red>Comida</red></bold>"
@@ -210,48 +219,15 @@ categories:
       - "<gray>recuperar vida</gray>"
     items:
       - stack: APPLE;4
-        price: 2 iron
+        price: 1 iron
       - stack: BREAD;2
-        price: 2 iron
+        price: 1 iron
       - stack: COOKED_BEEF;2
-        price: 4 iron
+        price: 2 iron
       - stack: GOLDEN_APPLE
-        price: 2 gold
+        price: 3 gold
       - stack: CAKE
-        price: 10 iron
-
-  potions:
-    display-name: "<bold><red>Pocoes</red></bold>"
-    icon: POTION
-    lore:
-      - "<gray>Compre pocoes para</gray>"
-      - "<gray>ganhar vantagem</gray>"
-    items:
-      - stack:
-          type: POTION
-          tag: '{potion_contents:{potion:"minecraft:swiftness"}}'
-        price: 3 iron
-      - stack:
-          type: POTION
-          tag: '{potion_contents:{potion:"minecraft:healing"}}'
-        price: 3 iron
-      - stack:
-          type: POTION
-          tag: '{potion_contents:{potion:"minecraft:regeneration"}}'
         price: 5 iron
-      - stack:
-          type: POTION
-          tag: '{potion_contents:{potion:"minecraft:strength"}}'
-        price: 5 gold
-      - stack:
-          type: POTION
-          tag: '{potion_contents:{potion:"minecraft:invisibility"}}'
-        price: 10 gold
-      - stack:
-          type: ARROW
-          amount: 4
-          tag: '{potion_contents:{potion:"minecraft:healing"}}'
-        price: 2 gold
 
   utils:
     display-name: "<bold><red>Utilidades</red></bold>"
@@ -263,32 +239,32 @@ categories:
       - stack:
           type: WATER_BUCKET
           display-name: "<yellow>Balde de Agua</yellow>"
-        price: 3 gold
+        price: 1 gold
       - stack:
           type: LAVA_BUCKET
           display-name: "<yellow>Balde de Lava</yellow>"
-        price: 6 gold
+        price: 2 gold
       - stack:
           type: ENDER_PEARL
-          display-name: "<yellow>Pera de Fim</yellow>"
-        price: 1 emerald
+          display-name: "<yellow>Perola do Fim</yellow>"
+        price: 2 emerald
       - stack:
           type: TNT
           display-name: "<yellow>Dinamite</yellow>"
-        price: 4 gold
+        price: 2 gold
       - stack:
           type: IRON_TRAPDOOR
           display-name: "<yellow>Alcapao de Ferro</yellow>"
-        price: 8 iron
+        price: 4 iron
       - stack:
           type: FIRE_CHARGE
           display-name: "<yellow>Bola de Fogo</yellow>"
-        price: 4 gold
+        price: 1 gold
       - stack:
           type: SPLASH_POTION
           display-name: "<yellow>Pot. Veneno</yellow>"
           tag: '{potion_contents:{potion:"minecraft:poison"}}'
-        price: 4 diamond
+        price: 2 emerald
 
   upgrades:
     display-name: "<bold><red>Melhorias</red></bold>"
@@ -298,12 +274,12 @@ categories:
       - "<gray>para seu time</gray>"
     items:
       - stack:
-          type: DIAMOND_SWORD
+          type: DIAMOND
           display-name: "<yellow>Afiacao</yellow>"
           lore:
             - "<gray>Melhora as armas</gray>"
             - "<gray>do seu time</gray>"
-        price: 4 diamond
+        price: 2 diamond
         upgrade: sharpness
       - stack:
           type: DIAMOND_CHESTPLATE
@@ -311,7 +287,7 @@ categories:
           lore:
             - "<gray>Melhora as armaduras</gray>"
             - "<gray>do seu time</gray>"
-        price: 4 diamond
+        price: 2 diamond
         upgrade: protection
       - stack:
           type: FURNACE
@@ -319,58 +295,13 @@ categories:
           lore:
             - "<gray>Melhora a fornalha</gray>"
             - "<gray>do seu time</gray>"
-        price: 2 diamond
+        price: 1 diamond
         upgrade: forge
-
-  kits:
-    display-name: "<bold><red>Kits</red></bold>"
-    icon: CHEST
-    lore:
-      - "<gray>Kits completos</gray>"
-      - "<gray>com encantamentos</gray>"
-    items:
       - stack:
-          type: DIAMOND_CHESTPLATE
-          display-name: "<aqua>Armadura de Diamante</aqua>"
-          items:
-            - stack:
-                type: DIAMOND_HELMET
-                enchants:
-                  protection: 2
-            - stack:
-                type: DIAMOND_CHESTPLATE
-                enchants:
-                  protection: 2
-            - stack:
-                type: DIAMOND_LEGGINGS
-                enchants:
-                  protection: 2
-            - stack:
-                type: DIAMOND_BOOTS
-                enchants:
-                  protection: 2
-                  feather_falling: 2
-        price: 8 emerald
-      - stack:
-          type: CHEST
-          display-name: "<gold>Kit Guerreiro</gold>"
-          items:
-            - stack:
-                type: DIAMOND_SWORD
-                enchants:
-                  sharpness: 2
-            - stack:
-                type: GOLDEN_APPLE
-                amount: 2
-            - stack:
-                type: BOW
-                enchants:
-                  power: 3
-        price: 6 emerald
-      - stack:
-          type: DIAMOND_SWORD
-          display-name: "<aqua>Espada Poderosa</aqua>"
-          enchants:
-            sharpness: 3
-            fire_aspect: 1
-        price: 5 emerald
+          type: ENDER_PEARL
+          display-name: "<yellow>Dragon Buff</yellow>"
+          lore:
+            - "<gray>Ganha forca quando</gray>"
+            - "<gray>a cama e destruida</gray>"
+        price: 3 diamond
+        upgrade: dragon_buff
