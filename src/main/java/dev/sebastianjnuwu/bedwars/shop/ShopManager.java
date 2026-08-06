@@ -136,7 +136,18 @@ public class ShopManager {
         Material icon = iconName != null ? Material.matchMaterial(iconName) : Material.BARRIER;
         List<String> lore = section.getStringList("lore");
 
-        ShopCategory category = new ShopCategory(name, icon, displayName, lore);
+        String layoutType = "row";
+        boolean centered = false;
+        ConfigurationSection positioning = section.getConfigurationSection("positioning");
+        if (positioning != null) {
+            String type = positioning.getString("type");
+            if (type != null && !type.isBlank()) {
+                layoutType = type.toLowerCase();
+            }
+            centered = positioning.getBoolean("center", false);
+        }
+
+        ShopCategory category = new ShopCategory(name, icon, displayName, lore, layoutType, centered);
 
         ConfigurationSection catsSection = section.getConfigurationSection("categories");
         if (catsSection != null) {

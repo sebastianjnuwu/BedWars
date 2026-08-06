@@ -12,14 +12,19 @@ public class ShopCategory {
     private final Material icon;
     private final String displayName;
     private final List<String> lore;
+    private final String layoutType;
+    private final boolean centered;
     private final List<ShopCategory> children;
     private final List<ShopItem> items;
 
-    public ShopCategory(String name, Material icon, String displayName, List<String> lore) {
+    public ShopCategory(String name, Material icon, String displayName, List<String> lore,
+            String layoutType, boolean centered) {
         this.name = name;
         this.icon = icon;
         this.displayName = displayName;
         this.lore = lore;
+        this.layoutType = layoutType;
+        this.centered = centered;
         this.children = new ArrayList<>();
         this.items = new ArrayList<>();
     }
@@ -46,6 +51,14 @@ public class ShopCategory {
 
     public List<ShopItem> getItems() {
         return items;
+    }
+
+    public String getLayoutType() {
+        return layoutType;
+    }
+
+    public boolean isCentered() {
+        return centered;
     }
 
     public void addChild(ShopCategory child) {
