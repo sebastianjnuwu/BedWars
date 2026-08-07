@@ -105,11 +105,29 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
      * Recarrega uma arena do disco, atualizando locations quando o mundo estiver carregado.
      */
     public void reload(final String name) {
-        final File file = new File(this.arenasFolder, name + ".yml");
-        if (!file.exists()) {
+        final File file = this.findArenaFile(name);
+        if (file == null) {
             return;
         }
-        this.arenas.put(name, this.loadArenaFromFile(name, file));
+        final String canonical = file.getName().replace(".yml", "");
+        this.arenas.put(canonical, this.loadArenaFromFile(canonical, file));
+    }
+
+    private @Nullable File findArenaFile(final String name) {
+        final File direct = new File(this.arenasFolder, name + ".yml");
+        if (direct.exists()) {
+            return direct;
+        }
+        final File[] files = this.arenasFolder.listFiles((dir, fileName) -> fileName.endsWith(".yml"));
+        if (files == null) {
+            return null;
+        }
+        for (final File file : files) {
+            if (file.getName().replace(".yml", "").equalsIgnoreCase(name)) {
+                return file;
+            }
+        }
+        return null;
     }
 
     /**
@@ -201,21 +219,22 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (arena == null) {
             return null;
         }
-        final File file = new File(this.arenasFolder, arenaName + ".yml");
+        final String resolved = arena.getName();
+        final File file = new File(this.arenasFolder, resolved + ".yml");
         if (!file.exists()) {
             return null;
         }
-        final String worldName = this.nextInstanceWorldName(arenaName);
+        final String worldName = this.nextInstanceWorldName(resolved);
 
         // Mundo construído com as configurações não-posicionais da arena em memória
         // (paste, mapa, difficulty... — independem de locations resolvidas).
-        final World world = this.buildWorld(arenaName, worldName, arena, "log.arena_manager.load_error");
+        final World world = this.buildWorld(resolved, worldName, arena, "log.arena_manager.load_error");
         if (world == null) {
             return null;
         }
         // Instância reconstruída 100% do disco, com todas as locations rebasadas
         // para o mundo de partida recém-criado.
-        final Arena instance = this.loadArenaFromFile(arenaName, file, world);
+        final Arena instance = this.loadArenaFromFile(resolved, file, world);
         instance.setWorldName(worldName);
         this.restoreBeds(world, instance);
         return instance;
@@ -240,7 +259,8 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             callback.accept(null);
             return;
         }
-        final File file = new File(this.arenasFolder, arenaName + ".yml");
+        final String resolved = arena.getName();
+        final File file = new File(this.arenasFolder, resolved + ".yml");
         if (!file.exists()) {
             callback.accept(null);
             return;
@@ -250,7 +270,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             callback.accept(null);
             return;
         }
-        final String worldName = this.nextInstanceWorldName(arenaName);
+        final String worldName = this.nextInstanceWorldName(resolved);
         final World world = this.createOrLoadWorld(worldName);
         if (world == null) {
             callback.accept(null);
@@ -261,10 +281,10 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             final Schematic schematic;
             final Location pasteLocation;
             try {
-                schematic = Schematic.load(arenaName, mapFile);
+                schematic = Schematic.load(resolved, mapFile);
                 pasteLocation = this.pasteSchematic(world, schematic, mapFile, arena);
             } catch (final Exception e) {
-                this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arenaName, e.getMessage()));
+                this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", resolved, e.getMessage()));
                 this.markWorldDirty(worldName);
                 this.plugin.getServer().getScheduler().runTask(this.plugin, () -> callback.accept(null));
                 return;
@@ -272,13 +292,13 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
                 try {
                     this.finalizeWorld(world, arena, schematic, pasteLocation);
-                    final Arena instance = this.loadArenaFromFile(arenaName, file, world);
+                    final Arena instance = this.loadArenaFromFile(resolved, file, world);
                     instance.setWorldName(worldName);
                     this.restoreBeds(world, instance);
                     this.markWorldClean(worldName);
                     callback.accept(instance);
                 } catch (final Exception e) {
-                    this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", arenaName, e.getMessage()));
+                    this.plugin.getLogger().severe(this.lang.raw("log.arena_manager.load_error", resolved, e.getMessage()));
                     this.markWorldDirty(worldName);
                     callback.accept(null);
                 }
@@ -375,6 +395,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     }
 
     public @Nullable File getMapFile(final String name) {
+        if (name == null) {
+            return null;
+        }
         // Priorizar formato interno .bwmap
         File file = new File(this.mapsFolder, name + ".bwmap");
         if (!file.exists()) {
@@ -389,7 +412,18 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (!file.exists()) {
             file = new File(this.mapsFolder, name);
         }
-        return file.exists() ? file : null;
+        if (file.exists()) {
+            return file;
+        }
+        final File[] files = this.mapsFolder.listFiles();
+        if (files != null) {
+            for (final File candidate : files) {
+                if (candidate.isFile() && stripMapExtension(candidate.getName()).equalsIgnoreCase(name)) {
+                    return candidate;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -407,6 +441,11 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         final String mapName = arena.getMapName();
         final String resolved = mapName == null || mapName.isBlank() ? arena.getName() : mapName;
         return this.getMapFile(resolved);
+    }
+
+    private static String stripMapExtension(final String fileName) {
+        final int dot = fileName.lastIndexOf('.');
+        return dot > 0 ? fileName.substring(0, dot) : fileName;
     }
 
     /**
@@ -1026,7 +1065,19 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
     }
 
     public Arena get(final String name) {
-        return this.arenas.get(name);
+        if (name == null) {
+            return null;
+        }
+        final Arena direct = this.arenas.get(name);
+        if (direct != null) {
+            return direct;
+        }
+        for (final Map.Entry<String, Arena> entry : this.arenas.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(name)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     public Set<String> getNames() {

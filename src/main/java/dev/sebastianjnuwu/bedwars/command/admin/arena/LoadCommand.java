@@ -89,14 +89,15 @@ public class LoadCommand extends BaseCommand implements SubCommand {
             sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.not_found", name));
             return;
         }
-        final String worldName = "bw_" + name;
+        final String canonical = arena.getName();
+        final String worldName = "bw_" + canonical;
         if (Bukkit.getWorld(worldName) != null) {
-            if (this.editorManager.isBeingEdited(name)) {
+            if (this.editorManager.isBeingEdited(canonical)) {
                 sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.already_being_edited",
-                        this.editorManager.getEditorName(name)));
+                        this.editorManager.getEditorName(canonical)));
                 return;
             }
-            sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.already_loaded", name));
+            sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.already_loaded", canonical));
             return;
         }
 
@@ -130,7 +131,7 @@ public class LoadCommand extends BaseCommand implements SubCommand {
                 this.arenaManager.flush(refreshed.getName());
             }
             this.arenaManager.markWorldClean(worldName);
-            this.editorManager.startSession(player, name);
+            this.editorManager.startSession(player, canonical);
             LocationUtil.safeTeleport(player, pasteLoc);
             player.setGameMode(org.bukkit.GameMode.CREATIVE);
             sender.sendMessage(this.lang.text(NamedTextColor.GREEN, "load.success"));

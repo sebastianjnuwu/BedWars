@@ -391,7 +391,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     private @Nullable Game findFirstByArenaName(final String arenaName) {
         for (final Game game : this.games.values()) {
-            if (game.getArena().getName().equals(arenaName)) {
+            if (game.getArena().getName().equalsIgnoreCase(arenaName)) {
                 return game;
             }
         }
@@ -436,7 +436,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private @Nullable Game findOpenGame(final String arenaName, final @Nullable ArenaMode mode) {
         for (final Game game : this.games.values()) {
             final Arena arena = game.getArena();
-            if (arena.getName().equals(arenaName)
+            if (arena.getName().equalsIgnoreCase(arenaName)
                     && game.getMode() == mode
                     && (game.getState() == GameState.WAITING || game.getState() == GameState.STARTING)
                     && !game.isFull()) {
