@@ -128,7 +128,7 @@ public class GameListener implements Listener {
      *
      * @param event o evento de renascimento (não nulo)
      */
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerRespawn(final PlayerRespawnEvent event) {
         final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
@@ -148,6 +148,12 @@ public class GameListener implements Listener {
                     : game.getArena().getArenaSpawn();
             if (target != null) {
                 event.setRespawnLocation(target);
+                final Location reassert = target.clone();
+                Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> {
+                    if (player.isOnline() && this.gameManager.getPlayerGame(player) == game) {
+                        player.teleport(reassert);
+                    }
+                });
             }
             return;
         }
