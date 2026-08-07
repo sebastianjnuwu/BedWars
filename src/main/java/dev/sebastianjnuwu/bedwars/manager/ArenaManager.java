@@ -790,6 +790,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         config.set("min_players", arena.getMinPlayers());
         config.set("countdown", arena.getCountdown());
         config.set("respawn-delay", arena.getRespawnDelay());
+        config.set("time-limit", arena.getTimeLimit());
 
         if (arena.getDifficulty() != null) {
             config.set("difficulty", arena.getDifficulty());
@@ -1136,6 +1137,7 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         arena.setMinPlayers(config.getInt("min_players", 2));
         arena.setCountdown(config.getInt("countdown", 3));
         arena.setRespawnDelay(config.getInt("respawn-delay", 3));
+        arena.setTimeLimit(config.getInt("time-limit", 0));
         if (config.contains("difficulty")) {
             arena.setDifficulty(config.getString("difficulty"));
         }

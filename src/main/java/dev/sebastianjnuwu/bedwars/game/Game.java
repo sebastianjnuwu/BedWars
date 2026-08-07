@@ -93,6 +93,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private BukkitTask gameTickTask;
     private int tick;
     private int countdownSeconds;
+    private int timeLimitWarning;
 
     /**
      * Constrói uma nova instância de partida para a arena informada.
@@ -680,6 +681,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 this.handleGeneratorTicks();
                 this.handleForgeTicks();
                 this.handleRespawnTicks();
+                this.handleTimeLimit();
                 break;
             default:
                 break;
@@ -1091,6 +1093,95 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             this.endGame(winner);
         } else if (aliveTeams == 0 && this.state == GameState.PLAYING) {
             this.forceEnd();
+        }
+    }
+
+    private void handleTimeLimit() {
+        final int limitSeconds = this.arena.getTimeLimit();
+        if (limitSeconds <= 0) {
+            return;
+        }
+        final int remaining = limitSeconds - (this.tick / 20);
+        if (remaining == 60 || remaining == 30 || (remaining > 0 && remaining <= 10)) {
+            if (remaining != this.timeLimitWarning) {
+                this.timeLimitWarning = remaining;
+                this.broadcastMessage(this.lang.text(NamedTextColor.RED, "game.time_limit_warning", remaining));
+            }
+        }
+        if (remaining <= 0) {
+            this.forceTimeLimitEnd();
+        }
+    }
+
+    private void forceTimeLimitEnd() {
+        ArenaTeam winner = null;
+        for (final var entry : this.teams.entrySet()) {
+            final ArenaTeam team = entry.getKey();
+            if (this.eliminatedTeams.contains(team)) {
+                continue;
+            }
+            if (winner == null || this.compareForTimeLimit(team, winner) > 0) {
+                winner = team;
+            }
+        }
+        if (winner != null && !this.hasTieForTimeLimit(winner)) {
+            this.broadcastMessage(this.lang.text(NamedTextColor.GOLD, "game.time_limit_winner",
+                    winner.getName().toUpperCase()));
+            this.endGame(winner);
+        } else {
+            this.broadcastMessage(this.lang.text(NamedTextColor.RED, "game.time_limit_tie"));
+            this.forceEnd();
+        }
+    }
+
+    private int compareForTimeLimit(final ArenaTeam first, final ArenaTeam second) {
+        final int alive = Integer.compare(this.getAliveCount(first), this.getAliveCount(second));
+        if (alive != 0) {
+            return alive;
+        }
+        final boolean firstBed = !this.bedlessTeams.contains(first);
+        final boolean secondBed = !this.bedlessTeams.contains(second);
+        if (firstBed != secondBed) {
+            return firstBed ? 1 : -1;
+        }
+        return Integer.compare(this.getTeamKills(first), this.getTeamKills(second));
+    }
+
+    private boolean hasTieForTimeLimit(final ArenaTeam winner) {
+        for (final ArenaTeam team : this.teams.keySet()) {
+            if (this.eliminatedTeams.contains(team) || team.equals(winner)) {
+                continue;
+            }
+            if (this.compareForTimeLimit(team, winner) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int getTeamKills(final ArenaTeam team) {
+        int total = 0;
+        for (final UUID uuid : this.teams.get(team)) {
+            final GamePlayer gamePlayer = this.players.get(uuid);
+            if (gamePlayer != null) {
+                total += gamePlayer.getKills();
+            }
+        }
+        return total;
+    }
+
+    private void broadcastMessage(final Component message) {
+        for (final UUID uuid : this.players.keySet()) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.sendMessage(message);
+            }
+        }
+        for (final UUID uuid : this.spectators) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.sendMessage(message);
+            }
         }
     }
 

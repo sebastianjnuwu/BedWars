@@ -2,14 +2,6 @@
 
 Um plugin moderno de **BedWars** para **Paper 1.21.4**, desenvolvido com foco em desempenho, organização do código e alta personalização.
 
-> **Status:** 🚧 Em desenvolvimento
-
-## 📊 Estatísticas
-
-O plugin utiliza o [bStats](https://bstats.org/) para coletar estatísticas anônimas de uso.
-
-![bStats](https://bstats.org/signatures/bukkit/sBedWars.svg)
-
 ### Codacy
 
 Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.com/).
@@ -27,6 +19,7 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 - 🛍️ Loja personalizável por arena (kits, upgrade de fornalha, conjuntos de armadura, posicionamento por linha/coluna)
 - 🥋 Armadura de time: compras viram couro na cor do time, presa no slot e com bloqueio de recompra
 - 💣 TNT destrói apenas blocos colocados por jogadores (mapa, camas e geradores protegidos)
+- 🔥 Bola de fogo: o item `FIRE_CHARGE` da loja dispara um projétil ao usar com o botão direito
 - 📦 Arquitetura modular para facilitar manutenção e expansão
 
 ## 📦 Requisitos
@@ -35,7 +28,7 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 - Maven **v3.9+**
 - FastAsyncWorldEdit **v2.15+**
 - AdvancedSlimePaper **v4.0+**
-- FancyNPCs **v2.9+** 
+- FancyNPCs **v2.9+** ou Citizens **v2.0+** (opcional, para NPCs da loja)
 
 ## Tutorial — Como utilizar o plugin?
 
@@ -47,7 +40,7 @@ Antes de usar o BedWars, você precisa preparar um servidor Paper 1.21.4 com os 
 - Instale os plugins obrigatórios:
   - FastAsyncWorldEdit **v2.15+**
   - AdvancedSlimePaper **v4.0+**
-  - FancyNPCs **v2.9+**
+  - FancyNPCs **v2.9+** ou Citizens **v2.0+** (um dos dois, para NPCs da loja)
 
 Depois, coloque o arquivo do BedWars gerado em `target/BedWars-1.0.0.jar` na pasta `plugins/` do servidor.
 
@@ -169,7 +162,7 @@ Por padrão, cada arena já possui configurações para os tipos **ferro**, **ou
 
 ### 12. Adicionar NPC da loja
 
-Instale o **FancyNPCs** no servidor. Durante a edição da arena, posicione-se onde o NPC deverá ficar e execute:
+Instale o **FancyNPCs** ou o **Citizens** no servidor (o plugin usado é escolhido automaticamente: FancyNPCs primeiro, depois Citizens — para forçar, descomente `npc-backend` no `config.yml`). Durante a edição da arena, posicione-se onde o NPC deverá ficar e execute:
 
 ```bash
 /bw admin arena <nome_da_arena> shop-npc add [skin] [displayName]
@@ -221,6 +214,11 @@ Destaques que você pode editar **direto no YAML** (sem comando):
     - WOODEN_SWORD
     - SHEARS
   ```
+- `time-limit:` — tempo máximo de duração da partida em **segundos** (`0` = sem limite). Quando o tempo acaba, a vitória é decidida na ordem:
+  1. Time com mais jogadores vivos.
+  2. Se empatar, vence o time cuja cama ainda está intacta.
+  3. Se ambos estiverem sem cama, vence o time com mais abates.
+  4. Persistindo empate, a partida termina empatada.
 - `difficulty` / `time` / `cycle_day` / `cycle_weather` / `spawn_mobs` / `spawn_animals` — ambiente do mundo.
 
 ### 14. Jogar na arena
@@ -313,6 +311,8 @@ categories:
 **Armadura de time:** toda armadura comprada (exceto couro já colorido) é convertida em couro tingido com a cor do time (`color:` no YAML da arena), marcada como `unbreakable` e com os atributos de proteção do material original. Ela fica **presa no slot** (não pode ser removida nem dropada) e **não dá para recomprar** a mesma armadura ou uma pior — apenas upgrades da fornalha liberam a compra.
 
 **TNT:** na partida, a TNT destrói apenas blocos colocados por jogadores — o mapa, as camas e os geradores ficam protegidos.
+
+**Bola de fogo:** o item `FIRE_CHARGE` (já presente na `default.yml`) dispara uma bola de fogo na direção do olhar ao ser usado com o botão direito durante a partida — em vez do comportamento padrão de isqueiro. Cada clique consome 1 item. Adicione na loja de qualquer arena com `stack: FIRE_CHARGE`.
 #### Vincular loja à arena
 
 ```bash
@@ -321,9 +321,9 @@ categories:
 
 Se não definir `shop`, a arena usa `default.yml`.
 
-#### NPC da loja (com FancyNPCs)
+#### NPC da loja (com FancyNPCs ou Citizens)
 
-Instale o **FancyNPCs** no servidor. Os NPCs são spawnados automaticamente quando a partida inicia e removidos ao final. Para configurar as posições durante a edição da arena:
+Instale o **FancyNPCs** ou o **Citizens** no servidor. Os NPCs são spawnados automaticamente quando a partida inicia e removidos ao final. O padrão tenta FancyNPCs primeiro e, se ausente, usa Citizens; para forçar outro, descomente `npc-backend` no `config.yml` (`citizens` ou `fancynpcs`). Para configurar as posições durante a edição da arena:
 
 ```bash
 /bw admin arena <nome_da_arena> shop-npc add [skin] [displayName]
@@ -337,7 +337,7 @@ Para gerenciar:
 /bw admin arena <nome_da_arena> shop-npc remove <id>
 ```
 
-> O nome do NPC será `bw-shop-<arena>-<id>` — o plugin reconhece automaticamente NPCs com nome `shop` ou prefixo `bw-shop-` e abre a loja ao interagir.
+> Internamente cada NPC é identificado como `bw-shop-<arena>-<id>` e marcado pelo plugin — ao interagir, a loja da arena é aberta. O `displayName` configurado é o nome visível do NPC.
 ### Comandos
 
 | Comando | Descrição | Permissão |

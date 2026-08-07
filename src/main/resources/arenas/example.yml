@@ -50,6 +50,29 @@ min_players: 2
 # Tempo (em segundos) da contagem regressiva antes da partida começar.
 countdown: 15
 
+# ══ TEMPO DA PARTIDA ═══════════════════════════════════════════════════
+
+# Tempo máximo de duração da partida.
+# Valor em segundos.
+#
+# 0 = Sem limite.
+#
+# Recomendado:
+# 600  = 10 minutos (Ultra rápido)
+# 900  = 15 minutos (Rápido)
+# 1200 = 20 minutos (Competitivo) ⭐
+# 1500 = 25 minutos (Casual)
+# 1800 = 30 minutos (Muito longo)
+
+time-limit: 1200
+
+# Quando o tempo acabar:
+#
+# 1º Time com mais jogadores vivos.
+# 2º Se empatar, vence o time cuja cama ainda está intacta.
+# 3º Se ambos estiverem sem cama, vence o time com mais abates.
+# 4º Persistindo empate, a partida termina empatada.
+
 # ── Ambiente do mundo da partida ──
 cycle_day: true        # true = o ciclo dia/noite continua normal
 cycle_weather: true    # true = o clima pode mudar
