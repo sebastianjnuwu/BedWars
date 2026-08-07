@@ -26,6 +26,8 @@ import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.DataManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
+import dev.sebastianjnuwu.bedwars.shop.CitizensNpcListener;
+import dev.sebastianjnuwu.bedwars.shop.NpcListener;
 import dev.sebastianjnuwu.bedwars.shop.ShopListener;
 import dev.sebastianjnuwu.bedwars.shop.ShopManager;
 import dev.sebastianjnuwu.bedwars.util.VersionChecker;
@@ -94,13 +96,12 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
         final String npcBackend = this.gameManager.getShopNpcManager().getBackendId();
         if ("fancynpcs".equals(npcBackend)) {
-            this.getServer().getPluginManager().registerEvents(
-                    new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager), this);
+            this.getServer().getPluginManager().registerEvents(new NpcListener(this.gameManager), this);
             this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
             this.getLogger().info(this.lang.raw("startup.npcs_hook_fancynpcs"));
         } else if ("citizens".equals(npcBackend)) {
             this.getServer().getPluginManager().registerEvents(
-                    new dev.sebastianjnuwu.bedwars.shop.CitizensNpcListener(this.gameManager.getShopNpcManager()), this);
+                    new CitizensNpcListener(this.gameManager.getShopNpcManager()), this);
             this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
             this.getLogger().info(this.lang.raw("startup.npcs_hook_citizens"));
         } else {

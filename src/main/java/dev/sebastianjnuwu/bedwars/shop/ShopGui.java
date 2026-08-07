@@ -843,7 +843,7 @@ public class ShopGui implements InventoryHolder {
                                 .filter(g -> g.getType().equalsIgnoreCase("forge"))
                                 .filter(g -> team.getName().equalsIgnoreCase(g.getTeam()))
                                 .findFirst().orElse(null);
-                        if (forge != null && game instanceof dev.sebastianjnuwu.bedwars.game.Game g) {
+                        if (forge != null && game instanceof Game g) {
                             g.upgradeForge(forge);
                         }
                     }

@@ -10,10 +10,12 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
@@ -63,7 +65,7 @@ public class SaveCommand extends BaseCommand implements SubCommand {
             final File mapsFolder
     ) {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
-        this.slimeManager = new SlimeManager(org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class));
+        this.slimeManager = new SlimeManager(JavaPlugin.getPlugin(BedWarsPlugin.class));
     }
 
     /**

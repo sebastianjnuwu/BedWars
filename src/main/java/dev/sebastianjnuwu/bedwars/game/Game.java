@@ -20,6 +20,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -729,8 +730,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
             final Location dropLocation = generator.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
             final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
-                    .filter(entity -> entity instanceof org.bukkit.entity.Item)
-                    .filter(entity -> ((org.bukkit.entity.Item) entity).getItemStack().getType() == material)
+                    .filter(entity -> entity instanceof Item)
+                    .filter(entity -> ((Item) entity).getItemStack().getType() == material)
                     .count();
             if (nearbyCount >= 32) {
                 continue;
@@ -778,8 +779,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 continue;
             }
             final long nearbyCount = world.getNearbyEntities(dropLocation, 2, 2, 2).stream()
-                    .filter(e -> e instanceof org.bukkit.entity.Item)
-                    .filter(e -> ((org.bukkit.entity.Item) e).getItemStack().getType() == material)
+                    .filter(e -> e instanceof Item)
+                    .filter(e -> ((Item) e).getItemStack().getType() == material)
                     .count();
             if (nearbyCount >= 32) {
                 continue;

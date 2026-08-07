@@ -176,6 +176,7 @@ dev.sebastianjnuwu.bedwars
 ├── command/        # Sistema de comandos (BaseCommand, SubCommand)
 ├── editor/         # Lógica específica do editor de arenas
 ├── game/           # Core do jogo e estados de partida
+├── hook/           # Integrações com backends de NPC (FancyNpcs, Citizens)
 ├── lang/           # Internacionalização (lang/pt_BR.yml) via LangManager
 ├── libs/           # Código embarcado (bStats)
 ├── listener/       # Eventos do Bukkit (Arena, Game, UI)
@@ -216,6 +217,14 @@ Implementação paralela **NÃO ativa**: `world/SimpleWorldManager`, `slime/Slim
 O `GameManager` coordena a transição entre `GameState` (READY -> STARTING -> PLAYING -> ENDING -> RESETTING).
 O `ResetManager` (sistema Slime, não ativo) não limpa blocos: solicita o descarregamento da instância `SlimeWorld` e remove o arquivo temporário. No sistema **ativo**, o reset é feito por `ArenaManager.resetArenaMap(name)` chamado por `Game.forceEnd()`/`endGame()` — recria o mundo do schematic a cada partida, garantindo integridade total para a próxima.
 
+### 4. NPCs da Loja (`hook/`, `shop/`)
+
+Os NPCs das lojas usam o contrato `NpcHook` (`hook/NpcHook`) com duas implementações: `FancyNpcsHook` e `CitizensHook` (via reflexão — Citizens **não** é dependência de compilação). A escolha é feita em `ShopNpcManager.resolveHook` a partir de `config.yml` `npc-backend` (`auto` = tenta FancyNpcs primeiro e, se ausente, usa Citizens; ou força `fancynpcs`/`citizens`). O listener de interação registrado em `BedWarsPlugin.onEnable` depende do hook ativo (`NpcListener` para FancyNpcs, `CitizensNpcListener` para Citizens) e ambos delegam a `ShopNpcManager.openShop`. NPCs são spawnados no início da partida/edição e removidos ao final; no Citizens o nome visível é o `displayName` configurado e a skin usa o trait `SkinTrait`.
+
+### 5. Tempo limite de partida
+
+`time-limit` (segundos, `0` = sem limite) é um campo por arena, lido em `manager/ArenaManager` no load. Durante `GameState.PLAYING`, `Game.handleTimeLimit` emite avisos aos 60s/30s/10..1s restantes (`game.time_limit_warning`) e, ao estourar, `forceTimeLimitEnd` decide o vencedor na ordem: mais jogadores vivos → cama intacta → mais abates → empate (`endGame`/`forceEnd` + `game.time_limit_*`).
+
 ---
 
 ## Regras de Desenvolvimento (Obrigatório)
@@ -225,3 +234,4 @@ O `ResetManager` (sistema Slime, não ativo) não limpa blocos: solicita o desca
 3. **Imutabilidade de Template:** Templates são *read-only*. Partidas SEMPRE rodam em cópias (instâncias).
 4. **Descarregamento Seguro:** Partidas encerradas devem disparar o ciclo de `RESETTING` imediatamente.
 5. **Clean Architecture:** Novas funcionalidades devem preferir a injeção dos Managers existentes.
+6. **Imports no topo:** Referencie tipos pelo **nome curto** com um único `import` no topo do arquivo — nunca hardcodar fully-qualified names inline no corpo. Exceções: nome clash real (importar o mais usado e qualificar o raro) e reflection/string (`Class.forName("...")`).

@@ -22,6 +22,7 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
+import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 
 /**
  * Comando para carregar uma arena no mundo do servidor.
@@ -109,7 +110,7 @@ public class LoadCommand extends BaseCommand implements SubCommand {
 
         try {
             final WorldCreator wc = new WorldCreator(worldName);
-            wc.generator(new dev.sebastianjnuwu.bedwars.world.VoidGenerator());
+            wc.generator(new VoidGenerator());
             final World world = wc.createWorld();
             if (world == null) {
                 sender.sendMessage(this.lang.text(NamedTextColor.RED, "load.error",

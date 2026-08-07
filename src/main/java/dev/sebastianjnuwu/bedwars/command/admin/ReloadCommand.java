@@ -3,10 +3,12 @@ package dev.sebastianjnuwu.bedwars.command.admin;
 import java.io.File;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
@@ -45,8 +47,7 @@ public class ReloadCommand extends BaseCommand implements SubCommand {
         this.lang.load();
 
         // Reload shop items (invalidate cache so GUIs rebuild from disk)
-        final dev.sebastianjnuwu.bedwars.BedWarsPlugin plugin =
-                org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class);
+        final BedWarsPlugin plugin = JavaPlugin.getPlugin(BedWarsPlugin.class);
         plugin.getShopManager().invalidateAll();
         plugin.getShopManager().loadDefaults();
 

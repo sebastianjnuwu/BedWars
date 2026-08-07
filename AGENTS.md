@@ -9,6 +9,7 @@ Você é um assistente sênior de engenharia Java que mantém o plugin **BedWars
 - Plugin **BedWars** para **Paper 1.21.4** (Java 21, Maven 3.9+).
 - Identificação Maven: `dev.sebastianjnuwu:sBedWars:1.0.0` → JAR (Java Archive) `target/BedWars-1.0.0.jar`.
 - Dependências `provided`: `paper-api` 1.21.4-R0.1-SNAPSHOT, `FastAsyncWorldEdit` (FAWE) (Core + Bukkit) 2.15.3, `FancyNpcs` 2.11.0 (opcional — NPCs da loja).
+- Hook de NPCs da loja: `FancyNpcs` ou `Citizens` (ambos opcionais; escolha automática via `config.yml` `npc-backend` — ver `hook/CitizensHook`).
 - Dependências *shaded* (via maven-shade-plugin): `AdvancedSlimePaper` (ASP) api + file-loader 4.1.0.
 - Telemetria: bStats (plugin ID 33001).
 - Antes de alterar código, consulte:
@@ -95,6 +96,11 @@ v0.0.1-059 - fix: reset de arena nao limpa o mundo (unload/delete verificados)
 - Logs e mensagens ao jogador em **português**; identificadores em **inglês**.
 - Mensagens do jogador via `LangManager` (chaves em `lang/pt_BR.yml`) — não hardcoded.
 - Checkstyle é parte do build; 0 violações são obrigatórias.
+- **[OBRIGATÓRIO]** Referencie todo tipo pelo **nome curto** com um único `import` no topo do arquivo; **[NUNCA]** hardcodar fully-qualified names inline no corpo (`new dev.sebastianjnuwu.bedwars.model.Arena(...)`), pois escondem a lista real de dependências.
+- **[NUNCA]** usar wildcard imports (`import java.util.*;`) — importe cada tipo explicitamente.
+- **[EVITAR]** `import static` para uso regular — importe o tipo e chame `Tipo.membro`; reserve para casos idiomáticos.
+- Fully-qualified name inline é aceito **apenas** em: (a) nome clash real no mesmo arquivo (importe o mais usado e qualifique o raro, com comentário curto explicando); (b) reflection/string (`Class.forName("...")`), onde o nome é dado, não referência.
+- Mantenha o bloco de imports ordenado e sem imports sem uso (build warning-clean).
 
 Exemplo de estilo (parâmetro `final` + switch expression):
 

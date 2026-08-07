@@ -23,6 +23,7 @@ import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 import dev.sebastianjnuwu.bedwars.world.Schematic;
+import dev.sebastianjnuwu.bedwars.world.VoidGenerator;
 
 /**
  * Comando para entrar no modo de edição de uma arena.
@@ -114,7 +115,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
                 return;
             }
             final WorldCreator wc = new WorldCreator(worldName);
-            wc.generator(new dev.sebastianjnuwu.bedwars.world.VoidGenerator());
+            wc.generator(new VoidGenerator());
             world = wc.createWorld();
             if (world == null) {
                 sender.sendMessage(this.lang.text(NamedTextColor.RED, "edit.world_not_found"));

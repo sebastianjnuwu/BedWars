@@ -6,11 +6,13 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
@@ -49,7 +51,7 @@ public class CreateCommand extends BaseCommand implements SubCommand {
         super(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder);
         
         // Inicializa SlimeManager
-        final var plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class);
+        final var plugin = JavaPlugin.getPlugin(BedWarsPlugin.class);
         this.slimeManager = new SlimeManager(plugin);
         this.templateManager = new TemplateManager(this.slimeManager.getTemplatesFolder(), this.slimeManager);
         this.arenaCreator = new ArenaCreator(this.slimeManager);

@@ -19,6 +19,7 @@ import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand {
@@ -94,7 +95,7 @@ public class GeneratorAddCommand extends BaseCommand implements ArenaSubCommand 
             arena.getGenerators().remove(existing);
         }
 
-        final var gen = new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(type, loc);
+        final var gen = new ArenaGenerator(type, loc);
         if (teamName != null) {
             gen.setTeam(teamName);
         }

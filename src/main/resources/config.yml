@@ -33,7 +33,7 @@ debug: false
 # ===================================================================
 # Opções para o plugin usado nos NPCs das lojas (padrão: auto):
 #   auto      -> tenta FancyNpcs primeiro e, se ausente, usa Citizens
-#   citizens  -> forçsa Citizens
+#   citizens  -> força Citizens
 #   fancynpcs -> força FancyNpcs
 npc-backend: auto
 

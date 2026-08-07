@@ -13,9 +13,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
@@ -44,7 +46,7 @@ public class ArenaManager {
      * @param slimeManager gerenciador de SlimeWorld
      */
     public ArenaManager(@Nullable File mapsFolder, @Nullable SlimeManager slimeManager) {
-        this.lang = org.bukkit.plugin.java.JavaPlugin.getPlugin(dev.sebastianjnuwu.bedwars.BedWarsPlugin.class).getLang();
+        this.lang = JavaPlugin.getPlugin(BedWarsPlugin.class).getLang();
         this.arenasFolder = new File("arenas");
         this.arenasFolder.mkdirs();
         this.mapsFolder = mapsFolder != null ? mapsFolder : new File("maps");

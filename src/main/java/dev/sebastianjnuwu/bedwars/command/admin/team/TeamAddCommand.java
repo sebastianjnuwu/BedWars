@@ -16,6 +16,7 @@ import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 public class TeamAddCommand extends BaseCommand implements ArenaSubCommand {
@@ -65,7 +66,7 @@ public class TeamAddCommand extends BaseCommand implements ArenaSubCommand {
             case "ciano" -> "CYAN";
             default -> "WHITE";
         };
-        arena.addTeam(new dev.sebastianjnuwu.bedwars.model.ArenaTeam(colorName, dyeColor));
+        arena.addTeam(new ArenaTeam(colorName, dyeColor));
         this.arenaManager.save(arena);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "admin.arena.addteam_success", colorName));
     }
