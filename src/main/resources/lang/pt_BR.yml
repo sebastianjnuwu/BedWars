@@ -381,9 +381,9 @@ debug:
   player_died: "{0} morreu em {1} (respawn em {2}s)"
   room_closed: "Sala fechada: {0}"
   room_closed_empty: "Sala fechada (sem jogadores): {0}"
-  player_inventory_saved: "Inventário salvo para o jogador com UUID={0}"
-  player_inventory_restored: "Inventário restaurado com sucesso para o jogador com UUID={0}"
-  player_inventory_restore_failed: "Falha ao restaurar o inventário do jogador com UUID={0}"
+  player_inventory_saved: "Inventário salvo para o jogador {0} ({1})"
+  player_inventory_restored: "Inventário restaurado com sucesso para o jogador {0} ({1})"
+  player_inventory_restore_failed: "Falha ao restaurar o inventário do jogador {0} ({1})"
   player_state_cleanup: "Limpeza de estado do jogador concluída para o UUID={0}"
   player_orphan_snapshot: "Snapshot órfão detectado para o jogador com UUID={0}. Restaurando estado órfão antes da entrada."
 

@@ -29,7 +29,7 @@ public final class PlayerStateManager {
             return;
         }
         this.snapshots.put(uuid, new PlayerStateSnapshot(player));
-        this.logger.info(this.lang.raw("debug.player_inventory_saved", uuid.toString()));
+        this.logger.info(this.lang.raw("debug.player_inventory_saved", player.getName(), uuid.toString()));
     }
 
     public void restorePlayerState(final Player player) {
@@ -41,9 +41,9 @@ public final class PlayerStateManager {
         try {
             snapshot.restore(player);
             this.snapshots.remove(uuid);
-            this.logger.info(this.lang.raw("debug.player_inventory_restored", uuid.toString()));
+            this.logger.info(this.lang.raw("debug.player_inventory_restored", player.getName(), uuid.toString()));
         } catch (final Exception e) {
-            this.logger.severe(this.lang.raw("debug.player_inventory_restore_failed", uuid.toString())
+            this.logger.severe(this.lang.raw("debug.player_inventory_restore_failed", player.getName(), uuid.toString())
                     + ": " + e.getMessage());
         }
     }
