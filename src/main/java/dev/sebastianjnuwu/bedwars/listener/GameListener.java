@@ -142,16 +142,13 @@ public class GameListener implements Listener {
         }
 
         if (game.isBedless(team)) {
-            Location target = this.gameManager.getConfigManager().getLobby();
-            if (target == null || target.getWorld() == null) {
-                target = !Bukkit.getWorlds().isEmpty()
-                        ? Bukkit.getWorlds().getFirst().getSpawnLocation() : null;
-            }
+            game.becomeSpectator(player);
+            final Location target = team.getSpawn() != null
+                    ? LocationUtil.findSafeRespawn(team.getSpawn())
+                    : game.getArena().getArenaSpawn();
             if (target != null) {
                 event.setRespawnLocation(target);
             }
-            player.setGameMode(GameMode.SURVIVAL);
-            Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> this.gameManager.leaveGame(player));
             return;
         }
 

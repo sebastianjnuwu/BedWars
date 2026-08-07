@@ -41,6 +41,8 @@ public interface Game {
 
     void joinAsSpectator(Player player);
 
+    void becomeSpectator(Player player);
+
     void leave(Player player);
 
     boolean isSpectator(Player player);

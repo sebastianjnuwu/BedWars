@@ -200,6 +200,15 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
     }
 
+    public void becomeSpectator(final Player player) {
+        player.setGameMode(GameMode.SPECTATOR);
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.getInventory().setItem(8, createExitDoorItem());
+        player.setHealth(20);
+        player.setFoodLevel(20);
+    }
+
     private void debug(final String key, final Object... args) {
         if (this.gameManager.getConfigManager().isDebugEnabled()) {
             Bukkit.getLogger().info("[BedWars] " + this.lang.raw(key, args));
@@ -959,16 +968,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
         if (this.bedlessTeams.contains(team) && !finalRespawn) {
-            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.no_bed"));
-            final Location lobby = this.gameManager.getConfigManager().getLobby();
-            final Location target = lobby != null
-                    ? lobby
-                    : (!Bukkit.getWorlds().isEmpty() ? Bukkit.getWorlds().getFirst().getSpawnLocation() : null);
+            this.becomeSpectator(player);
+            final Location target = team.getSpawn() != null
+                    ? LocationUtil.findSafeRespawn(team.getSpawn())
+                    : null;
             if (target != null) {
-                player.teleport(target);
+                LocationUtil.safeTeleport(player, target);
             }
-            player.setGameMode(GameMode.SURVIVAL);
-            this.gameManager.leaveGame(player);
             return;
         }
         if (team.getSpawn() == null) {
