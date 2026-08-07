@@ -221,20 +221,21 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
      * @param teleport  se deve teleportar o jogador quando o mundo estiver pronto
      */
     private void enqueueJoin(final Player player, final String arenaName, final @Nullable String teamName, final @Nullable ArenaMode mode, final boolean teleport) {
-        final List<PendingJoin> queue = this.pendingJoins.computeIfAbsent(arenaName, k -> new ArrayList<>());
+        final String key = queueKey(arenaName, mode);
+        final List<PendingJoin> queue = this.pendingJoins.computeIfAbsent(key, k -> new ArrayList<>());
         final UUID playerId = player.getUniqueId();
         if (queue.stream().anyMatch(pending -> pending.playerId().equals(playerId))) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_this_game"));
             return;
         }
         queue.add(new PendingJoin(playerId, teamName, mode, teleport));
-        if (this.buildingArenas.contains(arenaName)) {
+        if (this.buildingArenas.contains(key)) {
             player.sendMessage(this.lang.text(NamedTextColor.YELLOW, "game.countdown_preparing"));
             return;
         }
-        this.buildingArenas.add(arenaName);
+        this.buildingArenas.add(key);
         player.sendMessage(this.lang.text(NamedTextColor.YELLOW, "game.countdown_preparing"));
-        this.arenaManager.createInstanceAsync(arenaName, instance -> this.completePendingJoins(arenaName, instance));
+        this.arenaManager.createInstanceAsync(arenaName, instance -> this.completePendingJoins(arenaName, mode, instance));
     }
 
     /**
@@ -248,9 +249,10 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
      * @param arenaName nome da arena (não nulo)
      * @param instance  instância pronta, ou {@code null} se a construção falhou
      */
-    private void completePendingJoins(final String arenaName, final @Nullable Arena instance) {
-        this.buildingArenas.remove(arenaName);
-        final List<PendingJoin> waiters = this.pendingJoins.remove(arenaName);
+    private void completePendingJoins(final String arenaName, final @Nullable ArenaMode mode, final @Nullable Arena instance) {
+        final String key = queueKey(arenaName, mode);
+        this.buildingArenas.remove(key);
+        final List<PendingJoin> waiters = this.pendingJoins.remove(key);
         if (instance == null) {
             if (waiters != null) {
                 for (final PendingJoin pending : waiters) {
@@ -279,8 +281,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             }
             return;
         }
-        final Game game = new Game(this, instance, this.shopNpcManager,
-                waiters != null && !waiters.isEmpty() ? waiters.get(0).mode() : null);
+        final Game game = new Game(this, instance, this.shopNpcManager, mode);
         this.games.put(this.gameKey(instance), game);
         if (waiters != null) {
             for (final PendingJoin pending : waiters) {
@@ -452,6 +453,10 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private String gameKey(final Arena arena) {
         final String worldName = arena.getWorldName();
         return worldName != null && !worldName.isBlank() ? worldName : arena.getName();
+    }
+
+    private static String queueKey(final String arenaName, final @Nullable ArenaMode mode) {
+        return arenaName + ":" + (mode != null ? mode.name() : "FREE");
     }
 
     private void debug(final String key, final Object... args) {
