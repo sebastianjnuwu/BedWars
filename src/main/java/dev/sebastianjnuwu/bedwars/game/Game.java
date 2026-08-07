@@ -493,6 +493,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 final Location spawn = spawnLoc.clone().add(index * 0.5, 0, 0);
                 LocationUtil.safeTeleport(player, spawn);
                 player.getInventory().clear();
+                player.getEnderChest().clear();
                 applyTeamArmor(player, team);
                 giveSpawnItems(player);
                 player.setGameMode(GameMode.SURVIVAL);

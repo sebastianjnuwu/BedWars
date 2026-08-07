@@ -64,6 +64,7 @@ public final class PlayerStateManager {
         private final ItemStack[] contents;
         private final ItemStack[] armor;
         private final ItemStack[] extra;
+        private final ItemStack[] enderChest;
         private final float exp;
         private final int level;
         private final GameMode gameMode;
@@ -72,6 +73,7 @@ public final class PlayerStateManager {
             this.contents = cloneItems(player.getInventory().getContents());
             this.armor = cloneItems(player.getInventory().getArmorContents());
             this.extra = cloneItems(player.getInventory().getExtraContents());
+            this.enderChest = cloneItems(player.getEnderChest().getContents());
             this.exp = player.getExp();
             this.level = player.getLevel();
             this.gameMode = player.getGameMode();
@@ -82,6 +84,7 @@ public final class PlayerStateManager {
             player.getInventory().setContents(this.contents);
             player.getInventory().setArmorContents(this.armor);
             player.getInventory().setExtraContents(this.extra);
+            player.getEnderChest().setContents(this.enderChest);
             player.setExp(this.exp);
             player.setLevel(this.level);
             player.setGameMode(this.gameMode);
