@@ -87,6 +87,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Map<ArenaGenerator, long[]> generatorTicks;
     private final Map<String, long[]> forgeTicks;
     private final Map<UUID, Integer> respawnTicks;
+    private final Set<UUID> pendingFinalRespawns;
     private final Set<String> placedBlocks;
     private GameState state;
     private BukkitTask gameTickTask;
@@ -123,6 +124,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.generatorTicks = new HashMap<>();
         this.forgeTicks = new HashMap<>();
         this.respawnTicks = new HashMap<>();
+        this.pendingFinalRespawns = new HashSet<>();
         this.placedBlocks = new HashSet<>();
         this.state = GameState.WAITING;
         for (final ArenaTeam team : arena.getTeams()) {
@@ -386,6 +388,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         this.respawnTicks.remove(player.getUniqueId());
+        this.pendingFinalRespawns.remove(player.getUniqueId());
 
         final GamePlayer gp = this.players.remove(player.getUniqueId());
         if (gp == null) {
@@ -946,6 +949,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private void tryRespawn(final Player player, final ArenaTeam team) {
+        final boolean finalRespawn = this.pendingFinalRespawns.remove(player.getUniqueId());
         this.respawnTicks.remove(player.getUniqueId());
         if (this.state != GameState.PLAYING) {
             return;
@@ -953,7 +957,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         if (this.players.get(player.getUniqueId()) == null) {
             return;
         }
-        if (this.bedlessTeams.contains(team)) {
+        if (this.bedlessTeams.contains(team) && !finalRespawn) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.no_bed"));
             final Location lobby = this.gameManager.getConfigManager().getLobby();
             final Location target = lobby != null
@@ -970,7 +974,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
 
-        LocationUtil.safeTeleport(player, team.getSpawn());
+        LocationUtil.safeTeleport(player, LocationUtil.findSafeRespawn(team.getSpawn()));
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20);
         player.setFoodLevel(20);
@@ -1010,12 +1014,9 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new BedBreakEvent(this, team, null));
 
         for (final UUID uuid : this.teams.get(team)) {
-            final Integer rem = this.respawnTicks.remove(uuid);
-            if (rem != null) {
-                final GamePlayer gp = this.players.get(uuid);
-                if (gp != null) {
-                    Bukkit.getPluginManager().callEvent(new GamePlayerEliminateEvent(this, gp, null));
-                }
+            if (this.respawnTicks.containsKey(uuid)) {
+                this.pendingFinalRespawns.add(uuid);
+                continue;
             }
             final Player player = Bukkit.getPlayer(uuid);
             if (player != null && this.players.containsKey(uuid) && !this.players.get(uuid).isAlive()) {
@@ -1025,6 +1026,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         if (this.getAliveCount(team) == 0) {
+            for (final UUID uuid : this.teams.get(team)) {
+                this.respawnTicks.remove(uuid);
+                this.pendingFinalRespawns.remove(uuid);
+            }
             this.eliminateTeam(team);
         }
     }
@@ -1095,6 +1100,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.state = GameState.ENDING;
         this.stopGameTick();
         this.respawnTicks.clear();
+        this.pendingFinalRespawns.clear();
         this.generatorTicks.clear();
         this.forgeTicks.clear();
         this.forgeLevels.clear();
@@ -1285,6 +1291,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
         this.stopGameTick();
         this.respawnTicks.clear();
+        this.pendingFinalRespawns.clear();
         this.generatorTicks.clear();
         this.forgeTicks.clear();
         this.forgeLevels.clear();

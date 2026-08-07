@@ -48,6 +48,7 @@ import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 
 /**
  * Listener responsável pela lógica principal da partida de BedWars.
@@ -155,15 +156,16 @@ public class GameListener implements Listener {
         }
 
         if (team.getSpawn() != null) {
-            event.setRespawnLocation(team.getSpawn());
+            final Location target = LocationUtil.findSafeRespawn(team.getSpawn());
+            event.setRespawnLocation(target);
             player.setGameMode(GameMode.SPECTATOR);
             // Reafirma a posição no tick seguinte: garante que o jogador nasça no
             // spawn do time mesmo se outro plugin sobrescrever a localização do
             // respawn em prioridade mais alta (HIGHEST/MONITOR).
-            final Location target = team.getSpawn().clone();
+            final Location reassert = target.clone();
             Bukkit.getScheduler().runTask(this.gameManager.getPlugin(), () -> {
                 if (player.isOnline() && this.gameManager.getPlayerGame(player) == game) {
-                    player.teleport(target);
+                    player.teleport(reassert);
                 }
             });
         }
