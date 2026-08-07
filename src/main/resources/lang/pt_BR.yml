@@ -178,6 +178,7 @@ game:
   game_code: "Código da partida: <green>{0}</green>"
   code_not_found: "<red>Partida com código {0} não encontrada.</red>"
   code_full: "<red>Esta partida está cheia ou em andamento.</red>"
+  code_mode_mismatch: "<red>O modo desta partida não corresponde ao modo informado.</red>"
   join_broadcast: "{0} entrou na partida ({1}/{2})"
   leave_broadcast: "{0} saiu da partida."
   not_in_game: "Você não está em nenhuma partida."

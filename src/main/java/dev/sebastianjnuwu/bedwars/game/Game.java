@@ -201,6 +201,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     public void becomeSpectator(final Player player) {
+        this.spectators.add(player.getUniqueId());
         player.setGameMode(GameMode.SPECTATOR);
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
@@ -383,32 +384,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
 
         final boolean wasSpectator = this.spectators.remove(player.getUniqueId());
-        if (wasSpectator) {
-            final Location lobby = this.gameManager.getConfigManager().getLobby();
-            if (lobby != null) {
-                player.teleport(lobby);
-            } else if (!Bukkit.getWorlds().isEmpty()) {
-                player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
-            }
-            player.setGameMode(GameMode.SURVIVAL);
-            // Restaura inventario do mundo normal
-            restoreInventory(player);
-            return;
-        }
-
         this.respawnTicks.remove(player.getUniqueId());
         this.pendingFinalRespawns.remove(player.getUniqueId());
 
         final GamePlayer gp = this.players.remove(player.getUniqueId());
-        if (gp == null) {
-            return;
+        final ArenaTeam team = gp != null ? gp.getTeam() : null;
+        if (team != null) {
+            this.teams.get(team).remove(player.getUniqueId());
         }
-
-        final ArenaTeam team = gp.getTeam();
-        this.teams.get(team).remove(player.getUniqueId());
-
-        this.debug("debug.player_left", player.getName(), this.arena.getName(),
-                this.players.size());
 
         // Restaura inventario do mundo normal
         restoreInventory(player);
@@ -420,6 +403,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation());
         }
         player.setGameMode(GameMode.SURVIVAL);
+
+        if (wasSpectator && gp == null) {
+            return;
+        }
+
+        this.debug("debug.player_left", player.getName(), this.arena.getName(),
+                this.players.size());
 
         // Mostra jogadores de outras partidas novamente
         for (final Player online : Bukkit.getOnlinePlayers()) {
@@ -443,10 +433,12 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         this.updateCountdownState();
 
-        if (this.bedlessTeams.contains(team) && this.getAliveCount(team) == 0) {
-            this.eliminateTeam(team);
-        } else {
-            this.checkWinCondition();
+        if (team != null) {
+            if (this.bedlessTeams.contains(team) && this.getAliveCount(team) == 0) {
+                this.eliminateTeam(team);
+            } else {
+                this.checkWinCondition();
+            }
         }
     }
 
@@ -1085,7 +1077,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             if (this.eliminatedTeams.contains(team)) {
                 continue;
             }
-            if (this.getAliveCount(team) > 0) {
+            if (this.getAliveCount(team) > 0 || !this.bedlessTeams.contains(team)) {
                 aliveTeams++;
                 if (winner == null) {
                     winner = team;

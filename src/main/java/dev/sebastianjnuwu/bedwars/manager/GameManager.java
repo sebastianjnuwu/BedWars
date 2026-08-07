@@ -153,9 +153,17 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     public void joinGame(final Player player, final String arenaName, final @Nullable String teamName, final @Nullable ArenaMode mode, final @Nullable String code, final boolean teleport) {
         if (code != null && !code.isBlank()) {
+            if (this.isInGame(player)) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.already_in_game"));
+                return;
+            }
             final Game target = this.findGameByCode(code);
             if (target == null || !target.getArena().getName().equalsIgnoreCase(arenaName)) {
                 player.sendMessage(this.lang.text(NamedTextColor.RED, "game.code_not_found", code));
+                return;
+            }
+            if (mode != null && target.getMode() != mode) {
+                player.sendMessage(this.lang.text(NamedTextColor.RED, "game.code_mode_mismatch", code));
                 return;
             }
             if (target.getState() != GameState.WAITING && target.getState() != GameState.STARTING) {
@@ -281,18 +289,39 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             }
             return;
         }
+        final List<PendingJoin> online = waiters != null
+                ? waiters.stream().filter(pending -> Bukkit.getPlayer(pending.playerId()) != null).toList()
+                : List.of();
+        if (online.isEmpty()) {
+            this.arenaManager.deleteInstanceWorld(instance.getWorldName());
+            return;
+        }
         final Game game = new Game(this, instance, this.shopNpcManager, mode);
         this.games.put(this.gameKey(instance), game);
-        if (waiters != null) {
-            for (final PendingJoin pending : waiters) {
-                final Player player = Bukkit.getPlayer(pending.playerId());
-                if (player == null) {
-                    continue;
-                }
+        for (final PendingJoin pending : online) {
+            final Player player = Bukkit.getPlayer(pending.playerId());
+            if (player != null) {
                 game.join(player, pending.teamName(), pending.teleport());
                 this.playerGames.put(player.getUniqueId(), game);
             }
         }
+    }
+
+    /**
+     * Remove o jogador das filas de entrada pendentes (ex.: ao sair do servidor).
+     * <p>
+     * Não remove a arena em construção; a fila vazia é limpa e, quando a
+     * construção terminar, o mundo é descartado por {@link #completePendingJoins}.
+     * </p>
+     *
+     * @param player jogador que deve ser removido das filas (não nulo)
+     */
+    public void removeFromPendingJoins(final Player player) {
+        final UUID playerId = player.getUniqueId();
+        for (final List<PendingJoin> queue : this.pendingJoins.values()) {
+            queue.removeIf(pending -> pending.playerId().equals(playerId));
+        }
+        this.pendingJoins.values().removeIf(List::isEmpty);
     }
 
     /**

@@ -626,6 +626,7 @@ public class GameListener implements Listener {
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent event) {
         final Player player = event.getPlayer();
+        this.gameManager.removeFromPendingJoins(player);
         if (this.gameManager.isInGame(player)) {
             this.gameManager.leaveGame(player);
         }
@@ -634,6 +635,7 @@ public class GameListener implements Listener {
     @EventHandler
     public void onPlayerKick(final PlayerKickEvent event) {
         final Player player = event.getPlayer();
+        this.gameManager.removeFromPendingJoins(player);
         if (this.gameManager.isInGame(player)) {
             this.gameManager.leaveGame(player);
         }
