@@ -326,6 +326,9 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private void startGame(final String arenaName, final boolean force) {
         Game game = this.findOpenGame(arenaName, null);
         if (game == null) {
+            game = this.findFirstByArenaName(arenaName);
+        }
+        if (game == null || (game.getState() != GameState.WAITING && game.getState() != GameState.STARTING)) {
             final Arena arena = this.arenaManager.get(arenaName);
             if (arena == null) {
                 return;
