@@ -4,6 +4,12 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-178] - 2026-08-07
+
+### Documentação
+- `ARCHITECTURE.md`: diagramas Mermaid atualizados do sistema **Slime/ASP (não ativo)** para o sistema **Schematic (ativo)** — criação/save via `Schematic.save` para `maps/`, partidas via `WorldCreator` + `VoidGenerator` + `Schematic.paste`, reset via `ArenaManager.resetArenaMap` (unload/delete verificados → mundo void → repaste → flush), runtime com "Tempo Limite" e loja via `NpcHook` (FancyNpcs/Citizens).
+- `ARCHITECTURE.md`: "Pilares Tecnológicos" atualizados (schematic FAWE como núcleo de persistência, YAML + schematic, sem templates Slime em produção); seção 3 reescrita com o fluxo de reset ativo.
+
 ## [0.0.1-175] - 2026-08-07
 
 ### Documentação

@@ -9,10 +9,10 @@ O objetivo é garantir um sistema escalável, isolado e performático, evitando 
 
 ## Pilares Tecnológicos
 
-- **AdvancedSlimePaper / SlimeWorld:** Núcleo de gerenciamento de mundos para carregamento/descarregamento rápido de templates.
-- **FAWE (FastAsyncWorldEdit):** Restrito exclusivamente à fase de edição administrativa.
-- **Isolamento:** Cada partida roda em sua própria instância de mundo Slime.
-- **Persistência:** Templates SlimeWorld (.slime) armazenados para instanciamento rápido.
+- **Schematic FAWE (sistema ATIVO):** Núcleo de persistência de mapas. Arenas em `arenas/<nome>.yml`, mapas como `.schem`/`.bwmap` em `maps/`.
+- **FAWE (FastAsyncWorldEdit):** Restrito exclusivamente à fase de edição administrativa e load/save/restore — nunca em runtime.
+- **Isolamento:** Cada partida roda em seu próprio mundo `bw_<nome>` recriado do schematic a cada reset.
+- **Persistência:** YAML por arena + schematic por mapa; sem templates Slime em produção.
 
 ---
 
@@ -37,13 +37,11 @@ subgraph MAP_CREATION["🛠️ Criação e Persistência de Mapas"]
 
     EditorPosition -->|"FAWE / Construção Manual"| Build["Construção da Arena"]
 
-    Build -->|"Configuração"| Setup["Configuração da Arena\n• Spawn\n• Times\n• Camas\n• Geradores\n• Regras"]
+    Build -->|"Configuração"| Setup["Configuração da Arena\n• Spawn\n• Times\n• Camas\n• Geradores\n• Regras\n• time-limit"]
 
-    Setup -->|"/bw admin save"| TemplateManager["TemplateManager"]
+    Setup -->|"/bw admin save"| SchematicSave["Schematic.save\n(seleção FAWE ou área detectada)"]
 
-    TemplateManager -->|"Serialização"| SlimeStorage["SlimeLoader"]
-
-    SlimeStorage -->|"Persistência"| Template["📦 Template SlimeWorld\nmapa.slime"]
+    SchematicSave -->|"Persistência"| SchematicStorage["📦 Schematic FAWE\nmaps/<nome>.schem"]
 
 end
 
@@ -54,21 +52,15 @@ end
 
 subgraph ARENA_SYSTEM["🎮 Sistema de Arena"]
 
-    Template --> ArenaManager["ArenaManager"]
+    SchematicStorage --> ArenaManager["manager/ArenaManager"]
 
-    ArenaManager --> TemplateCache["Template Cache"]
+    ArenaManager --> ArenaCache["Cache de Arenas\narenas/<nome>.yml"]
 
-    TemplateCache -->|"Disponível"| ArenaPool["Arena Pool"]
+    ArenaCache -->|"updateWorldReferences + flush"| States["Arena State Machine"]
 
-    ArenaPool --> States["Arena State Machine"]
-
-    States --> OFFLINE["OFFLINE"]
-    States --> LOADING["LOADING"]
-    States --> READY["READY"]
-    States --> STARTING["STARTING"]
+    States --> LOBBY["LOBBY"]
     States --> PLAYING["PLAYING"]
     States --> ENDING["ENDING"]
-    States --> RESETTING["RESETTING"]
 
 end
 
@@ -87,11 +79,11 @@ subgraph GAME_FLOW["🏆 Fluxo de Partida"]
 
     GameManager -->|"Solicita arena"| ArenaManager
 
-    ArenaManager -->|"Seleciona READY"| InstanceManager["SlimeInstanceManager"]
+    ArenaManager -->|"Cria mundo bw_<nome>"| WorldCreate["WorldCreator + VoidGenerator"]
 
-    InstanceManager -->|"Clone Template"| Clone["SlimeWorld Instance"]
+    WorldCreate -->|"Paste do schematic"| SchematicPaste["Schematic.paste"]
 
-    Clone -->|"Generate World"| GameWorld["Mundo da Partida"]
+    SchematicPaste -->|"flush"| GameWorld["Mundo da Partida\nbw_<nome>"]
 
     GameWorld -->|"Chunks preparados"| Teleport["Player.teleportAsync()"]
 
@@ -116,9 +108,11 @@ subgraph RUNTIME["⚔️ Runtime da Partida"]
 
     Events --> Teams["Times"]
 
-    Events --> Shop["Loja"]
+    Events --> Shop["Loja\n(NpcHook: FancyNpcs/Citizens)"]
 
     Events --> Score["Scoreboard"]
+
+    Events --> TimeLimit["Tempo Limite\ngame.time_limit_*"]
 
 end
 
@@ -129,17 +123,17 @@ end
 
 subgraph RESET["♻️ Reset e Reciclagem"]
 
-    Match -->|"Fim da partida"| EndGame["Game End"]
+    Match -->|"Fim da partida"| EndGame["Game End\nforceEnd/endGame"]
 
-    EndGame --> ResetManager["ResetManager"]
+    EndGame --> ResetArena["ArenaManager.resetArenaMap(name)"]
 
-    ResetManager -->|"Remove jogadores"| Cleanup["Cleanup"]
+    ResetArena -->|"Unload + delete verificados"| DeleteWorld["WorldManager.deleteWorld"]
 
-    Cleanup -->|"Unload World"| Unload["Unload Slime Instance"]
+    DeleteWorld -->|"Novo mundo void"| NewWorld["WorldCreator + VoidGenerator"]
 
-    Unload -->|"Delete Instance"| Destroy["Destruir Mundo"]
+    NewWorld -->|"Schematic.paste"| Repaste["Repaste do schematic"]
 
-    Destroy -->|"Novo clone disponível"| ArenaPool
+    Repaste -->|"flush"| ArenaPool["Arena pronta para nova partida"]
 
 end
 
@@ -150,15 +144,15 @@ end
 
 subgraph PERFORMANCE["⚡ Otimização"]
 
-    Cache["Cache Control"]
+    Cache["Cache de Arenas em memória"]
 
     Cache --> RAM["RAM Control"]
 
-    Cache --> Limit["max-loaded-instances"]
+    Cache --> Limit["Mundo por partida\nbw_<nome> descarregado no fim"]
 
-    Limit --> UnloadPolicy["Auto Unload"]
+    Limit --> UnloadPolicy["Unload verificado pós-partida"]
 
-    UnloadPolicy --> ResetManager
+    UnloadPolicy --> ResetArena
 
 end
 ```
@@ -215,7 +209,7 @@ Implementação paralela **NÃO ativa**: `world/SimpleWorldManager`, `slime/Slim
 ### 3. Gerenciamento de Partidas (`game/`, `arena/`)
 
 O `GameManager` coordena a transição entre `GameState` (READY -> STARTING -> PLAYING -> ENDING -> RESETTING).
-O `ResetManager` (sistema Slime, não ativo) não limpa blocos: solicita o descarregamento da instância `SlimeWorld` e remove o arquivo temporário. No sistema **ativo**, o reset é feito por `ArenaManager.resetArenaMap(name)` chamado por `Game.forceEnd()`/`endGame()` — recria o mundo do schematic a cada partida, garantindo integridade total para a próxima.
+O sistema **ativo** descarta o mundo da partida ao fim: `Game.forceEnd()`/`endGame()` chama `ArenaManager.resetArenaMap(name)`, que faz unload + delete verificados do mundo `bw_<nome>` (`WorldManager.deleteWorld`) → novo mundo void (`WorldCreator` + `VoidGenerator`) → `Schematic.paste` → `flush`. Isso garante integridade total para a próxima partida. O `ResetManager` (sistema Slime, não ativo) não é usado em produção.
 
 ### 4. NPCs da Loja (`hook/`, `shop/`)
 
