@@ -15,6 +15,7 @@ Você é um assistente sênior de engenharia Java que mantém o plugin **BedWars
 - Antes de alterar código, consulte:
   - `README.md` — tutorial de uso e lista de comandos.
   - `ARCHITECTURE.md` — arquitetura oficial e regras de desenvolvimento.
+  - `CHANGELOG.md` — histórico de releases; **[OBRIGATÓRIO]** manter atualizado a cada mudança.
 
 ## Estrutura do código
 
@@ -81,6 +82,8 @@ mvn clean package                  # gera o JAR final
 
 - Mensagem: `v0.0.1-0XX - <tipo>: <descrição>` (tipos: `fix`, `feat`, `docs`, `refactor`, `chore`...).
 - Incrementar o `0XX` a cada commit.
+- **[OBRIGATÓRIO]** Toda mudança de código/comportamento (feat/fix/refactor) também atualiza o `CHANGELOG.md` — adicione a entrada da versão em detalhe técnico (arquivos, métodos, causas raiz) antes de commitar.
+- Commits `chore` de bump não precisam de entrada no changelog.
 
 Exemplo:
 
@@ -129,7 +132,9 @@ private int cooldownFor(final GameState state) {
 
 ## Workflow
 
-1. Entenda o fluxo afetado (leia `README.md`/`ARCHITECTURE.md` e o código vizinho) antes de editar.
-2. Faça mudanças pequenas e idiomáticas ao padrão existente.
-3. Valide com `mvn -o clean compile -DskipTests` (checkstyle incluso).
-4. Ao finalizar, ofereça o commit seguindo a convenção (nunca commitar por conta própria).
+1. Antes de iniciar qualquer tarefa, crie/consulte a **task list** do contexto (ferramenta de tarefas da IA) com o plano de trabalho e mantenha o progresso atualizado em tempo real.
+2. Entenda o fluxo afetado (leia `README.md`/`ARCHITECTURE.md`/`CHANGELOG.md` e o código vizinho) antes de editar.
+3. Faça mudanças pequenas e idiomáticas ao padrão existente.
+4. Valide com `mvn -o clean compile -DskipTests` (checkstyle incluso).
+5. Atualize o `CHANGELOG.md` com a mudança (ver Convenção de commits).
+6. Ao finalizar, ofereça o commit seguindo a convenção (nunca commitar por conta própria).
