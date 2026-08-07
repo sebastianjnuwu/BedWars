@@ -440,7 +440,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         for (final Game game : this.games.values()) {
             final Arena arena = game.getArena();
             if (arena.getName().equalsIgnoreCase(arenaName)
-                    && game.getMode() == mode
+                    && (mode == null || game.getMode() == mode)
                     && (game.getState() == GameState.WAITING || game.getState() == GameState.STARTING)
                     && !game.isFull()) {
                 return game;
