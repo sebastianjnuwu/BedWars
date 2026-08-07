@@ -1,136 +1,140 @@
 # Changelog
 
-Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4) são documentadas neste arquivo.
+Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são documentadas neste arquivo.
 
-O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cada versão deriva dos commits em `main`; versões pares de "bump" (atualização do número no `pom.xml`) são omitidas.
+O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
-## [0.0.1-174] - 2026-08-07
+## [0.0.1-175] - 2026-08-07
 
-### Interno
-- `pom.xml` atualizado para a versão `0.0.1-173` (bump de controle de versão).
+### Documentação
+- `CHANGELOG.md` criado com todo o histórico do plugin, detalhando as mudanças de cada release.
 
 ## [0.0.1-173] - 2026-08-07
 
 ### Refatoração
-- Imports movidos para o topo dos arquivos e fully-qualified names inline substituídos pelo nome curto com `import` único (regra de estilo de `AGENTS.md`).
-- FQN inline mantido apenas nos casos de conflito real de nome entre a interface `api.model.*` e o concreto `model.*` (ex.: `Arena`, `ArenaTeam`, `ArenaGenerator`, `GamePlayer`).
-- Comentários explicativos dos conflitos removidos a pedido do usuário.
+- Aplicada a regra de estilo de imports em todo o código: **imports no topo do arquivo + nome curto no corpo**, eliminando fully-qualified names inline (`new dev.sebastianjnuwu.bedwars.model.Arena(...)` → import único + `new Arena(...)`).
+- Arquivos afetados: `BedWarsPlugin` (imports de `NpcListener`/`CitizensNpcListener`), `ReloadCommand`, `CreateCommand`, `EditCommand`, `LoadCommand`, `SaveCommand` (imports de `JavaPlugin`/`BedWarsPlugin`/`VoidGenerator`), `TeamAddCommand` (`model.ArenaTeam`), `GeneratorAddCommand` (`model.ArenaGenerator`), `Game` (import de `org.bukkit.entity.Item`), `ShopGui`, `arena/ArenaManager` e `manager/ArenaManager`.
+- FQN inline mantido **apenas** nos casos de conflito real de nome entre a interface `api.model.*` e o concreto `model.*` (ex.: `Arena`, `ArenaTeam`, `ArenaGenerator`, `GamePlayer`).
+- Comentários explicativos dos conflitos removidos a pedido do usuário (decisão de manter o código limpo).
 
 ### Documentação
-- `AGENTS.md`: adicionada a regra de imports (import no topo, sem FQN inline, exceções para conflito de nome e reflection).
-- `ARCHITECTURE.md`: pacote `hook/` adicionado ao mapa de pacotes; novas seções "NPCs da Loja" (`NpcHook`, `FancyNpcsHook`, `CitizensHook`, `ShopNpcManager.resolveHook`) e "Tempo limite de partida"; princípio "Imports no topo" adicionado às regras de arquitetura.
+- `AGENTS.md`: adicionada a regra de imports (import explícito no topo, proibido FQN inline, exceções para conflito de nome com comentário curto e reflection/string via `Class.forName`; proibido wildcard import; `import static` apenas idiomático).
+- `ARCHITECTURE.md`: pacote `hook/` adicionado ao mapa de pacotes; novas seções "4. NPCs da Loja" (`NpcHook`, `FancyNpcsHook`, `CitizensHook`, `ShopNpcManager.resolveHook`, listeners por hook, `SkinTrait`) e "5. Tempo limite de partida" (`Game.handleTimeLimit`, critérios do `forceTimeLimitEnd`); princípio "Imports no topo" adicionado às regras de arquitetura.
 - `config.yml`: corrigido typo `forçsa` → `força` em comentário da opção `npc-backend`.
 
 ## [0.0.1-171] - 2026-08-07
 
 ### Adicionado
-- Tempo limite de partida por arena: nova chave `time-limit` no YAML da arena (em segundos; `0` = sem limite, padrão).
-- Avisos de tempo restante na barra de ação em `60`, `30`, `10`..`1` segundos (chave `game.time_limit_warning`).
-- Encerramento automático com determinação de vencedor por critérios em ordem: mais jogadores vivos → cama intacta → mais abates → empate (chaves `game.time_limit_winner` e `game.time_limit_tie`).
-- Novos campos `timeLimit`/`getTimeLimit()`/`setTimeLimit()` em `model.Arena` e na interface `api.model.Arena` (incluído na cópia).
-
-### Alterado
-- `manager/ArenaManager`: salva e carrega `time-limit` das arenas.
-- `Game`: novo `handleTimeLimit()` no tick de `PLAYING`, `forceTimeLimitEnd()` e helper `broadcastMessage(Component)`.
-- `lang/pt_BR.yml`: novas chaves `game.time_limit_warning`, `game.time_limit_winner`, `game.time_limit_tie`.
-- `example.yml`: opção `time-limit: 1200` documentada.
+- **Tempo limite de partida por arena**:
+  - Nova chave `time-limit` no YAML da arena, em segundos (`0` = sem limite, padrão).
+  - Campo `timeLimit` + getters/setters em `model/Arena` e na interface `api/model/Arena`; incluído no `copy()`.
+  - Persistência em `manager/ArenaManager`: `config.set("time-limit", ...)` no save e `getInt("time-limit", 0)` no load.
+  - `Game.handleTimeLimit()` executado no tick de `PLAYING`: avisos na barra de ação com `game.time_limit_warning` em `60`, `30`, `10`..`1` segundos restantes.
+  - `Game.forceTimeLimitEnd()` encerra a partida e decide o vencedor por **4 critérios em ordem**: mais jogadores vivos → cama intacta → mais abates (soma de `GamePlayer.getKills()` por time) → empate (`game.time_limit_tie`).
+  - Novas chaves de lang: `game.time_limit_warning`, `game.time_limit_winner`, `game.time_limit_tie`.
+  - Helper `Game.broadcastMessage(Component)` para mensagens unificadas de partida.
+  - `example.yml` documenta a opção: `time-limit: 1200`.
 
 ### Documentação
-- `README.md`: regras do tempo limite no tutorial, secção de referência do YAML e referência ao fireball (bola de fogo como projétil).
+- `README.md`: regras do tempo limite explicadas no tutorial e seção de referência do YAML; fireball (bola de fogo como projétil) adicionado à lista de recursos.
 
 ## [0.0.1-169] - 2026-08-07
 
 ### Adicionado
-- Hook de NPCs da loja para **Citizens** como alternativa ao FancyNpcs (detecção automática via `npc-backend` no `config.yml`; `auto` tenta FancyNpcs primeiro).
-- `hook/NpcHook` (interface): contrato comum de spawn, skin, displayName e detecção de entidades gerenciadas (`isManagedEntity` com default `false`).
-- `hook/FancyNpcsHook` e `hook/CitizensHook` (via reflexão, sem Citizens como dependência de compilação).
-- `CitizensNpcListener`: interação com NPCs do Citizens abre a loja.
-- Marker persistente `bw-shop-marker` em NPCs do Citizens para reconhecimento dos próprios NPCs.
+- **Hook de NPCs da loja para Citizens** como alternativa ao FancyNpcs:
+  - Interface `hook/NpcHook` (contrato): spawn, skin, displayName, nome do backend e `isManagedEntity(Entity)` (default `false`) para detecção de entidades gerenciadas.
+  - `hook/FancyNpcsHook` e `hook/CitizensHook` implementadas **via reflexão** (Citizens não vira dependência de compilação; permanece `optional` no `plugin.yml`).
+  - `CitizensNpcListener`: `PlayerInteractAtEntityEvent` em `MONITOR` abre a loja ao clicar no NPC.
+  - Marker persistente `bw-shop-marker` (`data().setPersistent`) em NPCs do Citizens para reconhecimento dos próprios NPCs; skin via `SkinTrait.setSkinName()`; displayName via `npc.setName()` com conversão MiniMessage→legacy; `findMethod` percorre interfaces em cada nível da hierarquia.
+  - Detecção de entidade gerenciada via `registry.getNPC(entity)` + marker.
 
 ### Alterado
-- `ShopNpcManager`: backend resolvido pelo config (`npc-backend`), `getBackendId()` por hook, detecção unificada de entidades gerenciadas.
-- `BedWarsPlugin`: registra o listener do hook ativo no startup.
-- `config.yml`: opção `npc-backend` (valores `auto`, `fancynpcs`, `citizens`) sem valor ativo por padrão (usa `auto`).
+- `ShopNpcManager`: backend resolvido por `config.yml` `npc-backend` (`auto`/`fancynpcs`/`citizens`; `auto` tenta FancyNpcs primeiro e faz fallback); `getBackendId()` delega ao hook; `isManagedEntity` unificada com fallback ao hook.
+- `BedWarsPlugin`: registra o listener do hook ativo no startup (`startup.npcs_unavailable` quando nenhum backend disponível).
+- `config.yml`: opção `npc-backend` documentada em comentário (linha sem valor ativo; default `auto` via `ConfigManager.getNpcBackend()`).
 - `lang/pt_BR.yml`: chave `startup.npcs_no_backend` renomeada para `startup.npcs_unavailable`; mensagens sem a palavra "backend".
 
 ### Documentação
-- `README.md`: Citizens adicionado aos requisitos e ao passo de instalação; seção "NPC da loja (com FancyNPCs ou Citizens)".
+- `README.md`: Citizens (`v2.0+`) adicionado aos requisitos e ao passo de instalação; seção "NPC da loja (com FancyNPCs ou Citizens)" explicando o `npc-backend`.
 
 ## [0.0.1-167] - 2026-08-07
 
 ### Corrigido
-- Joins por código validam modo e jogador antes de entrar na sala.
-- Filas órfãs descartadas; espectadores unificados entre salas.
+- Joins por código (`--code`) agora validam o **modo** e o **jogador** antes de entrar na sala (evita entrar em partida de modo incompatível).
+- Filas órfãs (sem sala/partida correspondente) descartadas no join.
+- Espectadores unificados entre salas da mesma arena (sem duplicidade de espectadores).
 
 ## [0.0.1-165] - 2026-08-07
 
 ### Corrigido
-- Fila de entradas pendentes chaveada por `(arena, modo)` para não misturar modos na construção da partida.
+- Fila de entradas pendentes chaveada por `(arena, modo)` para não misturar modos na construção da partida (join em fila de solo não contaminava fila de quarteto).
 
 ## [0.0.1-163] - 2026-08-07
 
 ### Corrigido
-- Join sem modo encontra qualquer lobby aberto da arena em vez de criar lobby paralelo.
+- `/bw join <arena>` sem `--mode` encontra qualquer **lobby aberto** da arena em vez de criar um lobby paralelo duplicado.
 
 ## [0.0.1-161] - 2026-08-07
 
 ### Corrigido
-- Start de partida com modo (ex.: quarteto) encontrava a partida existente em vez de criar instância fantasma.
+- `/bw start` com modo (ex.: quarteto) não encontrava a partida existente e criava **instância fantasma** (join agora busca a partida correta pelo modo).
 
 ## [0.0.1-159] - 2026-08-07
 
 ### Corrigido
-- Respawn com prioridade `MONITOR` para sobrepor outros plugins; reafirmação no tick seguinte para espectadores.
+- Respawn com prioridade de evento `MONITOR` para sobrepor outros plugins de respawn.
+- Reafirmação do estado de espectador no tick seguinte para garantir que plugins concorrentes não sobrescrevam.
 
 ## [0.0.1-157] - 2026-08-07
 
 ### Corrigido
-- Jogador eliminado sem cama vira espectador na partida em vez de voltar ao lobby.
+- Jogador eliminado **sem cama** vira espectador na própria partida (fica assistindo) em vez de voltar ao lobby.
 
 ## [0.0.1-155] - 2026-08-07
 
 ### Corrigido
-- Nomes de arena/mapa aceitos em qualquer caixa (case-insensitive).
+- Nomes de arena/mapa aceitos em qualquer caixa (`case-insensitive`) em comandos e seleção.
 
 ## [0.0.1-154] - 2026-08-07
 
 ### Alterado
-- Log de inventário exibe nome e UUID do jogador.
+- Log de inventário (debug) exibe nome e UUID do jogador.
 
 ## [0.0.1-153] - 2026-08-07
 
 ### Corrigido
-- Ender chest não vaza itens entre partidas (snapshot + clear no início).
+- Ender chest não vaza itens entre partidas: snapshot do conteúdo no início e `clear` no início de cada partida.
 
 ## [0.0.1-152] - 2026-08-07
 
 ### Corrigido
-- Respawn com bloco no spawn do time não sufoca; último respawn preservado quando a cama quebra durante o cooldown.
+- Respawn com bloco no spawn do time não sufoca (checagem de bloco sólido antes de teleportar).
+- Último respawn preservado quando a cama quebra durante o cooldown de respawn.
 
 ## [0.0.1-151] - 2026-08-07
 
 ### Adicionado
-- Bola de fogo dispara projétil em vez de agir como isqueiro (consumo de 1 por disparo).
+- **Bola de fogo dispara projétil**: `FIRE_CHARGE` clicado dispara um projétil real (em vez de agir como isqueiro/atalho); consome 1 item por disparo.
 
 ## [0.0.1-150] - 2026-08-07
 
 ### Corrigido
-- Jogador eliminado não fica preso caindo no void (respawn para o lobby).
+- Jogador eliminado não fica preso caindo no void: respawn para o lobby.
 
 ## [0.0.1-149] - 2026-08-07
 
 ### Corrigido
-- Armadura de time travada em 100% (bloqueio de movimento em qualquer inventário e arraste para slot de armadura).
+- Armadura de time travada em 100%: bloqueio de movimento da armadura em qualquer inventário e bloqueio de **arraste** para o slot de armadura.
 
 ## [0.0.1-148] - 2026-08-07
 
 ### Alterado
-- Botão "voltar" das categorias da loja usa flecha em vez de barreira.
+- Botão "voltar" das categorias da loja usa flecha (→) em vez de barreira (material `ARROW`).
 
 ## [0.0.1-147] - 2026-08-07
 
 ### Adicionado
-- Conjuntos de armadura do `shop.yml` padrão com encantamento de proteção I/II/III.
+- Conjuntos de armadura do `shop.yml` padrão com encantamento de proteção I/II/III (progressão por nível).
 
 ## [0.0.1-146] - 2026-08-07
 
@@ -140,54 +144,54 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-145] - 2026-08-07
 
 ### Corrigido
-- Bloqueio de recompra de armadura considera o encantamento de proteção na comparação de progressão.
+- Bloqueio de recompra de armadura agora considera o **encantamento de proteção** na comparação de progressão (não comparava apenas o material).
 
 ## [0.0.1-144] - 2026-08-07
 
 ### Corrigido
-- Reafirma o respawn no spawn do time 1 tick depois para evitar sobrescrita por outros plugins.
+- Reafirma o respawn no spawn do time 1 tick depois para evitar sobrescrita por outros plugins de respawn.
 
 ## [0.0.1-143] - 2026-08-07
 
 ### Corrigido
-- Reload apagava `spawn_item` do YAML (flush antes do load).
+- Reload apagava `spawn_item` do YAML: flush dos dados do cache **antes** do load para não sobrescrever.
 
 ## [0.0.1-142] - 2026-08-07
 
 ### Documentação
-- `README.md` e `ARCHITECTURE.md` atualizados: armaduras de time, loja posicionável, `spawn_item` e sistema de mundos ativo.
+- `README.md` e `ARCHITECTURE.md` atualizados: armaduras de time, loja posicionável, `spawn_item` e sistema de mundos ativo (Schematic).
 
 ## [0.0.1-141] - 2026-08-07
 
 ### Adicionado
-- `spawn_item` por arena.
-- Bloqueio de recompra de armadura.
-- Javadoc e correções apontadas pelo IDE.
+- `spawn_item` por arena (item de saída customizado).
+- Bloqueio de recompra de armadura (não deixa comprar conjunto que já está equipado).
+- Javadoc e correções apontadas pelo IDE (warnings).
 
 ## [0.0.1-140] - 2026-08-07
 
 ### Adicionado
-- Posicionamento da loja com type `row`/`column` e centralização por linha.
+- Posicionamento da loja com `type: row/column` e centralização por linha (config de layout da loja por arena).
 
 ## [0.0.1-139] - 2026-08-07
 
 ### Adicionado
-- Armadura da loja vira couro tingido na cor do time, unbreakable e travada no slot.
+- Armadura da loja vira **couro tingido na cor do time**, unbreakable e travada no slot de armadura.
 
 ## [0.0.1-138] - 2026-08-07
 
 ### Corrigido
-- TNT destrói apenas blocos colocados por jogadores; mapa original protegido.
+- TNT destrói apenas blocos colocados por jogadores; mapa original protegido (anti-grief).
 
 ## [0.0.1-137] - 2026-08-07
 
 ### Alterado
-- `shop.yml` adaptado; DIAMOND volta a ser item (não conjunto).
+- `shop.yml` adaptado; DIAMOND volta a ser item (não conjunto de armadura).
 
 ## [0.0.1-136] - 2026-08-07
 
 ### Adicionado
-- Kits recursivos com itens dentro de itens na loja.
+- Kits recursivos com itens dentro de itens na loja (sub-itens aninhados).
 
 ## [0.0.1-135] - 2026-08-07
 
@@ -197,22 +201,22 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-134] - 2026-08-07
 
 ### Corrigido
-- Restauração de inventário e estados do jogador centralizada e localizada.
+- Restauração de inventário e estados do jogador centralizada e localizada (função única `restoreInventory`).
 
 ## [0.0.1-133] - 2026-08-07
 
 ### Alterado
-- `version_check` loga quando a versão local é mais nova que a publicada.
+- `version_check` loga quando a versão local é mais nova que a publicada (não tratava como erro).
 
 ## [0.0.1-132] - 2026-08-07
 
 ### Documentação
-- `example.yml` totalmente comentado (referência de todas as opções) e seção correspondente no README.
+- `example.yml` totalmente comentado (referência de todas as opções) + seção no README.
 
 ## [0.0.1-131] - 2026-08-07
 
 ### Corrigido
-- `enable-cmd` aceita valor scalar no YAML.
+- `enable-cmd` aceita valor scalar no YAML (não só lista).
 - `version_check` roda assíncrono (não trava a main thread).
 
 ### Refatoração
@@ -226,23 +230,23 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-129] - 2026-08-07
 
 ### Corrigido
-- Lore do item de fornalha na loja não atualizava após upgrade (`purchaseItem` agora re-renderiza a loja).
+- Lore do item de fornalha na loja não atualizava após upgrade: `purchaseItem` agora re-renderiza a loja.
 
 ## [0.0.1-128] - 2026-08-07
 
 ### Corrigido
-- `/bw start` não iniciava partida com jogadores em um único time (`forceStart` ignora exigência de 2 times; countdown automático mantém a regra).
+- `/bw start` não iniciava partida com jogadores em um único time: `forceStart` ignora a exigência de 2 times; countdown automático mantém a regra.
 
 ## [0.0.1-127] - 2026-08-07
 
 ### Adicionado
-- Código de partida de 6 caracteres (ABC123) gerado por sala.
+- **Código de partida de 6 caracteres** (ABC123) gerado por sala.
 - `/bw join <arena> --code <codigo>` entra na sala específica.
 
 ## [0.0.1-125] - 2026-08-07
 
 ### Corrigido
-- `/bw start` acusava configuração faltando com YAML completo (`validateArena` rodava contra o cache sem world; agora usa `ensureWorldLoaded` antes de validar).
+- `/bw start` acusava "configuração faltando" com YAML completo: `validateArena` rodava contra o cache sem world; agora usa `ensureWorldLoaded` antes de validar.
 
 ## [0.0.1-124] - 2026-08-07
 
@@ -257,17 +261,17 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-122] - 2026-08-07
 
 ### Adicionado
-- Preço de upgrade da fornalha por nível (`level-default` + `upgrade.price/material` no YAML, cobrança e exibição dinâmica na loja).
+- Preço de upgrade da fornalha por nível: `level-default` + `upgrade.price/material` no YAML, com cobrança e exibição dinâmica na loja.
 
 ## [0.0.1-121] - 2026-08-07
 
 ### Corrigido
-- Contagem regressiva não parava e partida iniciava com todos no mesmo time (`updateCountdownState` valida 2+ times).
+- Contagem regressiva não parava e partida iniciava com todos no mesmo time: `updateCountdownState` valida 2+ times.
 
 ## [0.0.1-120] - 2026-08-07
 
 ### Corrigido
-- Tab-complete do `/bw` explodindo com `zip file closed` após reload do PlugMan (try/catch defensivo no `onTabComplete`).
+- Tab-complete do `/bw` explodindo com `zip file closed` após reload do PlugMan: try/catch defensivo no `onTabComplete`.
 
 ## [0.0.1-119] - 2026-08-07
 
@@ -277,12 +281,12 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-118] - 2026-08-07
 
 ### Corrigido
-- `plugin.yml` com `authors` inválido (YAML quebrado gerado a partir de `project.developers`) causando erro no PlugMan.
+- `plugin.yml` com `authors` inválido (YAML quebrado gerado a partir de `project.developers`) causava erro no PlugMan.
 
 ## [0.0.1-117] - 2026-08-07
 
 ### Corrigido
-- Jogadores perdiam o inventário ao sair da partida (snapshot único de inventário; leave em `ENDING` restaura; respawn sem cama via `leaveGame`).
+- Jogadores perdiam o inventário ao sair da partida: snapshot único de inventário; leave em `ENDING` restaura; respawn sem cama via `leaveGame`.
 
 ## [0.0.1-116] - 2026-08-07
 
@@ -307,7 +311,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-112] - 2026-08-07
 
 ### Adicionado
-- Tab do `/bw join` completo por flag; crafting bloqueado em partida.
+- Tab do `/bw join` completo por flag (`--mode`, `--team`, `--code`); crafting bloqueado em partida.
 
 ## [0.0.1-111] - 2026-08-07
 
@@ -332,7 +336,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-107] - 2026-08-07
 
 ### Corrigido
-- `restoreInventory` não limpa inventário em chamada dupla.
+- `restoreInventory` não limpa inventário em chamada dupla (idempotente).
 
 ## [0.0.1-106] - 2026-08-07
 
@@ -342,7 +346,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-105] - 2026-08-07
 
 ### Corrigido
-- Jogadores vivos podem dropar itens; respawn tem prioridade alta.
+- Jogadores vivos podem dropar itens; respawn com prioridade alta.
 
 ## [0.0.1-104] - 2026-08-07
 
@@ -352,12 +356,12 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-103] - 2026-08-07
 
 ### Corrigido
-- Reload atualiza itens da loja (invalida cache do ShopManager).
+- Reload atualiza itens da loja (invalida cache do `ShopManager`).
 
 ## [0.0.1-102] - 2026-08-07
 
 ### Corrigido
-- Upgrade da fornalha não entrega item físico.
+- Upgrade da fornalha não entregava item físico.
 
 ## [0.0.1-101] - 2026-08-07
 
@@ -372,7 +376,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-099] - 2026-08-07
 
 ### Corrigido
-- `isAvailable` captura `Error` do ASP para funcionar sem o plugin.
+- `isAvailable` captura `Error` do ASP para funcionar sem o plugin instalado.
 
 ## [0.0.1-098] - 2026-08-07
 
@@ -382,7 +386,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-097] - 2026-08-07
 
 ### Alterado
-- Persistência `Saveable`, log de idioma em `lang` e versão `0.0.1-097`.
+- Persistência `Saveable`; log de idioma em `lang`; versão `0.0.1-097`.
 
 ## [0.0.1-096] - 2026-08-07
 
@@ -396,22 +400,22 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-095] - 2026-08-07
 
 ### Corrigido
-- Roupas dos times, seletor wool, countdown bug e log de NPC.
+- Roupas dos times, seletor wool, bug de countdown e log de NPC.
 
 ## [0.0.1-094] - 2026-08-07
 
 ### Corrigido
-- Jogadores do mesmo jogo ficavam ocultos no join em fila.
+- Jogadores do mesmo jogo ficavam ocultos no join em fila (visibilidade entre players).
 
 ## [0.0.1-093] - 2026-08-07
 
 ### Adicionado
-- Pré-build assíncrono da instância no join (paste fora da main thread).
+- **Pré-build assíncrono da instância no join** (paste do schematic fora da main thread para não travar o servidor).
 
 ## [0.0.1-092] - 2026-08-07
 
 ### Corrigido
-- Instância de partida montada do disco evita reset após unload/load.
+- Instância de partida montada do disco evita reset após unload/load do mundo.
 
 ## [0.0.1-091] - 2026-08-07
 
@@ -436,12 +440,12 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-087] - 2026-08-07
 
 ### Adicionado
-- Modo de partida por sala (solo/dupla/trio/quarteto).
+- **Modo de partida por sala**: solo/dupla/trio/quarteto (lobbies separados por modo).
 
 ## [0.0.1-086] - 2026-08-07
 
 ### Adicionado
-- Instâncias de partida por arena (partidas simultâneas do mesmo mapa).
+- **Instâncias de partida por arena**: partidas simultâneas do mesmo mapa (mundo `bw_<nome>` copiado por instância).
 
 ## [0.0.1-085] - 2026-08-07
 
@@ -461,12 +465,12 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-082] - 2026-08-07
 
 ### Corrigido
-- Reutilizar mundo existente em vez de recriar na `arena/reset` (falha no createWorld sem `paper-world-defaults.yml`).
+- Reutiliza mundo existente em vez de recriar na `arena/reset` (falha no `createWorld` sem `paper-world-defaults.yml`).
 
 ## [0.0.1-081] - 2026-08-07
 
 ### Corrigido
-- Criação de mundo não capturada derrubava o comando join (`paper-world-defaults.yml` ausente).
+- Criação de mundo não capturada derrubava o comando `join` (`paper-world-defaults.yml` ausente) — agora com tratamento de falha.
 
 ## [0.0.1-080] - 2026-08-07
 
@@ -476,7 +480,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-079] - 2026-08-07
 
 ### Adicionado
-- Loja oculta fileira de categorias ao entrar em uma categoria; itens padrão de BedWars.
+- Loja oculta a fileira de categorias ao entrar em uma categoria; itens padrão de BedWars.
 
 ## [0.0.1-078] - 2026-08-07
 
@@ -526,7 +530,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-068] - 2026-08-07
 
 ### Adicionado
-- Save detecta automaticamente a área construída (sem seleção FAWE).
+- Save detecta automaticamente a área construída (sem precisar de seleção FAWE).
 
 ## [0.0.1-067] - 2026-08-07
 
@@ -536,7 +540,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-066] - 2026-08-07
 
 ### Corrigido
-- Mundo de partida reutilizado sujo (minérios/camas de partidas anteriores persistiam).
+- Mundo de partida reutilizado sujo (minérios/camas de partidas anteriores persistiam) — agora sempre recriado limpo.
 
 ## [0.0.1-065] - 2026-08-07
 
@@ -571,17 +575,17 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-059] - 2026-08-07
 
 ### Corrigido
-- Reset de arena não limpa o mundo (unload/delete verificados).
+- Reset de arena não limpa o mundo: unload/delete verificados antes de recriar.
 
 ## [0.0.1-058] - 2026-08-07
 
 ### Corrigido
-- Prefixo duplicado nos logs de debug do GameManager.
+- Prefixo duplicado nos logs de debug do `GameManager`.
 
 ## [0.0.1-057] - 2026-08-07
 
 ### Corrigido
-- NPCs da loja duplicados (leftover do `add` não era removido).
+- NPCs da loja duplicados: leftover do `add` não era removido no reset.
 
 ## [0.0.1-056] - 2026-08-07
 
@@ -671,7 +675,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-039] - 2026-08-07
 
 ### Adicionado
-- Checkstyle adicionado ao build; 708 violações de estilo corrigidas.
+- **Checkstyle adicionado ao build**; 708 violações de estilo corrigidas (build falha em qualquer violação).
 
 ## [0.0.1-038] - 2026-08-07
 
@@ -716,7 +720,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-030] - 2026-08-07
 
 ### Adicionado
-- Todas as mensagens hardcoded movidas para `lang/pt_BR.yml` e traduzidas para português.
+- Todas as mensagens hardcoded movidas para `lang/pt_BR.yml` e traduzidas para português (MiniMessage).
 
 ## [0.0.1-029] - 2026-08-07
 
@@ -756,7 +760,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Cad
 ## [0.0.1-021] até [0.0.1-001] - 2026
 
 ### Adicionado
-- Fundação do plugin: comandos base, arenas, partidas, spawns de recursos, loja, editor, espectadores, respawn, persistência, versão e integrações (FAWE/ASP/FancyNpcs/bStats).
+- Fundação do plugin: comandos base, arenas, partidas, spawns de recursos, loja, editor, espectadores, respawn, persistência, version-check e integrações (FAWE/ASP/FancyNpcs/bStats).
 
 ### Alterado
 - Lançamentos iniciais `0.0.1-002` a `0.0.1-020` sem mensagens descritivas; incluem merge da `main`, `renovate.json` e commits iniciais de scaffolding.
