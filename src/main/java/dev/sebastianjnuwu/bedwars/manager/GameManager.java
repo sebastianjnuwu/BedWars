@@ -49,7 +49,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         this.lang = lang;
         this.games = new HashMap<>();
         this.playerGames = new HashMap<>();
-        this.shopNpcManager = new ShopNpcManager(plugin);
+        this.shopNpcManager = new ShopNpcManager(plugin, configManager.getNpcBackend());
         this.editorManager = editorManager;
         this.buildingArenas = new HashSet<>();
         this.pendingJoins = new HashMap<>();

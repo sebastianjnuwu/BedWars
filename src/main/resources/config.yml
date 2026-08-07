@@ -29,6 +29,15 @@ check: true
 debug: false
 
 # ===================================================================
+# NPCs da loja
+# ===================================================================
+# Opções para o plugin usado nos NPCs das lojas (padrão: auto):
+#   auto      -> tenta FancyNpcs primeiro e, se ausente, usa Citizens
+#   citizens  -> forçsa Citizens
+#   fancynpcs -> força FancyNpcs
+npc-backend: auto
+
+# ===================================================================
 # Configurações de Edição
 # ===================================================================
 edit:

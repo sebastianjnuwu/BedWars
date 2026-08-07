@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 
 /**
  * Contrato simples para integrações com backends de NPC.
@@ -34,6 +35,13 @@ public interface NpcHook {
      * Verifica se um objeto representa um NPC gerenciado pelo BedWars.
      */
     boolean isManagedNpc(Object npc);
+
+    /**
+     * Verifica se uma entidade do mundo representa um NPC gerenciado pelo BedWars.
+     */
+    default boolean isManagedEntity(Entity entity) {
+        return false;
+    }
 
     /**
      * Resolve o nome de um NPC gerenciado pelo backend.

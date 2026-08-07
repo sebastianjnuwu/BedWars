@@ -92,14 +92,19 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.getServer().getPluginManager().registerEvents(new UIListener(this.arenaManager, this.gameManager), this);
         this.getServer().getPluginManager().registerEvents(new ShopListener(), this);
 
-        final boolean hasFancyNpcs = this.isClassAvailable("de.oliver.fancynpcs.api.events.NpcInteractEvent");
-        if (hasFancyNpcs) {
+        final String npcBackend = this.gameManager.getShopNpcManager().getBackendId();
+        if ("fancynpcs".equals(npcBackend)) {
             this.getServer().getPluginManager().registerEvents(
-                    new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager, this.shopManager, this.lang), this);
+                    new dev.sebastianjnuwu.bedwars.shop.NpcListener(this.gameManager), this);
             this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
             this.getLogger().info(this.lang.raw("startup.npcs_hook_fancynpcs"));
+        } else if ("citizens".equals(npcBackend)) {
+            this.getServer().getPluginManager().registerEvents(
+                    new dev.sebastianjnuwu.bedwars.shop.CitizensNpcListener(this.gameManager.getShopNpcManager()), this);
+            this.gameManager.getShopNpcManager().removeAllBedWarsNpcs();
+            this.getLogger().info(this.lang.raw("startup.npcs_hook_citizens"));
         } else {
-            this.getLogger().info(this.lang.raw("startup.fancynpcs_not_found"));
+            this.getLogger().info(this.lang.raw("startup.npcs_unavailable"));
         }
 
         final BWCommand bwCommand = new BWCommand(
@@ -136,15 +141,6 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
         if (this.dataManager != null) {
             this.dataManager.saveAllSync();
-        }
-    }
-
-    private boolean isClassAvailable(final String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (final ClassNotFoundException e) {
-            return false;
         }
     }
 

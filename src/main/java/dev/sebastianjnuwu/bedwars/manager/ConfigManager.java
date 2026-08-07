@@ -208,6 +208,15 @@ public class ConfigManager {
     }
 
     /**
+     * Retorna o backend de NPC configurado.
+     *
+     * @return "auto", "citizens" ou "fancynpcs"
+     */
+    public String getNpcBackend() {
+        return this.config.getString("npc-backend", "auto");
+    }
+
+    /**
      * Retorna o nível máximo configurado para forjas, com um mínimo seguro de um.
      */
     public int getForgeMaxLevel() {

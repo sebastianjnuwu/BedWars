@@ -9,10 +9,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
+import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.ShopNpc;
+import dev.sebastianjnuwu.bedwars.game.Game;
+import dev.sebastianjnuwu.bedwars.hook.CitizensHook;
 import dev.sebastianjnuwu.bedwars.hook.FancyNpcsHook;
 import dev.sebastianjnuwu.bedwars.hook.NpcHook;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
@@ -20,7 +24,8 @@ import dev.sebastianjnuwu.bedwars.lang.LangManager;
 /**
  * Gerencia o ciclo de vida dos NPCs da loja para as arenas do BedWars.
  * <p>
- * Os NPCs são criados via FancyNPCs quando o backend estiver disponível.
+ * Os NPCs são criados via FancyNPCs ou Citizens quando algum backend estiver
+ * disponível.
  */
 public class ShopNpcManager {
 
@@ -33,14 +38,47 @@ public class ShopNpcManager {
     /**
      * Cria um novo gerenciador de NPCs da loja.
      *
-     * @param plugin a instancia do plugin
+     * @param plugin            a instancia do plugin
+     * @param backendPreference backend desejado: "auto", "citizens" ou "fancynpcs"
      */
-    public ShopNpcManager(final JavaPlugin plugin) {
+    public ShopNpcManager(final JavaPlugin plugin, final String backendPreference) {
         this.plugin = plugin;
         this.lang = ((BedWarsPlugin) plugin).getLang();
-        this.npcHook = new FancyNpcsHook(plugin);
+        this.npcHook = this.resolveHook(plugin, backendPreference);
         this.gameNpcs = new HashMap<>();
         this.editorNpcs = new HashMap<>();
+    }
+
+    /**
+     * Identifica o backend de NPC atualmente ativo.
+     *
+     * @return "citizens", "fancynpcs" ou "none"
+     */
+    public String getBackendId() {
+        if (this.npcHook instanceof CitizensHook) {
+            return "citizens";
+        }
+        if (this.npcHook instanceof FancyNpcsHook) {
+            return "fancynpcs";
+        }
+        return "none";
+    }
+
+    /**
+     * Abre a loja da arena para o jogador (usado pelos listeners de NPC).
+     *
+     * @param player jogador que interagiu com o NPC (não nulo)
+     */
+    public void openShop(final Player player) {
+        final Game game = (Game) ((BedWarsPlugin) this.plugin).getGameManager().getPlayerGame(player);
+        if (game == null || game.getState() != GameState.PLAYING) {
+            return;
+        }
+        String shopName = game.getArena().getShop();
+        if (shopName == null) {
+            shopName = "default";
+        }
+        new ShopGui(((BedWarsPlugin) this.plugin).getShopManager(), this.lang, player, game, shopName);
     }
 
     /**
@@ -134,7 +172,10 @@ public class ShopNpcManager {
             return false;
         }
         final String name = this.resolveEntityName(entity);
-        return name != null && name.startsWith("bw-shop-");
+        if (name != null && name.startsWith("bw-shop-")) {
+            return true;
+        }
+        return this.npcHook.isManagedEntity(entity);
     }
 
     /**
@@ -153,7 +194,7 @@ public class ShopNpcManager {
      * Remove todos os NPCs do BedWars que tenham sobrado de sessoes anteriores.
      */
     public void removeAllBedWarsNpcs() {
-        if (!this.isFancyNpcsAvailable()) {
+        if (!this.isBackendAvailable()) {
             return;
         }
 
@@ -174,11 +215,32 @@ public class ShopNpcManager {
 
     // ── metodos internos ─────────────────────────────────────────────────
 
-    private boolean isBackendAvailable() {
-        return this.isFancyNpcsAvailable();
+    private NpcHook resolveHook(final JavaPlugin plugin, final String backendPreference) {
+        final String requested = backendPreference == null ? "auto" : backendPreference.toLowerCase();
+        if ("citizens".equals(requested)) {
+            final CitizensHook citizens = new CitizensHook(plugin);
+            if (citizens.isAvailable()) {
+                return citizens;
+            }
+        } else if ("fancynpcs".equals(requested)) {
+            final FancyNpcsHook fancy = new FancyNpcsHook(plugin);
+            if (fancy.isAvailable()) {
+                return fancy;
+            }
+        }
+
+        final FancyNpcsHook fancy = new FancyNpcsHook(plugin);
+        if (fancy.isAvailable()) {
+            return fancy;
+        }
+        final CitizensHook citizens = new CitizensHook(plugin);
+        if (citizens.isAvailable()) {
+            return citizens;
+        }
+        return fancy;
     }
 
-    private boolean isFancyNpcsAvailable() {
+    private boolean isBackendAvailable() {
         return this.npcHook.isAvailable();
     }
 
@@ -210,8 +272,8 @@ public class ShopNpcManager {
     private @org.jetbrains.annotations.Nullable Object spawnNpc(final String arenaName, final int index,
                                                                 final ShopNpc npc, final String context) {
         try {
-            if (!this.isFancyNpcsAvailable()) {
-                throw new IllegalStateException("FancyNPCs não disponível");
+            if (!this.isBackendAvailable()) {
+                throw new IllegalStateException("Nenhum backend de NPC disponível");
             }
             return this.spawnFancyNpc(arenaName, index, npc, context);
         } catch (final Exception e) {

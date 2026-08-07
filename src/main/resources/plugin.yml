@@ -3,7 +3,7 @@ version: ${project.version}
 main: dev.sebastianjnuwu.bedwars.BedWarsPlugin
 api-version: 1.21
 authors: [sebastianjnuwu]
-softdepend: [WorldEdit, FancyNpcs]
+softdepend: [WorldEdit, FancyNpcs, Citizens]
 description: Plugin de sBedWars para Paper 1.21.4 usando SlimeWorld
 website: https://github.com/sebastianjnuwu
 

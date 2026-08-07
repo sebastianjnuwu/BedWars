@@ -147,7 +147,7 @@ admin:
       usage_list: "Uso: /bw admin arena <arena> shop-npc list"
       usage_display_name: "Uso: /bw admin arena <arena> shop-npc displayName <id> <nome>"
       added: "Shop NPC adicionado na arena {0}"
-      added_no_npcs: "Localização do Shop NPC salva, mas o NPC não pôde ser criado. Verifique se o FancyNPCs está ativo e carregado."
+      added_no_npcs: "Localização do Shop NPC salva, mas o NPC não pôde ser criado. Verifique se o plugin de NPC (FancyNpcs/Citizens) está ativo e carregado."
       removed: "Shop NPC {0} removido"
       removed_last: "Último Shop NPC removido"
       invalid_id: "ID inválido"
@@ -199,6 +199,9 @@ game:
   respawn_subtitle: "§7Renascendo em {0} segundos..."
   respawned: "§aVocê reviveu!"
   no_bed: "Sua cama foi destruída! Aguarde o fim da partida."
+  time_limit_warning: "§cO tempo limite será atingido em {0} segundo(s)!"
+  time_limit_winner: "§7Tempo limite atingido! O time §c{0} §7venceu por ter mais jogadores."
+  time_limit_tie: "§7Tempo limite atingido! Partida empatada."
   validate_spawn: "Spawn da arena (use /bw admin arena {0} spawn)"
   validate_teams: "Pelo menos 2 times (use /bw admin arena {0} addteam <cor>)"
   validate_team_spawn: "Spawn do time {0} (use setspawn)"
@@ -305,7 +308,7 @@ log:
       not_found: "Shop '{0}' não encontrado, usando padrão"
       parse_error: "Falha ao processar item da loja: {0} - {1}"
     shop_npc:
-      not_installed: "FancyNPCs não instalado, não foi possível spawnar NPCs da loja"
+      not_installed: "Nenhum plugin de NPC (FancyNpcs/Citizens) disponível, não foi possível spawnar NPCs da loja"
       spawn_error: "Falha ao spawnar NPC da loja {0} para {1}: {2}"
       skin_fallback: "Falha ao definir skin '{0}' para NPC '{1}': {2}. Usando skin padrão."
       remove_error: "Falha ao remover NPC da loja: {0}"
@@ -347,7 +350,8 @@ startup:
   author: "sebastianjnuwu <sebastianjnuwu@gmail.com>"
   version: "v{0}"
   npcs_hook_fancynpcs: "Hook de NPCs ativo para FancyNPCs!"
-  fancynpcs_not_found: "FancyNPCs não encontrado - interação com NPC da loja desativada."
+  npcs_hook_citizens: "Hook de NPCs ativo para Citizens!"
+  npcs_unavailable: "Nenhum plugin de NPC (FancyNpcs/Citizens) encontrado - interação com NPC da loja desativada."
 
 # ── ui ────────────────────────────────
 ui:
