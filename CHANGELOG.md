@@ -4,6 +4,29 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-181] - 2026-08-08
+
+### Corrigido
+- Avisos do VS Code/IDE (não quebravam build):
+  - `manager/GameManager.removeFromPendingJoins`: `List::isEmpty` → lambda `queue -> queue.isEmpty()` (null type safety do `Predicate`).
+  - `shop/ShopGui.protectionWeight`: `Registry.ENCHANTMENT.get(...)` (deprecated desde 1.21) → `Enchantment.PROTECTION`; import de `Registry` removido.
+
+
+### Adicionado
+- **`ChatManager`** (`game/ChatManager.java`): centraliza envio de mensagens, títulos e sons da partida com javadocs — `sendToPlayers`, `broadcast`, `showTitle`, `clearTitle`, `playSound`, `broadcastWithSound` e `getPresentPlayers`. Alcança apenas jogadores da partida (players + espectadores), nunca o servidor todo.
+- `Game.getSpectatorPlayers()` e campo `chat` integrado.
+- Sons em eventos: cama destruída (`ENTITY_WITHER_BREAK_BLOCK`), eliminação de time (`ENTITY_LIGHTNING_BOLT_THUNDER`) e vitória (`UI_TOAST_CHALLENGE_COMPLETE`).
+
+### Alterado
+- `breakBed`, `eliminateTeam`, `endGame`, `started`, `countdown_cancelled`, `join_broadcast`, `leave_broadcast` e avisos de `time-limit` agora usam `ChatManager` — mensagens vão **só para quem está na partida**, não para todo o servidor (removidos os `Bukkit.getOnlinePlayers()` de chat; restaram apenas os de visibilidade entre partidas).
+- Countdown de início e `time-limit` usam `chat.playSound` com o mesmo pitch crescente (extraído para `Game.countdownPitch`).
+
+## [0.0.1-180] - 2026-08-08
+
+### Adicionado
+- Som de countdown nos últimos **20% do tempo** (countdown de início e `time-limit`): `Game.playCountdownSound(int, int)` toca `BLOCK_NOTE_BLOCK_PLING` com pitch crescente conforme o tempo acaba.
+- Mensagens de aviso do `time-limit` agora vão **apenas para os jogadores em partida** (novo `Game.sendToPlayers(Component)`), sem espectadores.
+
 ## [0.0.1-179] - 2026-08-07
 
 ### Adicionado

@@ -329,7 +329,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         for (final List<PendingJoin> queue : this.pendingJoins.values()) {
             queue.removeIf(pending -> pending.playerId().equals(playerId));
         }
-        this.pendingJoins.values().removeIf(List::isEmpty);
+        this.pendingJoins.values().removeIf(queue -> queue.isEmpty());
     }
 
     /**

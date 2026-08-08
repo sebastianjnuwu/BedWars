@@ -19,6 +19,7 @@ import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -76,6 +77,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final GameManager gameManager;
     private final ShopNpcManager shopNpcManager;
     private final LangManager lang;
+    private final ChatManager chat;
     private final Arena arena;
     private final ArenaMode mode;
     private final String code;
@@ -114,6 +116,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.gameManager = gameManager;
         this.shopNpcManager = shopNpcManager;
         this.lang = gameManager.getLang();
+        this.chat = new ChatManager(this);
         this.arena = arena;
         this.mode = mode;
         this.code = generateCode();
@@ -335,12 +338,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         final int max = this.arena.getTeams().size();
         final Component msg = this.lang.text(NamedTextColor.GREEN, "game.join_broadcast",
                 player.getName(), String.valueOf(count), String.valueOf(max));
-        for (final var entry : this.players.entrySet()) {
-            final Player p = Bukkit.getPlayer(entry.getKey());
-            if (p != null) {
-                p.sendMessage(msg);
-            }
-        }
+        this.chat.sendToPlayers(msg);
 
         this.updateCountdownState();
     }
@@ -424,12 +422,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
         final Component msg = this.lang.text(NamedTextColor.YELLOW, "game.leave_broadcast", player.getName());
         // Envia mensagem apenas para jogadores desta partida
-        for (final var entry : this.players.entrySet()) {
-            final Player p = Bukkit.getPlayer(entry.getKey());
-            if (p != null) {
-                p.sendMessage(msg);
-            }
-        }
+        this.chat.sendToPlayers(msg);
 
         Bukkit.getPluginManager().callEvent(new PlayerLeaveGameEvent(this, player));
 
@@ -518,12 +511,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(4), Duration.ofSeconds(1))
         );
         final Component msg = this.lang.text(NamedTextColor.GOLD, "game.started");
-        for (final Player p : Bukkit.getOnlinePlayers()) {
-            if (this.players.containsKey(p.getUniqueId())) {
-                p.showTitle(startTitle);
-                p.sendMessage(msg);
-            }
-        }
+        this.chat.showTitle(startTitle);
+        this.chat.sendToPlayers(msg);
 
         Bukkit.getPluginManager().callEvent(new GameStartEvent(this));
 
@@ -697,6 +686,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             this.start();
             return;
         }
+        final int beepStart = Math.max(1, (int) Math.ceil(this.arena.getCountdown() * 0.2));
         for (final Player p : Bukkit.getOnlinePlayers()) {
             if (this.players.containsKey(p.getUniqueId())) {
                 p.showTitle(Title.title(
@@ -705,7 +695,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                         Title.Times.times(java.time.Duration.ZERO, java.time.Duration.ofSeconds(1), java.time.Duration.ofMillis(500))));
             }
         }
+        if (this.countdownSeconds <= beepStart) {
+            this.chat.playSound(Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, this.countdownPitch(this.countdownSeconds, beepStart));
+        }
         this.countdownSeconds--;
+    }
+
+    private float countdownPitch(final int remaining, final int beepStart) {
+        return remaining <= 10 ? 1.0F + (beepStart - remaining) * 0.05F : 0.8F;
     }
 
     private int currentGeneratorLevel() {
@@ -911,12 +908,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.debug("debug.countdown_cancelled", this.arena.getName());
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, GameState.STARTING, GameState.WAITING));
         final Component langMsg = this.lang.text(NamedTextColor.RED, "game.countdown_cancelled");
-        Bukkit.getOnlinePlayers().forEach(p -> {
-            if (this.players.containsKey(p.getUniqueId())) {
-                p.sendMessage(langMsg);
-                p.clearTitle();
-            }
-        });
+        this.chat.sendToPlayers(langMsg);
+        this.chat.clearTitle();
     }
 
     public void killPlayer(final Player player) {
@@ -1012,13 +1005,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 Component.text(this.lang.raw("game.bed_broken_subtitle", team.getName().toUpperCase())),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(1))
         );
-        Bukkit.getOnlinePlayers().forEach(p -> {
-            p.sendMessage(msg);
+        this.chat.broadcast(msg);
+        this.chat.playSound(Sound.ENTITY_WITHER_BREAK_BLOCK, 1.0F, 1.0F);
+        for (final Player p : this.chat.getPresentPlayers()) {
             final ArenaTeam pt = this.getPlayerTeam(p);
             if (pt != null && pt.getName().equals(team.getName())) {
                 p.showTitle(title);
             }
-        });
+        }
 
         Bukkit.getPluginManager().callEvent(new BedBreakEvent(this, team, null));
 
@@ -1055,13 +1049,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 Component.text(this.lang.raw("game.team_eliminated_subtitle", team.getName().toUpperCase())),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(1))
         );
-        Bukkit.getOnlinePlayers().forEach(p -> {
-            p.sendMessage(msg);
+        this.chat.broadcast(msg);
+        this.chat.playSound(Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0F, 1.0F);
+        for (final Player p : this.chat.getPresentPlayers()) {
             final ArenaTeam pt = this.getPlayerTeam(p);
             if (pt != null && pt.getName().equals(team.getName())) {
                 p.showTitle(title);
             }
-        });
+        }
 
         Bukkit.getPluginManager().callEvent(new TeamEliminateEvent(this, team));
 
@@ -1110,11 +1105,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
         final int remaining = limitSeconds - (this.tick / 20);
-        if (remaining == 60 || remaining == 30 || (remaining > 0 && remaining <= 10)) {
-            if (remaining != this.timeLimitWarning) {
-                this.timeLimitWarning = remaining;
-                this.broadcastMessage(this.lang.text(NamedTextColor.RED, "game.time_limit_warning", remaining));
-            }
+        final int beepStart = Math.max(1, (int) Math.ceil(limitSeconds * 0.2));
+        if (remaining > 0 && remaining <= beepStart && remaining != this.timeLimitWarning) {
+            this.timeLimitWarning = remaining;
+            this.chat.sendToPlayers(this.lang.text(NamedTextColor.RED, "game.time_limit_warning", remaining));
+            this.chat.playSound(Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, this.countdownPitch(remaining, beepStart));
         }
         if (remaining <= 0) {
             this.forceTimeLimitEnd();
@@ -1133,11 +1128,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
         }
         if (winner != null && !this.hasTieForTimeLimit(winner)) {
-            this.broadcastMessage(this.lang.text(NamedTextColor.GOLD, "game.time_limit_winner",
+            this.chat.broadcast(this.lang.text(NamedTextColor.GOLD, "game.time_limit_winner",
                     winner.getName().toUpperCase()));
             this.endGame(winner);
         } else {
-            this.broadcastMessage(this.lang.text(NamedTextColor.RED, "game.time_limit_tie"));
+            this.chat.broadcast(this.lang.text(NamedTextColor.RED, "game.time_limit_tie"));
             this.forceEnd();
         }
     }
@@ -1178,21 +1173,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return total;
     }
 
-    private void broadcastMessage(final Component message) {
-        for (final UUID uuid : this.players.keySet()) {
-            final Player player = Bukkit.getPlayer(uuid);
-            if (player != null) {
-                player.sendMessage(message);
-            }
-        }
-        for (final UUID uuid : this.spectators) {
-            final Player player = Bukkit.getPlayer(uuid);
-            if (player != null) {
-                player.sendMessage(message);
-            }
-        }
-    }
-
     private void endGame(final ArenaTeam winner) {
         final GameState prevState = this.state;
         this.state = GameState.ENDING;
@@ -1216,15 +1196,15 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 Component.text(this.lang.raw("game.lose_subtitle", winner.getName().toUpperCase())),
                 Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(5), Duration.ofSeconds(2))
         );
-        Bukkit.getOnlinePlayers().forEach(p -> {
-            p.sendMessage(msg);
+        this.chat.broadcastWithSound(msg, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
+        for (final Player p : this.chat.getPresentPlayers()) {
             final ArenaTeam pt = this.getPlayerTeam(p);
             if (pt != null && pt.getName().equals(winner.getName())) {
                 p.showTitle(winTitle);
             } else if (pt != null) {
                 p.showTitle(loseTitle);
             }
-        });
+        }
 
         Bukkit.getPluginManager().callEvent(new GameEndEvent(this, winner));
 
@@ -1379,6 +1359,13 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     public Collection<Player> getPlayers() {
         return this.players.keySet().stream()
+                .map(Bukkit::getPlayer)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    public Collection<Player> getSpectatorPlayers() {
+        return this.spectators.stream()
                 .map(Bukkit::getPlayer)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

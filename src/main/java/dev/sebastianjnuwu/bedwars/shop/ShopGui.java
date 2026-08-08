@@ -11,7 +11,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
@@ -722,7 +721,7 @@ public class ShopGui implements InventoryHolder {
     }
 
     private static int protectionWeight(final ItemMeta meta) {
-        final Enchantment protection = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("protection"));
+        final Enchantment protection = Enchantment.PROTECTION;
         if (protection == null) {
             return 0;
         }
