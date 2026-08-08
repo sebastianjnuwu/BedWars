@@ -1118,7 +1118,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
         final int remaining = limitSeconds - (this.tick / 20);
         final int beepStart = Math.max(1, (int) Math.ceil(limitSeconds * 0.2));
-        if (remaining > 0 && remaining <= beepStart && remaining != this.timeLimitWarning) {
+        if (remaining > 0 && remaining <= beepStart && remaining % 5 == 0 && remaining != this.timeLimitWarning) {
             this.timeLimitWarning = remaining;
             this.chat.sendToPlayers(this.lang.text(NamedTextColor.RED, "game.time_limit_warning", remaining));
             this.chat.playSound(Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, this.countdownPitch(remaining, beepStart));

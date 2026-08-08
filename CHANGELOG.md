@@ -4,6 +4,37 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-189] - 2026-08-08
+
+### Alterado
+- **Ovo de ponte com projétil real** (`listener/GameListener`): o `EGG` agora é lançado como projétil (`Egg`) na direção do olhar. Ao pousar (`onBridgeEggHit`), a ponte de lã é interpolada **do atirador até o ponto de impacto** (até 16 blocos), acompanhando a altura da trajetória — se você mira para cima, a ponte sobe até onde o ovo cai. Removidos `floorLevel`/`trackLevel` (ponte horizontal antiga). Import de `Egg` restaurado.
+
+## [0.0.1-188] - 2026-08-08
+
+### Corrigido
+- **Ovo de ponte criava ponte desconectada no vazio** (`listener/GameListener`): a altura base usava `player.getLocation().getBlockY()` (bloco do pé, que flutua) e `groundLevel` procurava até 6 blocos acima/abaixo, jogando a ponte numa altura errada ao cruzar o vazio. Agora:
+  - `floorLevel` acha a superfície do chão sob o jogador (descendo até 10 blocos) — a ponte sai da ilha, não do ar.
+  - `trackLevel` acompanha o terreno suavemente (entre -2 e +3 blocos); sem chão (vazio), mantém o nível atual e cruza reto.
+  - Renomeado `groundLevel` → `floorLevel`/`trackLevel`.
+
+## [0.0.1-187] - 2026-08-08
+
+### Alterado
+- **Aviso do `time-limit` sem spam** (`game/Game.handleTimeLimit`): mensagem e som agora disparam apenas quando os segundos restantes são múltiplos de 5 (ex.: 60, 55, 50...) dentro dos últimos 20% do tempo, em vez de a cada segundo. Mantido o guard `timeLimitWarning` para evitar duplicatas.
+
+## [0.0.1-186] - 2026-08-08
+
+### Alterado
+- **Ovo de Ponte reformulado (estilo Hypixel)** (`listener/GameListener`): trocado `onBridgeEggHit` (criava no impacto do projétil, ponte reta no mesmo Y) por `onBridgeEggUse` — ao usar o `EGG` em partida, o evento é cancelado e a ponte é criada **imediatamente na direção do olhar**, seguindo a altura do chão a cada bloco (`groundLevel` sobe/desce até 6 blocos para acompanhar o terreno). Comprimento aumentado para `BRIDGE_EGG_LENGTH = 16`. Consome o ovo na hora. Import de `Egg` removido.
+
+## [0.0.1-185] - 2026-08-08
+
+### Corrigido
+- **Ovo de Ponte não criava a ponte** (`listener/GameListener.onBridgeEggHit`): no impacto do `Egg`, a velocidade horizontal costumava ser ~0 (o projétil cai em Y), fazendo o guard `dir.lengthSquared() < 0.0001` abortar a ponte. Agora usa a direção do atirador (`shooter.getLocation().getDirection()`) como fallback; bloco de impacto também cai para `egg.getLocation().getBlock()` quando `getHitBlock()` é null.
+- **Impulso da fireball** (`GameListener`): reforçado estilo "vento"/Wind Charge do Hypixel:
+  - `knockbackVictim` (acertou jogador): impulso horizontal maior (`2.2`) + vertical (`1.0`).
+  - Novo `windBlast` (acertou bloco): empurra radialmente **todos** os jogadores da partida num raio de 5 blocos para longe do impacto (força decresce com a distância), com elevação; substitui o antigo `boostShooter` (super pulo só do atirador).
+
 ## [0.0.1-184] - 2026-08-08
 
 ### Adicionado

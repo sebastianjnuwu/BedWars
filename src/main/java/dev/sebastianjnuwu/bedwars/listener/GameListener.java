@@ -66,7 +66,7 @@ import dev.sebastianjnuwu.bedwars.util.LocationUtil;
  */
 public class GameListener implements Listener {
 
-    private static final int BRIDGE_EGG_LENGTH = 8;
+    private static final int BRIDGE_EGG_LENGTH = 16;
 
     private final GameManager gameManager;
     private final LangManager lang;
@@ -384,7 +384,7 @@ public class GameListener implements Listener {
             return;
         }
         if (event.getHitBlock() != null) {
-            this.boostShooter(fireball);
+            this.windBlast(fireball);
         }
     }
 
@@ -409,21 +409,22 @@ public class GameListener implements Listener {
         if (dir.lengthSquared() < 0.0001) {
             return;
         }
-        dir.normalize().multiply(1.6).setY(1.1);
+        dir.normalize().multiply(2.2).setY(1.0);
         victim.setVelocity(victim.getVelocity().add(dir));
     }
 
     /**
-     * Aplica o "super pulo" ao atirador quando a bola de fogo acerta um bloco.
+     * Aplica o efeito de "vento" (estilo Wind Charge) quando a fireball acerta
+     * um bloco.
      * <p>
-     * Estilo Hypixel: a fireball no chão lança o próprio atirador para o alto,
-     * permitindo pulos estratégicos (rocket jump). Apenas em partida ativa e com
-     * o atirador ainda online e em jogo.
+     * Empurra radialmente todos os jogadores da partida em um raio do ponto de
+     * impacto (para longe da explosão, como o vento), e o atirador recebe um
+     * impulso vertical extra (super pulo). Apenas em partida ativa.
      * </p>
      *
      * @param fireball o projétil que atingiu o bloco (não nulo)
      */
-    private void boostShooter(final SmallFireball fireball) {
+    private void windBlast(final SmallFireball fireball) {
         if (!(fireball.getShooter() instanceof final Player shooter)) {
             return;
         }
@@ -431,17 +432,67 @@ public class GameListener implements Listener {
         if (game == null || game.getState() != GameState.PLAYING) {
             return;
         }
-        final Vector boost = new Vector(0, 1.4, 0);
-        shooter.setVelocity(shooter.getVelocity().add(boost));
+        final Location center = fireball.getLocation();
+        for (final Player p : game.getPlayers()) {
+            final Player online = Bukkit.getPlayer(p.getUniqueId());
+            if (online == null || !online.getWorld().equals(center.getWorld())) {
+                continue;
+            }
+            final double dist = online.getLocation().distance(center);
+            if (dist > 5.0) {
+                continue;
+            }
+            Vector push = online.getLocation().toVector().subtract(center.toVector());
+            push.setY(0);
+            if (push.lengthSquared() < 0.0001) {
+                push = online.getLocation().getDirection().clone().multiply(-1);
+            }
+            push.normalize().multiply(2.2 * (1.0 - dist / 5.0) + 0.6).setY(1.0);
+            online.setVelocity(online.getVelocity().add(push));
+        }
     }
 
     /**
-     * Cria a ponte de lã do ovo de ponte ({@code EGG}) ao atingir algo.
+     * Cria a ponte de lã do ovo de ponte ({@code EGG}) ao usar o item.
      * <p>
-     * No impacto, estende uma linha horizontal de lã na direção do lançamento,
-     * a partir do bloco atingido, com o comprimento fixo {@link #BRIDGE_EGG_LENGTH}.
-     * A lã usa a cor do time do atirador. Cada bloco colocado é rastreado via
-     * {@link Game#trackPlacedBlock(org.bukkit.Location)} para ser limpo no reset.
+     * Estilo Hypixel: o ovo é lançado como projétil e, ao pousar, cria uma ponte
+     * de lã conectando o ponto de impacto ao atirador, subindo/descendo conforme
+     * a trajetória. A lã usa a cor do time do atirador. Cada bloco é rastreado
+     * via {@link Game#trackPlacedBlock(org.bukkit.Location)} para ser limpo no reset.
+     * </p>
+     *
+     * @param event o evento de interação (não nulo)
+     */
+    @EventHandler
+    public void onBridgeEggUse(final PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
+            return;
+        }
+        final ItemStack item = event.getItem();
+        if (item == null || item.getType() != Material.EGG) {
+            return;
+        }
+        final Player player = event.getPlayer();
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null || game.getState() != GameState.PLAYING) {
+            return;
+        }
+        event.setCancelled(true);
+        final Egg egg = player.launchProjectile(
+                Egg.class, player.getLocation().getDirection().multiply(1.5));
+        egg.setShooter(player);
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+        } else {
+            player.getInventory().setItemInMainHand(null);
+        }
+    }
+
+    /**
+     * Cria a ponte quando o ovo de ponte pousa.
+     * <p>
+     * Interpola blocos de lã entre o atirador e o ponto de impacto (até
+     * {@link #BRIDGE_EGG_LENGTH} blocos), acompanhando a altura da trajetória.
      * </p>
      *
      * @param event o evento de impacto do projétil (não nulo)
@@ -458,27 +509,22 @@ public class GameListener implements Listener {
         if (game == null || game.getState() != GameState.PLAYING) {
             return;
         }
-        final Block hit = event.getHitBlock();
-        if (hit == null) {
+        final Location impact = event.getHitBlock() != null
+                ? event.getHitBlock().getLocation().add(0.5, 1, 0.5)
+                : egg.getLocation();
+        final World world = egg.getWorld();
+        final Location start = shooter.getLocation();
+        final Vector delta = impact.toVector().subtract(start.toVector());
+        final int length = Math.min(BRIDGE_EGG_LENGTH, (int) delta.length());
+        if (length <= 0) {
             return;
         }
-        final Vector dir = egg.getVelocity().clone();
-        dir.setY(0);
-        if (dir.lengthSquared() < 0.0001) {
-            return;
-        }
-        dir.normalize();
+        final Vector step = delta.normalize();
         final ArenaTeam team = game.getPlayerTeam(shooter);
         final Material wool = team != null ? getWoolColor(team.getColor()) : Material.WHITE_WOOL;
-        final World world = hit.getWorld();
-        final int startX = hit.getX();
-        final int startY = hit.getY();
-        final int startZ = hit.getZ();
-        for (int i = 1; i <= BRIDGE_EGG_LENGTH; i++) {
-            final Block target = world.getBlockAt(
-                    startX + (int) Math.round(dir.getX() * i),
-                    startY,
-                    startZ + (int) Math.round(dir.getZ() * i));
+        for (int i = 1; i <= length; i++) {
+            final Vector point = start.toVector().add(step.clone().multiply(i));
+            final Block target = world.getBlockAt(point.getBlockX(), point.getBlockY(), point.getBlockZ());
             if (!target.getType().isAir()) {
                 continue;
             }
