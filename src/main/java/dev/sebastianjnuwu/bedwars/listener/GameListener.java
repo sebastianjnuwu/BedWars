@@ -1,6 +1,9 @@
 package dev.sebastianjnuwu.bedwars.listener;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -11,6 +14,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.SmallFireball;
 import org.bukkit.event.EventHandler;
@@ -21,6 +25,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -36,6 +41,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -67,9 +73,11 @@ import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 public class GameListener implements Listener {
 
     private static final int BRIDGE_EGG_LENGTH = 16;
+    private static final int IRON_GOLEM_RANGE = 20;
 
     private final GameManager gameManager;
     private final LangManager lang;
+    private final Map<UUID, ArenaTeam> golemOwners;
 
     /**
      * Constrói um novo {@code GameListener}.
@@ -79,6 +87,8 @@ public class GameListener implements Listener {
     public GameListener(final GameManager gameManager) {
         this.gameManager = gameManager;
         this.lang = gameManager.getLang();
+        this.golemOwners = new HashMap<>();
+        Bukkit.getScheduler().runTaskTimer(gameManager.getPlugin(), this::tickIronGolems, 10L, 10L);
     }
 
     /**
@@ -531,6 +541,166 @@ public class GameListener implements Listener {
             target.setType(wool);
             game.trackPlacedBlock(target.getLocation());
         }
+    }
+
+    /**
+     * Convoca um golem de ferro ({@code IRON_GOLEM_SPAWN_EGG}) ao usar o item
+     * da loja durante uma partida.
+     * <p>
+     * O golem nasce na posição do jogador, fica associado ao time do atirador
+     * e passa a defender a área (ver {@link #onGolemDeath} e a IA de alvo).
+     * </p>
+     *
+     * @param event o evento de interação (não nulo)
+     */
+    @EventHandler
+    public void onIronGolemUse(final PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
+            return;
+        }
+        final ItemStack item = event.getItem();
+        if (item == null || item.getType() != Material.IRON_GOLEM_SPAWN_EGG) {
+            return;
+        }
+        final Player player = event.getPlayer();
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null || game.getState() != GameState.PLAYING) {
+            return;
+        }
+        final ArenaTeam team = game.getPlayerTeam(player);
+        if (team == null) {
+            return;
+        }
+        event.setCancelled(true);
+        final Location spawn = player.getLocation().clone();
+        final IronGolem golem = player.getWorld().spawn(spawn, IronGolem.class);
+        golem.setPlayerCreated(true);
+        golem.customName(this.lang.text(NamedTextColor.GREEN, "game.iron_golem_name", team.getName().toUpperCase()));
+        golem.setCustomNameVisible(true);
+        this.golemOwners.put(golem.getUniqueId(), team);
+        player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.iron_golem_spawned"));
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+        } else {
+            player.getInventory().setItemInMainHand(null);
+        }
+    }
+
+    /**
+     * Controla a morte de golems de ferro convocados em partida.
+     * <p>
+     * Remove o golem do registro para que a IA pare de mirá-lo e impede que
+     * ele solte ferro ou papoilas ao morrer.
+     * </p>
+     *
+     * @param event o evento de morte (não nulo)
+     */
+    @EventHandler
+    public void onGolemDeath(final EntityDeathEvent event) {
+        if (!(event.getEntity() instanceof final IronGolem golem)) {
+            return;
+        }
+        this.golemOwners.remove(golem.getUniqueId());
+        event.getDrops().clear();
+    }
+
+    /**
+     * Impede dano amigável envolvendo golems de ferro convocados.
+     * <p>
+     * Um golem não pode danificar o jogador que o convocou nem aliados, e
+     * jogadores do mesmo time não podem danificar o golem. Dano de inimigos
+     * é mantido normalmente.
+     * </p>
+     *
+     * @param event o evento de dano por entidade (não nulo)
+     */
+    @EventHandler
+    public void onGolemDamage(final EntityDamageByEntityEvent event) {
+        final IronGolem golem;
+        final Player player;
+        if (event.getDamager() instanceof final IronGolem damagerGolem
+                && event.getEntity() instanceof final Player victim) {
+            golem = damagerGolem;
+            player = victim;
+        } else if (event.getEntity() instanceof final IronGolem victimGolem
+                && event.getDamager() instanceof final Player attacker) {
+            golem = victimGolem;
+            player = attacker;
+        } else {
+            return;
+        }
+        final ArenaTeam ownerTeam = this.golemOwners.get(golem.getUniqueId());
+        if (ownerTeam == null) {
+            return;
+        }
+        final Game game = this.gameManager.getPlayerGame(player);
+        if (game == null) {
+            return;
+        }
+        final ArenaTeam playerTeam = game.getPlayerTeam(player);
+        if (playerTeam != null && playerTeam.getName().equals(ownerTeam.getName())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Atualiza a IA de defesa dos golems de ferro convocados.
+     * <p>
+     * A cada tick de jogo, cada golem registrado procura o inimigo vivo mais
+     * próximo dentro de {@value #IRON_GOLEM_RANGE} blocos e o define como alvo.
+     * Inimigos de times diferentes são priorizados; aliados e espectadores são
+     * ignorados. Quando não há inimigo no alcance, o alvo é liberado.
+     * </p>
+     */
+    public void tickIronGolems() {
+        this.golemOwners.entrySet().removeIf(entry -> {
+            final org.bukkit.entity.Entity entity = Bukkit.getEntity(entry.getKey());
+            return !(entity instanceof final IronGolem golem) || !golem.isValid();
+        });
+        for (final var entry : this.golemOwners.entrySet()) {
+            final org.bukkit.entity.Entity entity = Bukkit.getEntity(entry.getKey());
+            if (!(entity instanceof final IronGolem golem) || !golem.isValid()) {
+                continue;
+            }
+            final Game game = this.gameManager.getGameByWorld(golem.getWorld().getName());
+            if (game == null || game.getState() != GameState.PLAYING) {
+                continue;
+            }
+            final ArenaTeam ownerTeam = entry.getValue();
+            final Player target = this.findNearestEnemy(golem, game, ownerTeam);
+            golem.setTarget(target);
+        }
+    }
+
+    /**
+     * Encontra o inimigo vivo mais próximo do golem dentro do alcance.
+     *
+     * @param golem     o golem de ferro (não nulo)
+     * @param game      a partida (não nula)
+     * @param ownerTeam time dono do golem (não nulo)
+     * @return o inimigo mais próximo ou {@code null} se não houver
+     */
+    private @Nullable Player findNearestEnemy(final IronGolem golem, final Game game, final ArenaTeam ownerTeam) {
+        Player nearest = null;
+        double nearestDistanceSq = IRON_GOLEM_RANGE * (double) IRON_GOLEM_RANGE;
+        for (final Player candidate : game.getPlayers()) {
+            if (!game.isPlaying(candidate)) {
+                continue;
+            }
+            if (candidate.getWorld() != golem.getWorld()) {
+                continue;
+            }
+            final ArenaTeam candidateTeam = game.getPlayerTeam(candidate);
+            if (candidateTeam == null || candidateTeam.getName().equals(ownerTeam.getName())) {
+                continue;
+            }
+            final double distanceSq = golem.getLocation().distanceSquared(candidate.getLocation());
+            if (distanceSq < nearestDistanceSq) {
+                nearestDistanceSq = distanceSq;
+                nearest = candidate;
+            }
+        }
+        return nearest;
     }
 
     private static Material getWoolColor(final String dyeColor) {

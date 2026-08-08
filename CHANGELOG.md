@@ -4,6 +4,17 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-190] - 2026-08-08
+
+### Adicionado
+- **Golem de Ferro de defesa (estilo Hypixel)** (`listener/GameListener`, `shop.yml`):
+  - Novo item `IRON_GOLEM_SPAWN_EGG` na loja (seção Utilidades, `5 iron`).
+  - `onIronGolemUse`: ao usar o item em partida ativa (PLAYING), convoca um `IronGolem` na posição do jogador, com nome colorido do time (`game.iron_golem_name`), e registra o dono em `golemOwners` (Map `UUID -> ArenaTeam`). Consome o item; mensagem `game.iron_golem_spawned`.
+  - `onGolemDeath`: remove o golem do registro e limpa os drops (não solta ferro/papoilas).
+  - `onGolemDamage`: bloqueia dano amigável em ambos os sentidos — golem não fere o dono/aliados e aliados não ferem o golem.
+  - `tickIronGolems` (agendada a cada 10 ticks no construtor do listener): IA de defesa — procura o inimigo vivo mais próximo dentro de `IRON_GOLEM_RANGE = 20` blocos e define `setTarget`; ignora aliados e espectadores (`game.isPlaying`); limpa entradas órfãs de partidas encerradas.
+  - `findNearestEnemy`: seleciona o jogador vivo de time adversário mais próximo (por `distanceSquared`).
+
 ## [0.0.1-189] - 2026-08-08
 
 ### Alterado

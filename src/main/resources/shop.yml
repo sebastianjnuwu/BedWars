@@ -478,6 +478,14 @@ categories:
           tag: '{potion_contents:{potion:"minecraft:poison"}}'
         price: 2 emerald
 
+      - stack:
+          type: IRON_GOLEM_SPAWN_EGG
+          display-name: "<yellow>Golem de Ferro</yellow>"
+          lore:
+            - "<gray>Convoca um golem</gray>"
+            - "<gray>que defende sua base</gray>"
+        price: 5 iron
+
 
   # ═══════════════════════════════════════
   # MELHORIAS

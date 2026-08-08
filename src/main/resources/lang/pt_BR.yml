@@ -221,6 +221,8 @@ game:
   win_subtitle: "§eTime {0} §7venceu a partida!"
   lose_title: "§c§lDERROTA!"
   lose_subtitle: "§7O time {0} §7venceu!"
+  iron_golem_spawned: "§aUm Golem de Ferro foi convocado para defender seu time!"
+  iron_golem_name: "{0} Golem"
 
 # ── edit ──────────────────────────────
 edit:
