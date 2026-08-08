@@ -15,7 +15,6 @@ import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.SubCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SetCountdownCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SetMapCommand;
-import dev.sebastianjnuwu.bedwars.command.admin.config.SetMinPlayersCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.ShopNpcCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.SpawnCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.config.StatusCommand;
@@ -39,7 +38,7 @@ import dev.sebastianjnuwu.bedwars.session.EditorManager;
  * Uso: {@code /bw admin arena <arena> <açao> [argumentos...]}<br>
  * Valida se o jogador está editando a arena correta antes de delegar a
  * execução ao {@link ArenaSubCommand} apropriado. Ações suportadas:
- * {@code spawn}, {@code status}, {@code setminplayers}, {@code setcountdown},
+ * {@code spawn}, {@code status}, {@code setcountdown},
  * {@code addteam}, {@code setspawn}, {@code setbed}, {@code teams},
  * {@code addgenerator}.
  * </p>
@@ -76,7 +75,6 @@ public class ArenaRouter extends BaseCommand implements SubCommand {
         this.validator = new ArenaEditorValidator(arenaManager, editorManager, lang);
         this.register("spawn", new SpawnCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("status", new StatusCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
-        this.register("setminplayers", new SetMinPlayersCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("setcountdown", new SetCountdownCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("setmap", new SetMapCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));
         this.register("addteam", new TeamAddCommand(arenaManager, editorManager, configManager, gameManager, lang, mapsFolder));

@@ -37,7 +37,10 @@ public class StatusCommand extends BaseCommand implements ArenaSubCommand {
     public void execute(final CommandSender sender, final @NotNull Arena arena, final @NotNull String @NotNull [] args) {
         final List<String> missing = this.gameManager.validateArena(arena);
         sender.sendMessage(this.lang.text(NamedTextColor.GOLD, "admin.arena.status_header", arena.getName()));
-        sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_minplayers", String.valueOf(arena.getMinPlayers())));
+        sender.sendMessage(this.lang.text(NamedTextColor.WHITE, "admin.arena.status_team_limits",
+                String.valueOf(arena.getMinPlayersPerTeam()),
+                String.valueOf(arena.getMaxPlayersPerTeam() == 0 ? "modo" : arena.getMaxPlayersPerTeam()),
+                String.valueOf(arena.getMinTeamsToStart())));
         final int teamCount = arena.getTeams().size();
         final String modes = java.util.Arrays.stream(ArenaMode.values())
                 .filter(mode -> mode.isValidFor(teamCount))

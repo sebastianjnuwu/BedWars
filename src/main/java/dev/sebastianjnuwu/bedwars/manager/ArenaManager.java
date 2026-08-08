@@ -787,7 +787,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (arena.getSpawnBlockData() != null) {
             config.set("spawn_block", arena.getSpawnBlockData());
         }
-        config.set("min_players", arena.getMinPlayers());
+        config.set("teams.min-players", arena.getMinPlayersPerTeam());
+        config.set("teams.max-players", arena.getMaxPlayersPerTeam());
+        config.set("teams.min-teams", arena.getMinTeamsToStart());
         config.set("countdown", arena.getCountdown());
         config.set("respawn-delay", arena.getRespawnDelay());
         config.set("time-limit", arena.getTimeLimit());
@@ -848,7 +850,18 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             String type = entry.getKey();
             GeneratorConfig gc = entry.getValue();
             config.set("generator_config." + type + ".material", gc.material().name());
-            config.set("generator_config." + type + ".interval", gc.interval());
+            config.set("generator_config." + type + ".levels", null);
+            for (var levelEntry : gc.levels().entrySet()) {
+                config.set("generator_config." + type + ".levels." + levelEntry.getKey(), levelEntry.getValue());
+            }
+        }
+
+        // Level times
+        config.set("level-times", null);
+        if (arena.getLevelTimes() != null) {
+            for (var entry : arena.getLevelTimes().entrySet()) {
+                config.set("level-times." + entry.getKey(), entry.getValue());
+            }
         }
 
         // Forge levels
@@ -985,16 +998,17 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             return null;
         }
         final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
-        arena.setMinPlayers(2);
         arena.setCountdown(3);
         arena.setRespawnDelay(3);
         // Default generator configs
         Map<String, GeneratorConfig> genConfigs = new java.util.HashMap<>();
-        genConfigs.put("iron", new GeneratorConfig(Material.IRON_INGOT, 40));
-        genConfigs.put("gold", new GeneratorConfig(Material.GOLD_INGOT, 120));
-        genConfigs.put("diamond", new GeneratorConfig(Material.DIAMOND, 600));
-        genConfigs.put("emerald", new GeneratorConfig(Material.EMERALD, 1200));
+        genConfigs.put("iron", new GeneratorConfig(Material.IRON_INGOT, java.util.Map.of(1, 40L, 2, 35L, 3, 30L, 4, 25L, 5, 20L)));
+        genConfigs.put("gold", new GeneratorConfig(Material.GOLD_INGOT, java.util.Map.of(1, 120L, 2, 100L, 3, 80L, 4, 60L, 5, 40L)));
+        genConfigs.put("diamond", new GeneratorConfig(Material.DIAMOND, java.util.Map.of(1, 600L, 2, 500L, 3, 400L, 4, 300L, 5, 200L)));
+        genConfigs.put("emerald", new GeneratorConfig(Material.EMERALD, java.util.Map.of(1, 1200L, 2, 1000L, 3, 800L, 4, 600L, 5, 400L)));
         arena.setGeneratorConfigs(genConfigs);
+        // Default level times (minutos -> nivel)
+        arena.setLevelTimes(java.util.Map.of(0, 1, 5, 2, 10, 3, 15, 4, 20, 5));
         // Default forge levels
         arena.setForgeMaxLevel(10);
         arena.setForgeDefaultLevel(1);
@@ -1134,7 +1148,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         if (config.contains("spawn_block")) {
             arena.setSpawnBlockData(config.getString("spawn_block"));
         }
-        arena.setMinPlayers(config.getInt("min_players", 2));
+        arena.setMinPlayersPerTeam(config.getInt("teams.min-players", 1));
+        arena.setMaxPlayersPerTeam(config.getInt("teams.max-players", 0));
+        arena.setMinTeamsToStart(config.getInt("teams.min-teams", 2));
         arena.setCountdown(config.getInt("countdown", 3));
         arena.setRespawnDelay(config.getInt("respawn-delay", 3));
         arena.setTimeLimit(config.getInt("time-limit", 0));
@@ -1163,6 +1179,9 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         }
         if (config.contains("teams")) {
             for (final String key : config.getConfigurationSection("teams").getKeys(false)) {
+                if (key.equalsIgnoreCase("min-players") || key.equalsIgnoreCase("max-players") || key.equalsIgnoreCase("min-teams")) {
+                    continue;
+                }
                 final String path = "teams." + key;
                 final var team = new dev.sebastianjnuwu.bedwars.model.ArenaTeam(key, config.getString(path + ".color"));
                 if (config.contains(path + ".spawn")) {
@@ -1251,13 +1270,28 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
                 String path = "generator_config." + type;
                 String matName = config.getString(path + ".material");
                 Material mat = matName != null ? Material.matchMaterial(matName) : null;
-                long interval = config.getLong(path + ".interval", 0L);
-                if (mat != null && interval > 0L) {
-                    genConfigs.put(type, new GeneratorConfig(mat, interval));
+                Map<Integer, Long> levels = new java.util.HashMap<>();
+                if (config.contains(path + ".levels")) {
+                    for (String levelKey : config.getConfigurationSection(path + ".levels").getKeys(false)) {
+                        levels.put(Integer.parseInt(levelKey), config.getLong(path + ".levels." + levelKey, 0L));
+                    }
+                }
+                if (mat != null && !levels.isEmpty()) {
+                    genConfigs.put(type, new GeneratorConfig(mat, levels));
                 }
             }
             if (!genConfigs.isEmpty()) {
                 arena.setGeneratorConfigs(genConfigs);
+            }
+        }
+
+        if (config.contains("level-times")) {
+            Map<Integer, Integer> levelTimes = new java.util.HashMap<>();
+            for (String minuteKey : config.getConfigurationSection("level-times").getKeys(false)) {
+                levelTimes.put(Integer.parseInt(minuteKey), config.getInt("level-times." + minuteKey, 1));
+            }
+            if (!levelTimes.isEmpty()) {
+                arena.setLevelTimes(levelTimes);
             }
         }
 

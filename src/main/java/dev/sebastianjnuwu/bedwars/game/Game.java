@@ -448,7 +448,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         if (this.state != GameState.WAITING && this.state != GameState.STARTING) {
             return;
         }
-        if (!this.hasAtLeastTwoTeams()) {
+        if (!this.hasEnoughActiveTeams()) {
             this.cancelCountdown();
             return;
         }
@@ -599,7 +599,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 continue;
             }
             final Material material = config.material();
-            final long interval = config.interval();
+            final long interval = config.intervalForLevel(this.currentGeneratorLevel());
             if (material == null || interval <= 0L) {
                 continue;
             }
@@ -708,6 +708,21 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.countdownSeconds--;
     }
 
+    private int currentGeneratorLevel() {
+        final Map<Integer, Integer> levelTimes = this.arena.getLevelTimes();
+        if (levelTimes == null || levelTimes.isEmpty()) {
+            return 1;
+        }
+        final int minutes = (int) (this.tick / (20L * 60L));
+        int level = 1;
+        for (final var entry : levelTimes.entrySet()) {
+            if (entry.getKey() <= minutes && entry.getValue() > level) {
+                level = entry.getValue();
+            }
+        }
+        return level;
+    }
+
     private void handleGeneratorTicks() {
         for (final Map.Entry<ArenaGenerator, long[]> entry : this.generatorTicks.entrySet()) {
             final ArenaGenerator generator = entry.getKey();
@@ -716,11 +731,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
             final long[] data = entry.getValue();
             final long lastSpawn = data[0];
-            final long interval = data[1];
-            if (this.tick - lastSpawn < interval) {
-                continue;
-            }
-            data[0] = this.tick;
             final String type = generator.getType().toLowerCase();
             final var genConfigs = this.arena.getGeneratorConfigs();
             final GeneratorConfig config = genConfigs != null ? genConfigs.get(type) : null;
@@ -728,6 +738,14 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             if (material == null) {
                 continue;
             }
+            final long interval = config != null
+                    ? config.intervalForLevel(this.currentGeneratorLevel())
+                    : this.gameManager.getConfigManager().getGeneratorInterval(type);
+            if (interval <= 0L || this.tick - lastSpawn < interval) {
+                continue;
+            }
+            data[0] = this.tick;
+            data[1] = interval;
             final Location dropLocation = generator.getLocation().getBlock().getLocation().add(0.5, 1.2, 0.5);
             final long nearbyCount = dropLocation.getWorld().getNearbyEntities(dropLocation, 2, 2, 2).stream()
                     .filter(entity -> entity instanceof Item)
@@ -860,34 +878,23 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 this.countdownSeconds, this.players.size());
     }
 
-    private boolean hasAtLeastTwoTeams() {
-        int filledTeams = 0;
-        for (final var entry : this.teams.entrySet()) {
-            if (!entry.getValue().isEmpty()) {
-                filledTeams++;
-            }
-        }
-        return filledTeams >= 2;
+    private boolean hasEnoughActiveTeams() {
+        return this.countActiveTeams() >= this.arena.getMinTeamsToStart();
+    }
+
+    private long countActiveTeams() {
+        final int minPerTeam = Math.max(1, this.arena.getMinPlayersPerTeam());
+        return this.teams.values().stream()
+                .filter(members -> members.size() >= minPerTeam)
+                .count();
     }
 
     private void updateCountdownState() {
         if (this.state != GameState.WAITING && this.state != GameState.STARTING) {
             return;
         }
-        if (this.players.size() < this.arena.getMinPlayers()) {
+        if (!this.hasEnoughActiveTeams()) {
             this.cancelCountdown();
-            return;
-        }
-        if (!this.hasAtLeastTwoTeams()) {
-            if (this.state == GameState.STARTING) {
-                this.cancelCountdown();
-                final Component msg = this.lang.text(NamedTextColor.RED, "game.countdown_need_teams");
-                Bukkit.getOnlinePlayers().forEach(p -> {
-                    if (this.players.containsKey(p.getUniqueId())) {
-                        p.sendMessage(msg);
-                    }
-                });
-            }
             return;
         }
         if (this.state == GameState.WAITING && this.gameTickTask == null) {
@@ -1318,15 +1325,26 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private int maxTeamSlots() {
+        final int arenaMax = this.arena.getMaxPlayersPerTeam();
+        if (arenaMax > 0) {
+            return arenaMax;
+        }
         final ArenaMode mode = this.mode;
         if (mode != null) {
             return mode.getTeamSize();
         }
+        return this.largestValidMode().getTeamSize();
+    }
+
+    private ArenaMode largestValidMode() {
         final int teamCount = this.teams.size();
-        if (teamCount == 0) {
-            return 0;
+        ArenaMode largest = ArenaMode.SOLO;
+        for (final ArenaMode mode : ArenaMode.values()) {
+            if (mode.isValidFor(teamCount) && mode.getTeamSize() > largest.getTeamSize()) {
+                largest = mode;
+            }
         }
-        return (int) Math.ceil((double) this.arena.getMinPlayers() / teamCount) + 1;
+        return largest;
     }
 
     private int getAliveCount(final ArenaTeam team) {

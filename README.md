@@ -152,13 +152,14 @@ Por padrão, cada arena já possui configurações para os tipos **ferro**, **ou
 ### 11. Configurações opcionais
 
 ```bash
-/bw admin arena <nome_da_arena> setminplayers 4
 /bw admin arena <nome_da_arena> setcountdown 30
 /bw admin arena <nome_da_arena> status
 /bw admin arena <nome_da_arena> teams
 ```
 
 > O comando `status` mostra quantos times a arena tem e **quais modos ela suporta**. Um modo é válido quando o número de times é divisível pelo tamanho do time (ex.: arena com 2 times aceita `solo` e `dupla`, mas não `trio`).
+
+> O limite de times ativos e jogadores por time é configurado **direto no YAML** da arena: `teams.min-players`, `teams.max-players` e `teams.min-teams` (ver seção 13.2).
 
 ### 12. Adicionar NPC da loja
 
@@ -207,13 +208,18 @@ Destaques que você pode editar **direto no YAML** (sem comando):
     - "msg"      # libera /msg e /msg <jogador> ...
   ```
 - `forge:` — níveis da fornalha, preço e moeda de upgrade de cada nível.
-- `generator_config:` — intervalo (em ticks) de cada gerador.
+- `generator_config:` — material e intervalos por nível de cada gerador base (`levels.<nivel>` em ticks). O nível ativo é definido por `level-times`.
+- `level-times:` — em que **minuto** da partida cada nível de gerador base passa a valer (ex.: `5: 2` sobe para o nível 2 aos 5 minutos).
 - `spawn_item:` — itens entregues ao jogador no **início da partida e em cada respawn**. Ex.:
   ```yaml
   spawn_item:
     - WOODEN_SWORD
     - SHEARS
   ```
+- `teams.min-players:` — mínimo de jogadores para um time ser considerado **ativo** (padrão `1`).
+- `teams.max-players:` — teto de jogadores por time (`0` = derivar do modo da partida; padrão `0`).
+- `teams.min-teams:` — quantos times ativos são necessários para o countdown iniciar (padrão `2`).
+- `countdown:` — tempo (segundos) da contagem regressiva.
 - `time-limit:` — tempo máximo de duração da partida em **segundos** (`0` = sem limite). Quando o tempo acaba, a vitória é decidida na ordem:
   1. Time com mais jogadores vivos.
   2. Se empatar, vence o time cuja cama ainda está intacta.
@@ -232,7 +238,7 @@ Destaques que você pode editar **direto no YAML** (sem comando):
 /bw leave                             # sair da partida
 ```
 
-> O modo é escolhido **na hora de entrar**, não fica fixo na arena. `solo`, `dupla`, `trio` e `quarteto` definem quantos jogadores cabem por time. Quem entra sem modo joga numa partida **livre** (capacidade derivada do `min_players` da arena).
+> O modo é escolhido **na hora de entrar**, não fica fixo na arena. `solo`, `dupla`, `trio` e `quarteto` definem quantos jogadores cabem por time. Quem entra sem modo joga numa partida **livre** (capacidade derivada do maior modo válido do mapa, salvo se `teams.max-players` definir um teto).
 >
 > Enquanto um administrador estiver editando a arena, jogadores **não podem** entrar na partida.
 
@@ -267,6 +273,8 @@ O modo define **quantos jogadores cabem por time**; o número de times/camas é 
 Regras importantes:
 
 - **O modo é o máximo, não o mínimo.** Uma partida `quarteto` num mapa de 4 camas funciona com menos gente: 4 jogadores viram 1v1v1v1, 8 viram 2v2v2v2, e assim por diante.
+- **O início é definido por times ativos.** O countdown inicia quando o número de times com pelo menos `teams.min-players` jogadores atinge `teams.min-teams` (padrão `2`). Um mapa de 6 camas em dupla com `min-players: 1` e `min-teams: 2` começa com apenas 1v1 — não é preciso lotar todos os times.
+- **`teams.max-players` limita o modo.** Se definido (`0` = derivar do modo), nenhum modo com mais jogadores por time que esse teto é aceito no join (ex.: `max-players: 2` bloqueia `quarteto`).
 - **Distribuição automática balanceada.** Quem entra sem escolher time vai para o time com menos jogadores (`findSmallestTeam`). Por isso nunca fica um time vazio por acaso — com 12 jogadores numa partida quarteto de 4 camas, o resultado é 3v3v3v3, não 3 times cheios + 1 sobrando.
 - **Mapa com 3 camas não aceita quarteto** (nem trio num mapa de 2 camas): o modo é rejeitado se o número de times não for divisível pelo tamanho do time. Consulte os modos válidos com `/bw admin arena <arena> status`.
 - Só fica um time vazio se **jogadores forçarem na mão**, escolhendo times específicos (`/bw join <arena> azul` etc.) — a partida começa com os times preenchidos mesmo assim.
@@ -353,7 +361,6 @@ Para gerenciar:
 | `/bw admin reload` | Recarrega arquivos de configuração | `bw.admin` |
 | `/bw admin arena <arena> spawn` | Define o spawn de espera | `bw.admin` |
 | `/bw admin arena <arena> status` | Exibe o status da arena | `bw.admin` |
-| `/bw admin arena <arena> setminplayers <num>` | Define mínimo de jogadores | `bw.admin` |
 | `/bw admin arena <arena> setcountdown <seg>` | Define contagem regressiva | `bw.admin` |
 | `/bw admin arena <arena> setmap <mapa\|default>` | Aponta a arena para um schematic compartilhado | `bw.admin` |
 | `/bw admin arena <arena> addteam <cor>` | Adiciona um time | `bw.admin` |

@@ -4,6 +4,35 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-179] - 2026-08-07
+
+### Adicionado
+- **Início de partida por times ativos** (substitui o mínimo global de jogadores):
+  - Novas chaves no YAML da arena: `teams.min-players` (mínimo p/ time ser ativo, padrão `1`), `teams.max-players` (teto por time, `0` = derivar do modo, padrão `0`) e `teams.min-teams` (nº de times ativos p/ iniciar o countdown, padrão `2`).
+  - Campos `minPlayersPerTeam`, `maxPlayersPerTeam`, `minTeamsToStart` + getters/setters em `model/Arena` e `api/model/Arena`, incluído no `copy()`.
+  - Persistência em `manager/ArenaManager` e `arena/ArenaManager` (sistema Slime): save/load das 3 chaves; load de times ignora `min-players`/`max-players`/`min-teams` (não viram times).
+  - `Game.updateCountdownState` agora usa `countActiveTeams() >= getMinTeamsToStart()` (time ativo = `size() >= minPlayersPerTeam`); `Game.start()` exige `hasEnoughActiveTeams()`; `forceStart()` continua ignorando.
+  - `Game.maxTeamSlots()` respeita `max-players` da arena; partida livre sem teto deriva do **maior modo válido** do mapa (`largestValidMode`).
+  - `GameManager.validateArena` valida `min-teams <= nº de times` (`game.validate_min_teams`); join rejeita modo com `teamSize > max-players` (`game.mode_exceeds_team_limit`).
+  - `StatusCommand` exibe min/max por time e min-teams (`admin.arena.status_team_limits`).
+- **Progressão de níveis dos geradores base por tempo de partida:**
+  - `GeneratorConfig` virou `record GeneratorConfig(Material material, Map<Integer, Long> levels)` com `intervalForLevel(int)` (resolução: nível exato → maior nível ≤ pedido → menor nível configurado). O campo `interval` fixo foi removido (formato quebrado).
+  - Nova chave `generator_config.<tipo>.levels.<nivel>` (intervalo em ticks por nível), substituindo o antigo `generator_config.<tipo>.interval`.
+  - `Game.currentGeneratorLevel()` resolve o nível pelo tempo decorrido (minutos); `handleGeneratorTicks`/`initGeneratorTicks` usam o intervalo do nível atual dinamicamente.
+  - Defaults em `manager/ArenaManager.create()`: 5 níveis por tipo (iron 40→20, gold 120→40, diamond 600→200, emerald 1200→400).
+  - Persistência em `manager/ArenaManager` (save/load) de `generator_config.*.levels.*`.
+
+### Removido
+- Campo `minPlayers` removido por completo: `model/Arena`, `api/model/Arena`, persistência (save/load), `CreateCommand`, `create()` dos dois `ArenaManager`, comando `/bw admin arena setminplayers` (`SetMinPlayersCommand` deletado, registro em `ArenaRouter` e tab-complete em `BWCommand`), chaves de lang `setminplayers_*`/`status_minplayers` e documentação (`example.yml`, `README.md`).
+- Seção `level-times` do `example.yml` (sem ela os geradores base permanecem no nível 1).
+
+### Alterado
+- `min-teams` movido de `game.min-teams` para `teams.min-teams` no YAML da arena (save/load nos dois `ArenaManager`; load de times ignora a chave; lang e docs atualizados).
+
+### Documentação
+- `example.yml`: bloco "INÍCIO DA PARTIDA (por time)" com `teams.min-teams` e `teams.min-players`/`max-players` dentro da seção `teams`; `generator_config` reescrita com `levels` por tipo; removido `min_players` e `level-times`.
+- `README.md`: seções 13.2 e 14.2 atualizadas com a regra de times ativos e teto por time; descrição de `generator_config` e `teams.min-teams`; removido `setminplayers` do tutorial, da tabela de comandos e da referência do YAML.
+
 ## [0.0.1-178] - 2026-08-07
 
 ### Documentação

@@ -108,6 +108,9 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         if (arena.getTeams().size() < 2) {
             missing.add(this.lang.raw("game.validate_teams", arena.getName()));
         }
+        if (arena.getMinTeamsToStart() > arena.getTeams().size()) {
+            missing.add(this.lang.raw("game.validate_min_teams", arena.getName()));
+        }
         for (final ArenaTeam team : arena.getTeams()) {
             if (team.getSpawn() == null) {
                 missing.add(this.lang.raw("game.validate_team_spawn", team.getName()));
@@ -189,6 +192,11 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         }
         if (mode != null && !mode.isValidFor(arena.getTeams().size())) {
             player.sendMessage(this.lang.text(NamedTextColor.RED, "game.mode_not_supported", mode.name().toLowerCase(), arenaName));
+            return;
+        }
+        if (mode != null && arena.getMaxPlayersPerTeam() > 0 && mode.getTeamSize() > arena.getMaxPlayersPerTeam()) {
+            player.sendMessage(this.lang.text(NamedTextColor.RED, "game.mode_exceeds_team_limit",
+                    mode.name().toLowerCase(), arena.getMaxPlayersPerTeam()));
             return;
         }
 

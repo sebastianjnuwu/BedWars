@@ -209,7 +209,7 @@ public class BWCommand implements CommandExecutor, TabCompleter {
                     break;
             }
         } else if (args.length == 4 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
-            completions.addAll(List.of("spawn", "addteam", "removeteam", "setspawn", "setbed", "addgenerator", "teams", "status", "setminplayers", "setcountdown", "shop-npc"));
+            completions.addAll(List.of("spawn", "addteam", "removeteam", "setspawn", "setbed", "addgenerator", "teams", "status", "setcountdown", "shop-npc"));
         } else if (args.length == 5 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
             final String sub = args[3].toLowerCase();
             if (List.of("addteam", "removeteam", "setspawn", "setbed").contains(sub)) {

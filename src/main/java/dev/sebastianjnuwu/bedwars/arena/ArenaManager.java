@@ -239,7 +239,6 @@ public class ArenaManager {
         }
 
         final Arena arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
-        arena.setMinPlayers(2);
         arena.setCountdown(3);
         arenas.put(name, arena);
         saveArena(arena);
@@ -299,7 +298,9 @@ public class ArenaManager {
                 arena.getSchematicWidth() + "," + arena.getSchematicHeight() + "," + arena.getSchematicLength());
         setIfNotNull(config, "arena_spawn", serializeLocation(arena.getArenaSpawn()));
         setIfNotNull(config, "spawn_block", arena.getSpawnBlockData());
-        config.set("min_players", arena.getMinPlayers());
+        config.set("teams.min-players", arena.getMinPlayersPerTeam());
+        config.set("teams.max-players", arena.getMaxPlayersPerTeam());
+        config.set("teams.min-teams", arena.getMinTeamsToStart());
         config.set("countdown", arena.getCountdown());
 
         setIfNotNull(config, "difficulty", arena.getDifficulty());
@@ -361,7 +362,9 @@ public class ArenaManager {
         if (config.contains("spawn_block")) {
             arena.setSpawnBlockData(config.getString("spawn_block"));
         }
-        arena.setMinPlayers(config.getInt("min_players", 2));
+        arena.setMinPlayersPerTeam(config.getInt("teams.min-players", 1));
+        arena.setMaxPlayersPerTeam(config.getInt("teams.max-players", 0));
+        arena.setMinTeamsToStart(config.getInt("teams.min-teams", 2));
         arena.setCountdown(config.getInt("countdown", 3));
 
         if (config.contains("difficulty")) {
@@ -380,6 +383,9 @@ public class ArenaManager {
 
         if (config.contains("teams")) {
             for (final String key : config.getConfigurationSection("teams").getKeys(false)) {
+                if (key.equalsIgnoreCase("min-players") || key.equalsIgnoreCase("max-players") || key.equalsIgnoreCase("min-teams")) {
+                    continue;
+                }
                 final String path = "teams." + key;
                 final ArenaTeam team = new dev.sebastianjnuwu.bedwars.model.ArenaTeam(key, config.getString(path + ".color"));
                 if (config.contains(path + ".spawn")) {

@@ -105,7 +105,6 @@ public class CreateCommand extends BaseCommand implements SubCommand {
 
         arena.setWorldName(worldName);
         arena.setEnabled(false); // Arena só é habilitada após salvar o template
-        arena.setMinPlayers(2);
         arena.setCountdown(3);
 
         // Salva a arena

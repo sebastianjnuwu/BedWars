@@ -83,9 +83,50 @@ public interface Arena {
 
     void addGenerator(ArenaGenerator generator);
 
-    int getMinPlayers();
+    /**
+     * Retorna o número mínimo de jogadores para um time ser considerado ativo
+     * (config {@code teams.min-players}).
+     *
+     * @return mínimo de jogadores por time ativo
+     */
+    int getMinPlayersPerTeam();
 
-    void setMinPlayers(int minPlayers);
+    /**
+     * Define o número mínimo de jogadores para um time ser considerado ativo.
+     *
+     * @param minPlayersPerTeam mínimo de jogadores por time
+     */
+    void setMinPlayersPerTeam(int minPlayersPerTeam);
+
+    /**
+     * Retorna o teto de jogadores por time (config {@code teams.max-players}).
+     * {@code 0} significa derivar do modo da partida.
+     *
+     * @return teto por time ou 0 para derivar do modo
+     */
+    int getMaxPlayersPerTeam();
+
+    /**
+     * Define o teto de jogadores por time.
+     *
+     * @param maxPlayersPerTeam teto por time ou 0 para derivar do modo
+     */
+    void setMaxPlayersPerTeam(int maxPlayersPerTeam);
+
+    /**
+     * Retorna o número mínimo de times ativos para o countdown iniciar
+     * (config {@code teams.min-teams}).
+     *
+     * @return mínimo de times ativos
+     */
+    int getMinTeamsToStart();
+
+    /**
+     * Define o número mínimo de times ativos para o countdown iniciar.
+     *
+     * @param minTeamsToStart mínimo de times ativos
+     */
+    void setMinTeamsToStart(int minTeamsToStart);
 
     int getCountdown();
 
@@ -134,6 +175,22 @@ public interface Arena {
     Map<String, GeneratorConfig> getGeneratorConfigs();
 
     void setGeneratorConfigs(Map<String, GeneratorConfig> configs);
+
+    /**
+     * Retorna o tempo da partida (em minutos) a partir do qual cada nível de
+     * gerador base passa a valer.
+     *
+     * @return mapa {@code minutos -> nivel} (nunca nulo)
+     */
+    Map<Integer, Integer> getLevelTimes();
+
+    /**
+     * Define o tempo da partida (em minutos) a partir do qual cada nível de
+     * gerador base passa a valer.
+     *
+     * @param levelTimes mapa {@code minutos -> nivel}
+     */
+    void setLevelTimes(Map<Integer, Integer> levelTimes);
 
     int getForgeMaxLevel();
 

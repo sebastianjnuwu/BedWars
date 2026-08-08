@@ -35,7 +35,9 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private int schematicLength;
     private Location arenaSpawn;
     private String spawnBlockData;
-    private int minPlayers;
+    private int minPlayersPerTeam;
+    private int maxPlayersPerTeam;
+    private int minTeamsToStart;
     private int countdown;
     private int respawnDelay;
     private int timeLimit;
@@ -48,6 +50,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private boolean spawnAnimals;
     private String shop;
     private Map<String, GeneratorConfig> generatorConfigs;
+    private Map<Integer, Integer> levelTimes;
     private int forgeMaxLevel;
     private int forgeDefaultLevel;
     private List<ForgeLevel> forgeLevels;
@@ -319,12 +322,28 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.generators.add(generator);
     }
 
-    public int getMinPlayers() {
-        return this.minPlayers;
+    public int getMinPlayersPerTeam() {
+        return this.minPlayersPerTeam;
     }
 
-    public void setMinPlayers(final int minPlayers) {
-        this.minPlayers = minPlayers;
+    public void setMinPlayersPerTeam(final int minPlayersPerTeam) {
+        this.minPlayersPerTeam = minPlayersPerTeam;
+    }
+
+    public int getMaxPlayersPerTeam() {
+        return this.maxPlayersPerTeam;
+    }
+
+    public void setMaxPlayersPerTeam(final int maxPlayersPerTeam) {
+        this.maxPlayersPerTeam = maxPlayersPerTeam;
+    }
+
+    public int getMinTeamsToStart() {
+        return this.minTeamsToStart;
+    }
+
+    public void setMinTeamsToStart(final int minTeamsToStart) {
+        this.minTeamsToStart = minTeamsToStart;
     }
 
     public int getCountdown() {
@@ -439,6 +458,14 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
 
     public void setGeneratorConfigs(Map<String, GeneratorConfig> configs) {
         this.generatorConfigs = configs;
+    }
+
+    public Map<Integer, Integer> getLevelTimes() {
+        return levelTimes;
+    }
+
+    public void setLevelTimes(Map<Integer, Integer> levelTimes) {
+        this.levelTimes = levelTimes;
     }
 
     public int getForgeMaxLevel() {
@@ -561,7 +588,9 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         copy.schematicLength = this.schematicLength;
         copy.arenaSpawn = this.arenaSpawn;
         copy.spawnBlockData = this.spawnBlockData;
-        copy.minPlayers = this.minPlayers;
+        copy.minPlayersPerTeam = this.minPlayersPerTeam;
+        copy.maxPlayersPerTeam = this.maxPlayersPerTeam;
+        copy.minTeamsToStart = this.minTeamsToStart;
         copy.countdown = this.countdown;
         copy.respawnDelay = this.respawnDelay;
         copy.timeLimit = this.timeLimit;
@@ -574,6 +603,7 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         copy.spawnAnimals = this.spawnAnimals;
         copy.shop = this.shop;
         copy.generatorConfigs = this.generatorConfigs != null ? new HashMap<>(this.generatorConfigs) : new HashMap<>();
+        copy.levelTimes = this.levelTimes != null ? new HashMap<>(this.levelTimes) : null;
         copy.forgeMaxLevel = this.forgeMaxLevel;
         copy.forgeDefaultLevel = this.forgeDefaultLevel;
         copy.forgeLevels = this.forgeLevels != null ? new ArrayList<>(this.forgeLevels) : new ArrayList<>();
