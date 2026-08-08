@@ -162,6 +162,13 @@ categories:
           display-name: "<yellow>Bola de Fogo</yellow>"
         price: 1 gold
 
+      - stack:
+          type: EGG
+          display-name: "<yellow>Ovo de Ponte</yellow>"
+          lore:
+            - "<gray>Jogue e crie uma ponte</gray>"
+            - "<gray>de lã na direção do lançamento</gray>"
+        price: 2 gold
 
   # ═══════════════════════════════════════
   # ARMADURAS

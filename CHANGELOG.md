@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-184] - 2026-08-08
+
+### Adicionado
+- **Ovo de Ponte** (`listener/GameListener.onBridgeEggHit`): novo item `EGG` na loja (seção de armas, `2 gold`). Ao ser lançado e atingir um bloco durante uma partida ativa, estende uma ponte horizontal de lã na direção do lançamento (comprimento fixo `BRIDGE_EGG_LENGTH = 8`), usando a cor do time do atirador (`getWoolColor`). Cada bloco é rastreado com `trackPlacedBlock` para ser limpo no reset da arena.
+
 ## [0.0.1-183] - 2026-08-08
 
 ### Adicionado

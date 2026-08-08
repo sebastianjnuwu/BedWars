@@ -6,8 +6,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
+import org.bukkit.entity.Egg;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.SmallFireball;
@@ -63,6 +65,8 @@ import dev.sebastianjnuwu.bedwars.util.LocationUtil;
  * @see GameManager
  */
 public class GameListener implements Listener {
+
+    private static final int BRIDGE_EGG_LENGTH = 8;
 
     private final GameManager gameManager;
     private final LangManager lang;
@@ -429,6 +433,76 @@ public class GameListener implements Listener {
         }
         final Vector boost = new Vector(0, 1.4, 0);
         shooter.setVelocity(shooter.getVelocity().add(boost));
+    }
+
+    /**
+     * Cria a ponte de lã do ovo de ponte ({@code EGG}) ao atingir algo.
+     * <p>
+     * No impacto, estende uma linha horizontal de lã na direção do lançamento,
+     * a partir do bloco atingido, com o comprimento fixo {@link #BRIDGE_EGG_LENGTH}.
+     * A lã usa a cor do time do atirador. Cada bloco colocado é rastreado via
+     * {@link Game#trackPlacedBlock(org.bukkit.Location)} para ser limpo no reset.
+     * </p>
+     *
+     * @param event o evento de impacto do projétil (não nulo)
+     */
+    @EventHandler
+    public void onBridgeEggHit(final ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof final Egg egg)) {
+            return;
+        }
+        if (!(egg.getShooter() instanceof final Player shooter)) {
+            return;
+        }
+        final Game game = this.gameManager.getPlayerGame(shooter);
+        if (game == null || game.getState() != GameState.PLAYING) {
+            return;
+        }
+        final Block hit = event.getHitBlock();
+        if (hit == null) {
+            return;
+        }
+        final Vector dir = egg.getVelocity().clone();
+        dir.setY(0);
+        if (dir.lengthSquared() < 0.0001) {
+            return;
+        }
+        dir.normalize();
+        final ArenaTeam team = game.getPlayerTeam(shooter);
+        final Material wool = team != null ? getWoolColor(team.getColor()) : Material.WHITE_WOOL;
+        final World world = hit.getWorld();
+        final int startX = hit.getX();
+        final int startY = hit.getY();
+        final int startZ = hit.getZ();
+        for (int i = 1; i <= BRIDGE_EGG_LENGTH; i++) {
+            final Block target = world.getBlockAt(
+                    startX + (int) Math.round(dir.getX() * i),
+                    startY,
+                    startZ + (int) Math.round(dir.getZ() * i));
+            if (!target.getType().isAir()) {
+                continue;
+            }
+            target.setType(wool);
+            game.trackPlacedBlock(target.getLocation());
+        }
+    }
+
+    private static Material getWoolColor(final String dyeColor) {
+        return switch (dyeColor.toUpperCase()) {
+            case "RED", "VERMELHO" -> Material.RED_WOOL;
+            case "BLUE", "AZUL" -> Material.BLUE_WOOL;
+            case "GREEN", "VERDE" -> Material.GREEN_WOOL;
+            case "YELLOW", "AMARELO" -> Material.YELLOW_WOOL;
+            case "PURPLE", "ROXO" -> Material.PURPLE_WOOL;
+            case "PINK", "ROSA" -> Material.PINK_WOOL;
+            case "ORANGE", "LARANJA" -> Material.ORANGE_WOOL;
+            case "CYAN", "CIANO" -> Material.CYAN_WOOL;
+            case "LIME" -> Material.LIME_WOOL;
+            case "LIGHT_BLUE", "AZUL_CLARO" -> Material.LIGHT_BLUE_WOOL;
+            case "GRAY", "CINZA" -> Material.GRAY_WOOL;
+            case "BLACK", "PRETO" -> Material.BLACK_WOOL;
+            default -> Material.WHITE_WOOL;
+        };
     }
 
     /**
