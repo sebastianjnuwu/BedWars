@@ -21,6 +21,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -32,6 +33,7 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -356,6 +358,77 @@ public class GameListener implements Listener {
         } else {
             player.getInventory().setItemInMainHand(null);
         }
+    }
+
+    /**
+     * Aplica o impulso da bola de fogo ao jogador atingido (estilo Hypixel).
+     * <p>
+     * No impacto, a vítima é empurrada horizontalmente na direção do projétil
+     * e lançada para o alto, criando o efeito de "quase voar" característico.
+     * Apenas jogadores em partida ativa (PLAYING) recebem o impulso.
+     * </p>
+     *
+     * @param event o evento de impacto do projétil (não nulo)
+     */
+    @EventHandler
+    public void onFireballHit(final ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof final SmallFireball fireball)) {
+            return;
+        }
+        if (event.getHitEntity() instanceof final Player victim) {
+            this.knockbackVictim(fireball, victim);
+            return;
+        }
+        if (event.getHitBlock() != null) {
+            this.boostShooter(fireball);
+        }
+    }
+
+    /**
+     * Aplica o impulso da bola de fogo ao jogador atingido (estilo Hypixel).
+     * <p>
+     * No impacto, a vítima é empurrada horizontalmente na direção do projétil
+     * e lançada para o alto, criando o efeito de "quase voar" característico.
+     * Apenas jogadores em partida ativa (PLAYING) recebem o impulso.
+     * </p>
+     *
+     * @param fireball o projétil que atingiu o jogador (não nulo)
+     * @param victim   o jogador atingido (não nulo)
+     */
+    private void knockbackVictim(final SmallFireball fireball, final Player victim) {
+        final Game game = this.gameManager.getPlayerGame(victim);
+        if (game == null || game.getState() != GameState.PLAYING) {
+            return;
+        }
+        final Vector dir = fireball.getVelocity().clone();
+        dir.setY(0);
+        if (dir.lengthSquared() < 0.0001) {
+            return;
+        }
+        dir.normalize().multiply(1.6).setY(1.1);
+        victim.setVelocity(victim.getVelocity().add(dir));
+    }
+
+    /**
+     * Aplica o "super pulo" ao atirador quando a bola de fogo acerta um bloco.
+     * <p>
+     * Estilo Hypixel: a fireball no chão lança o próprio atirador para o alto,
+     * permitindo pulos estratégicos (rocket jump). Apenas em partida ativa e com
+     * o atirador ainda online e em jogo.
+     * </p>
+     *
+     * @param fireball o projétil que atingiu o bloco (não nulo)
+     */
+    private void boostShooter(final SmallFireball fireball) {
+        if (!(fireball.getShooter() instanceof final Player shooter)) {
+            return;
+        }
+        final Game game = this.gameManager.getPlayerGame(shooter);
+        if (game == null || game.getState() != GameState.PLAYING) {
+            return;
+        }
+        final Vector boost = new Vector(0, 1.4, 0);
+        shooter.setVelocity(shooter.getVelocity().add(boost));
     }
 
     /**

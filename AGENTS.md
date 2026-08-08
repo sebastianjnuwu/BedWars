@@ -83,6 +83,7 @@ mvn clean package                  # gera o JAR final
 - Mensagem: `v0.0.1-0XX - <tipo>: <descrição>` (tipos: `fix`, `feat`, `docs`, `refactor`, `chore`...).
 - Incrementar o `0XX` a cada commit.
 - **[OBRIGATÓRIO]** Toda mudança de código/comportamento (feat/fix/refactor) também atualiza o `CHANGELOG.md` — adicione a entrada da versão em detalhe técnico (arquivos, métodos, causas raiz) antes de commitar.
+- **[OBRIGATÓRIO]** Manter `pom.xml` sincronizado com o CHANGELOG: a cada bump de versão no `CHANGELOG.md`, atualize `<version>` no `pom.xml` para o mesmo número (ex.: `0.0.1-183`). O bump vai junto no mesmo commit.
 - Commits `chore` de bump não precisam de entrada no changelog.
 
 Exemplo:

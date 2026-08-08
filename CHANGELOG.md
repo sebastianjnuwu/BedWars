@@ -4,6 +4,12 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-183] - 2026-08-08
+
+### Adicionado
+- **Super pulo da bola de fogo** (`listener/GameListener.boostShooter`): quando a `SmallFireball` acerta um bloco, o atirador é lançado para o alto (`1.4` no eixo Y), efeito "rocket jump" estilo Hypixel. Refatorado `onFireballHit` em dois casos: `knockbackVictim` (acertou jogador — impulso horizontal + vertical) e `boostShooter` (acertou bloco — pulo vertical). Ambos apenas em partida ativa (PLAYING).
+- **Impulso da bola de fogo** (`listener/GameListener.knockbackVictim`): novo handler de `ProjectileHitEvent` — quando a `SmallFireball` (item `FIRE_CHARGE` da loja) acerta um jogador em partida ativa, a vítima é lançada horizontalmente na direção do projétil (`1.6`) e para o alto (`1.1`), efeito "quase voar" estilo Hypixel. Não afeta fora do estado PLAYING nem quando não há componente horizontal.
+
 ## [0.0.1-181] - 2026-08-08
 
 ### Corrigido
