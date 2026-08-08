@@ -661,7 +661,19 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.gameTickTask = Bukkit.getScheduler().runTaskTimer(this.gameManager.getPlugin(), this::gameTick, 1L, 1L);
     }
 
+    private boolean isMatchWorldLoaded() {
+        final String worldName = this.arena.getWorldName() != null ? this.arena.getWorldName() : "bw_" + this.arena.getName();
+        return Bukkit.getWorld(worldName) != null;
+    }
+
     private void gameTick() {
+        if (this.state == GameState.STARTING || this.state == GameState.PLAYING) {
+            if (!this.isMatchWorldLoaded()) {
+                this.debug("debug.game_force_ended", this.arena.getName());
+                this.forceEnd();
+                return;
+            }
+        }
         this.tick++;
         switch (this.state) {
             case STARTING:

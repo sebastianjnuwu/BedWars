@@ -7,6 +7,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Ver
 ## [0.0.1-181] - 2026-08-08
 
 ### Corrigido
+- **Exceção `World unloaded` em `handleForgeTicks`** (`game/Game.java`): quando o mundo da partida era descarregado (reset de arena) com a partida ainda ativa, `Location.getBlock()` lançava `IllegalArgumentException: World unloaded` a cada tick. Adicionado `Game.isMatchWorldLoaded()` (resolve o mundo por nome via `Bukkit.getWorld`) e guard no início de `gameTick`: se o mundo sumiu com a partida em STARTING/PLAYING, a partida é encerrada via `forceEnd()` antes de tocar qualquer `Location`.
 - Avisos do VS Code/IDE (não quebravam build):
   - `manager/GameManager.removeFromPendingJoins`: `List::isEmpty` → lambda `queue -> queue.isEmpty()` (null type safety do `Predicate`).
   - `shop/ShopGui.protectionWeight`: `Registry.ENCHANTMENT.get(...)` (deprecated desde 1.21) → `Enchantment.PROTECTION`; import de `Registry` removido.
