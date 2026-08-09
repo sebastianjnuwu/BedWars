@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-203] - 2026-08-09
+
+### Corrigido
+- **Golems de ferro não atacavam nem perseguiam o time adversário** (`listener/GameListener`): o golem era marcado como criado por jogador (`setPlayerCreated(true)`), e no vanilla 1.21 golems assim têm `canTarget(Player)` falso — nunca perseguem jogadores, e o `setTarget()` do `tickIronGolems` era silenciosamente rejeitado. A IA foi reescrita com uma goal customizada da **Mob Goal API** do Paper (`GolemAttackGoal`, prioridade 0, tipos `MOVE`/`LOOK`/`TARGET`): localiza o inimigo vivo mais próximo (mesmo filtro de `findNearestEnemy`), move o golem com `Pathfinder.moveTo` e aplica dano com `LivingEntity.attack` respeitando cooldown de 20 ticks — sem depender do alvo vanilla. O `tickIronGolems` agora só faz cleanup do mapa de donos.
+
 ## [0.0.1-202] - 2026-08-08
 
 ### Adicionado

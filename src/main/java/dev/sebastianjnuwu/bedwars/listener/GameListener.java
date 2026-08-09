@@ -1,6 +1,7 @@
 package dev.sebastianjnuwu.bedwars.listener;
 
 import java.time.Duration;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
@@ -48,6 +50,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 
+import com.destroystokyo.paper.entity.ai.Goal;
+import com.destroystokyo.paper.entity.ai.GoalKey;
+import com.destroystokyo.paper.entity.ai.GoalType;
+
 import dev.sebastianjnuwu.bedwars.api.events.GamePlayerDamageByPlayerEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GamePlayerKillEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GamePlayerStatChangeEvent;
@@ -75,6 +81,8 @@ public class GameListener implements Listener {
 
     private static final int BRIDGE_EGG_LENGTH = 16;
     private static final int IRON_GOLEM_RANGE = 20;
+    private static final GoalKey<IronGolem> GOLEM_ATTACK_GOAL_KEY = GoalKey.of(IronGolem.class,
+            new NamespacedKey("bedwars", "golem_attack"));
 
     private final GameManager gameManager;
     private final LangManager lang;
@@ -567,9 +575,11 @@ public class GameListener implements Listener {
         event.setCancelled(true);
         final Location spawn = player.getLocation().clone();
         final IronGolem golem = player.getWorld().spawn(spawn, IronGolem.class);
-        golem.setPlayerCreated(true);
+        golem.setPlayerCreated(false);
         golem.customName(this.lang.text(NamedTextColor.GREEN, "game.iron_golem_name", team.getName().toUpperCase()));
         golem.setCustomNameVisible(true);
+        golem.setPersistent(true);
+        Bukkit.getMobGoals().addGoal(golem, 0, new GolemAttackGoal(golem, team));
         this.golemOwners.put(golem.getUniqueId(), team);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.iron_golem_spawned"));
         this.consumeUsedItem(event, player, item);
@@ -633,12 +643,11 @@ public class GameListener implements Listener {
     }
 
     /**
-     * Atualiza a IA de defesa dos golems de ferro convocados.
+     * Remove do registro golems que saíram do mundo ou não são mais válidos.
      * <p>
-     * A cada tick de jogo, cada golem registrado procura o inimigo vivo mais
-     * próximo dentro de {@value #IRON_GOLEM_RANGE} blocos e o define como alvo.
-     * Inimigos de times diferentes são priorizados; aliados e espectadores são
-     * ignorados. Quando não há inimigo no alcance, o alvo é liberado.
+     * O alvo e a perseguição são controlados pela {@link GolemAttackGoal}
+     * registrada em cada golem no momento da convocação; este tick periódico
+     * apenas evita o acúmulo de entradas órfãs no mapa de donos.
      * </p>
      */
     public void tickIronGolems() {
@@ -646,18 +655,102 @@ public class GameListener implements Listener {
             final org.bukkit.entity.Entity entity = Bukkit.getEntity(entry.getKey());
             return !(entity instanceof final IronGolem golem) || !golem.isValid();
         });
-        for (final var entry : this.golemOwners.entrySet()) {
-            final org.bukkit.entity.Entity entity = Bukkit.getEntity(entry.getKey());
-            if (!(entity instanceof final IronGolem golem) || !golem.isValid()) {
-                continue;
+    }
+
+    /**
+     * IA que faz um golem de ferro convocado perseguir e atacar o inimigo mais
+     * próximo.
+     * <p>
+     * Contorna a restrição vanilla de golems criados por jogador, que não
+     * perseguem jogadores ({@code canTarget(Player)} é falso). Em vez de
+     * depender do {@code setTarget}, a goal move o golem com o
+     * {@code Pathfinder} e aplica o dano via {@code attack} diretamente,
+     * usando um cooldown próprio para não repetir o golpe a cada tick.
+     * </p>
+     */
+    private final class GolemAttackGoal implements Goal<IronGolem> {
+
+        private static final int ATTACK_COOLDOWN = 20;
+        private static final double CHASE_SPEED = 1.0D;
+        private static final double ATTACK_RANGE_SQ = 4.0D;
+
+        private final IronGolem golem;
+        private final ArenaTeam ownerTeam;
+        private @Nullable Player target;
+        private int attackCooldown;
+
+        GolemAttackGoal(final IronGolem golem, final ArenaTeam ownerTeam) {
+            this.golem = golem;
+            this.ownerTeam = ownerTeam;
+        }
+
+        @Override
+        public boolean shouldActivate() {
+            final Game game = this.currentGame();
+            if (game == null) {
+                return false;
             }
-            final Game game = this.gameManager.getGameByWorld(golem.getWorld().getName());
-            if (game == null || game.getState() != GameState.PLAYING) {
-                continue;
+            this.target = findNearestEnemy(this.golem, game, this.ownerTeam);
+            return this.target != null;
+        }
+
+        @Override
+        public boolean shouldStayActive() {
+            return this.target != null && this.target.isValid() && !this.target.isDead()
+                    && this.golem.getWorld() == this.target.getWorld();
+        }
+
+        @Override
+        public void start() {
+            this.golem.setTarget(this.target);
+        }
+
+        @Override
+        public void tick() {
+            final Game game = this.currentGame();
+            if (game == null) {
+                return;
             }
-            final ArenaTeam ownerTeam = entry.getValue();
-            final Player target = this.findNearestEnemy(golem, game, ownerTeam);
-            golem.setTarget(target);
+            final Player current = findNearestEnemy(this.golem, game, this.ownerTeam);
+            if (current != null) {
+                this.target = current;
+            }
+            if (this.target == null) {
+                return;
+            }
+            this.golem.setTarget(this.target);
+            final double distanceSq = this.golem.getLocation().distanceSquared(this.target.getLocation());
+            if (distanceSq <= ATTACK_RANGE_SQ) {
+                this.golem.lookAt(this.target);
+                if (this.attackCooldown <= 0) {
+                    this.golem.attack(this.target);
+                    this.attackCooldown = ATTACK_COOLDOWN;
+                }
+            } else {
+                this.golem.getPathfinder().moveTo(this.target, CHASE_SPEED);
+            }
+            if (this.attackCooldown > 0) {
+                this.attackCooldown--;
+            }
+        }
+
+        @Override
+        public void stop() {
+            this.golem.setTarget(null);
+        }
+
+        @Override
+        public GoalKey<IronGolem> getKey() {
+            return GOLEM_ATTACK_GOAL_KEY;
+        }
+
+        @Override
+        public EnumSet<GoalType> getTypes() {
+            return EnumSet.of(GoalType.MOVE, GoalType.LOOK, GoalType.TARGET);
+        }
+
+        private @Nullable Game currentGame() {
+            return GameListener.this.gameManager.getGameByWorld(this.golem.getWorld().getName());
         }
     }
 
