@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-204] - 2026-08-09
+
+### Corrigido
+- **Golems não atacavam os golems de outros times** (`listener/GameListener`): o alvo da `GolemAttackGoal` era tipado como `Player`, e o `findNearestEnemy` só iterava `game.getPlayers()` — golems adversários ficavam fora do alcance de alvo e os times se ignoravam no confronto de golems. O alvo agora é `LivingEntity` e o `findNearestEnemy` também considera golems registrados no `golemOwners` de times adversários (mesmo mundo e válidos). Além disso, o `onGolemDamage` passou a bloquear dano entre golems do **mesmo time** (antes só cobria golem↔jogador).
+
 ## [0.0.1-203] - 2026-08-09
 
 ### Corrigido

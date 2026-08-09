@@ -17,6 +17,7 @@ import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.IronGolem;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.SmallFireball;
 import org.bukkit.event.EventHandler;
@@ -607,14 +608,24 @@ public class GameListener implements Listener {
      * Impede dano amigável envolvendo golems de ferro convocados.
      * <p>
      * Um golem não pode danificar o jogador que o convocou nem aliados, e
-     * jogadores do mesmo time não podem danificar o golem. Dano de inimigos
-     * é mantido normalmente.
+     * jogadores do mesmo time não podem danificar o golem. Golems de um time
+     * também não podem danificar golems do próprio time. Dano de inimigos é
+     * mantido normalmente.
      * </p>
      *
      * @param event o evento de dano por entidade (não nulo)
      */
     @EventHandler
     public void onGolemDamage(final EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof final IronGolem damagerGolem
+                && event.getEntity() instanceof final IronGolem victimGolem) {
+            final ArenaTeam damagerTeam = this.golemOwners.get(damagerGolem.getUniqueId());
+            final ArenaTeam victimTeam = this.golemOwners.get(victimGolem.getUniqueId());
+            if (damagerTeam != null && damagerTeam.getName().equals(victimTeam.getName())) {
+                event.setCancelled(true);
+            }
+            return;
+        }
         final IronGolem golem;
         final Player player;
         if (event.getDamager() instanceof final IronGolem damagerGolem
@@ -676,7 +687,7 @@ public class GameListener implements Listener {
 
         private final IronGolem golem;
         private final ArenaTeam ownerTeam;
-        private @Nullable Player target;
+        private @Nullable LivingEntity target;
         private int attackCooldown;
 
         GolemAttackGoal(final IronGolem golem, final ArenaTeam ownerTeam) {
@@ -711,7 +722,7 @@ public class GameListener implements Listener {
             if (game == null) {
                 return;
             }
-            final Player current = findNearestEnemy(this.golem, game, this.ownerTeam);
+            final LivingEntity current = findNearestEnemy(this.golem, game, this.ownerTeam);
             if (current != null) {
                 this.target = current;
             }
@@ -756,14 +767,18 @@ public class GameListener implements Listener {
 
     /**
      * Encontra o inimigo vivo mais próximo do golem dentro do alcance.
+     * <p>
+     * Considera tanto jogadores de outros times quanto golems convocados por
+     * times adversários (registrados em {@link #golemOwners}).
+     * </p>
      *
      * @param golem     o golem de ferro (não nulo)
      * @param game      a partida (não nula)
      * @param ownerTeam time dono do golem (não nulo)
      * @return o inimigo mais próximo ou {@code null} se não houver
      */
-    private @Nullable Player findNearestEnemy(final IronGolem golem, final Game game, final ArenaTeam ownerTeam) {
-        Player nearest = null;
+    private @Nullable LivingEntity findNearestEnemy(final IronGolem golem, final Game game, final ArenaTeam ownerTeam) {
+        LivingEntity nearest = null;
         double nearestDistanceSq = IRON_GOLEM_RANGE * (double) IRON_GOLEM_RANGE;
         for (final Player candidate : game.getPlayers()) {
             if (!game.isPlaying(candidate)) {
@@ -780,6 +795,21 @@ public class GameListener implements Listener {
             if (distanceSq < nearestDistanceSq) {
                 nearestDistanceSq = distanceSq;
                 nearest = candidate;
+            }
+        }
+        for (final var entry : this.golemOwners.entrySet()) {
+            if (entry.getValue().getName().equals(ownerTeam.getName())) {
+                continue;
+            }
+            final org.bukkit.entity.Entity entity = Bukkit.getEntity(entry.getKey());
+            if (!(entity instanceof final IronGolem enemyGolem) || !enemyGolem.isValid()
+                    || enemyGolem == golem || enemyGolem.getWorld() != golem.getWorld()) {
+                continue;
+            }
+            final double distanceSq = golem.getLocation().distanceSquared(enemyGolem.getLocation());
+            if (distanceSq < nearestDistanceSq) {
+                nearestDistanceSq = distanceSq;
+                nearest = enemyGolem;
             }
         }
         return nearest;
