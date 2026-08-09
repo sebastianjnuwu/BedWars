@@ -7,7 +7,8 @@ Você é um assistente sênior de engenharia Java que mantém o plugin **BedWars
 ## Projeto
 
 - Plugin **BedWars** para **Paper 1.21.4** (Java 21, Maven 3.9+).
-- Identificação Maven: `dev.sebastianjnuwu:sBedWars:1.0.0` → JAR (Java Archive) `target/BedWars-1.0.0.jar`.
+- Projeto **Maven multi-módulo**: `pom.xml` raiz (agregador, `<packaging>pom</packaging>`, propriedade `<revision>` como fonte única de versão) + módulo `core/` (`core/pom.xml`, `artifactId sBedWars-core`, `name sBedWars`).
+- Identificação Maven: `dev.sebastianjnuwu:sBedWars:${revision}` → JAR (Java Archive) `core/target/sBedWars-v${revision}.jar`.
 - Dependências `provided`: `paper-api` 1.21.4-R0.1-SNAPSHOT, `FastAsyncWorldEdit` (FAWE) (Core + Bukkit) 2.15.3, `FancyNpcs` 2.11.0 (opcional — NPCs da loja).
 - Hook de NPCs da loja: `FancyNpcs` ou `Citizens` (ambos opcionais; escolha automática via `config.yml` `npc-backend` — ver `hook/CitizensHook`).
 - Dependências *shaded* (via maven-shade-plugin): `AdvancedSlimePaper` (ASP) api + file-loader 4.1.0.
@@ -19,13 +20,14 @@ Você é um assistente sênior de engenharia Java que mantém o plugin **BedWars
 
 ## Estrutura do código
 
-Base: `src/main/java/dev/sebastianjnuwu/bedwars`:
+Base: `core/src/main/java/dev/sebastianjnuwu/bedwars`:
 
 | Pacote | Responsabilidade |
 |--------|------------------|
 | `api/` | Interfaces e eventos públicos (`ArenaManager`, `Game`, eventos em `api/events`, modelos em `api/model`) |
 | `arena/` | Lógica de arena e instâncias (sistema Slime — ver gotchas) |
 | `command/` | Sistema de comandos (`BaseCommand`/`SubCommand`; subcomandos em `command/admin/...`) |
+| `compat/` | Camada de compatibilidade multi-versão (`CompatProvider`, interfaces + impls nativas/legadas) |
 | `editor/` | Editor de arenas (`ArenaCreator`, validação) |
 | `game/` | Core do jogo, `GameState`, ciclos de ticks |
 | `lang/` | Internacionalização (`lang/pt_BR.yml`) |
@@ -46,7 +48,7 @@ Base: `src/main/java/dev/sebastianjnuwu/bedwars`:
 ## Comandos
 
 - **[OBRIGATÓRIO]** Validar build antes de encerrar qualquer tarefa: `mvn -o clean compile -DskipTests` — executa o Checkstyle na fase `validate` e **exige 0 violações** (`violationSeverity=error`, `failOnViolation=true`).
-- Empacotar: `mvn clean package` → JAR em `target/BedWars-1.0.0.jar` (shade inclui o ASP).
+- Empacotar: `mvn clean package` → JAR em `core/target/sBedWars-v${revision}.jar` (shade inclui o ASP).
 - `src/test/` é ignorado pelo repositório; **[NUNCA]** adicionar testes.
 
 Exemplo:

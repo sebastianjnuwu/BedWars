@@ -1,0 +1,28 @@
+name: ${project.name}
+version: ${project.version}
+main: dev.sebastianjnuwu.bedwars.BedWarsPlugin
+api-version: 1.16
+authors: [sebastianjnuwu]
+softdepend: [WorldEdit, FancyNpcs, Citizens]
+description: Plugin de sBedWars para Paper 1.21.4 usando SlimeWorld
+website: https://github.com/sebastianjnuwu
+
+commands:
+  bw:
+    aliases:
+      - bedwars
+    permission: bw.player
+    permission-message: "Você não tem permissão para usar este comando."
+
+  spawn:
+    aliases:
+      - lobby
+    permission: bw.player
+    permission-message: "Você não tem permissão para usar este comando."
+
+permissions:
+  bw.admin:
+    default: op
+
+  bw.player:
+    default: true
