@@ -39,6 +39,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
@@ -354,11 +355,11 @@ public class GameListener implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
             return;
         }
-        final ItemStack item = event.getItem();
+        final Player player = event.getPlayer();
+        final ItemStack item = this.usedItem(event, player);
         if (item == null || item.getType() != Material.FIRE_CHARGE) {
             return;
         }
-        final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null || !game.isPlaying(player)) {
             return;
@@ -367,11 +368,7 @@ public class GameListener implements Listener {
         final SmallFireball fireball = player.launchProjectile(
                 SmallFireball.class, player.getLocation().getDirection().multiply(1.5));
         fireball.setShooter(player);
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().setItemInMainHand(null);
-        }
+        this.consumeUsedItem(event, player, item);
     }
 
     /**
@@ -478,11 +475,11 @@ public class GameListener implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
             return;
         }
-        final ItemStack item = event.getItem();
+        final Player player = event.getPlayer();
+        final ItemStack item = this.usedItem(event, player);
         if (item == null || item.getType() != Material.EGG) {
             return;
         }
-        final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null || game.getState() != GameState.PLAYING) {
             return;
@@ -491,11 +488,7 @@ public class GameListener implements Listener {
         final Egg egg = player.launchProjectile(
                 Egg.class, player.getLocation().getDirection().multiply(1.5));
         egg.setShooter(player);
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().setItemInMainHand(null);
-        }
+        this.consumeUsedItem(event, player, item);
     }
 
     /**
@@ -558,11 +551,11 @@ public class GameListener implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
             return;
         }
-        final ItemStack item = event.getItem();
+        final Player player = event.getPlayer();
+        final ItemStack item = this.usedItem(event, player);
         if (item == null || item.getType() != Material.IRON_GOLEM_SPAWN_EGG) {
             return;
         }
-        final Player player = event.getPlayer();
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null || game.getState() != GameState.PLAYING) {
             return;
@@ -579,11 +572,7 @@ public class GameListener implements Listener {
         golem.setCustomNameVisible(true);
         this.golemOwners.put(golem.getUniqueId(), team);
         player.sendMessage(this.lang.text(NamedTextColor.GREEN, "game.iron_golem_spawned"));
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().setItemInMainHand(null);
-        }
+        this.consumeUsedItem(event, player, item);
     }
 
     /**
@@ -701,6 +690,49 @@ public class GameListener implements Listener {
             }
         }
         return nearest;
+    }
+
+    /**
+     * Retorna o item usado na interação, respeitando a mão (principal ou offhand).
+     * <p>
+     * O {@code PlayerInteractEvent} reporta via {@code getHand()} qual das duas
+     * mãos iniciou a ação; {@code getItem()} sozinho pode devolver o item errado
+     * quando o item está na mão secundária (ex.: slot do escudo). Este helper
+     * lê o slot correto conforme a mão do evento.
+     * </p>
+     *
+     * @param event  o evento de interação (não nulo)
+     * @param player o jogador (não nulo)
+     * @return o item usado ou {@code null} se a mão não tiver item
+     */
+    private @Nullable ItemStack usedItem(final PlayerInteractEvent event, final Player player) {
+        if (event.getHand() == EquipmentSlot.OFF_HAND) {
+            return player.getInventory().getItemInOffHand();
+        }
+        return event.getItem();
+    }
+
+    /**
+     * Consome uma unidade do item usado, respeitando a mão da interação.
+     * <p>
+     * Diminui a quantidade do slot correto (principal ou offhand), removendo o
+     * item por completo quando a pilha chega a zero.
+     * </p>
+     *
+     * @param event  o evento de interação (não nulo)
+     * @param player o jogador (não nulo)
+     * @param item   o item a ser consumido (não nulo)
+     */
+    private void consumeUsedItem(final PlayerInteractEvent event, final Player player, final ItemStack item) {
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+            return;
+        }
+        if (event.getHand() == EquipmentSlot.OFF_HAND) {
+            player.getInventory().setItemInOffHand(null);
+        } else {
+            player.getInventory().setItemInMainHand(null);
+        }
     }
 
     private static Material getWoolColor(final String dyeColor) {

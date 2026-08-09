@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-191] - 2026-08-08
+
+### Corrigido
+- **Itens da loja na mão secundária (offhand) não funcionavam** (`listener/GameListener`): o ovo de ponte, a bola de fogo e o ovo do golem de ferro só eram detectados na mão principal — ao usar no slot do escudo, o item sumia/comportamento vanilla sem consumo. Adicionados os helpers `usedItem` (lê o slot conforme `event.getHand()`, incluindo `EquipmentSlot.OFF_HAND`) e `consumeUsedItem` (consome no slot correto). Os handlers `onFireballUse`, `onBridgeEggUse` e `onIronGolemUse` agora usam os helpers.
+
 ## [0.0.1-190] - 2026-08-08
 
 ### Adicionado
