@@ -13,6 +13,13 @@
     <name>sBedWars</name>
     <version>0.0.1-195</version>
     <packaging>jar</packaging>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
     <developers>
         <developer>
             <id>sebastianjnuwu</id>
