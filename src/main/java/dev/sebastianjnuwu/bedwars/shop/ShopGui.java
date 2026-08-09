@@ -496,11 +496,12 @@ public class ShopGui implements InventoryHolder {
      * @param event evento de clique
      */
     public void handleClick(InventoryClickEvent event) {
-        event.setCancelled(true);
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= 54) {
             return;
         }
+
+        event.setCancelled(true);
 
         // Back button
         if (slot == 49 && currentCategory != null) {

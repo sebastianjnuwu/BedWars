@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-192] - 2026-08-08
+
+### Corrigido
+- **Inventário travado com a loja aberta** (`shop/ShopGui.handleClick`): o `setCancelled(true)` era aplicado antes de validar o slot, cancelando também os cliques no inventário do jogador (slots ≥ 54, ex.: ao organizar itens comprados). Agora o evento só é cancelado para os slots da GUI da loja (0-53); cliques no inventário do jogador são liberados. `ShopListener` identifica a loja pelo holder do inventário top da view.
+
 ## [0.0.1-191] - 2026-08-08
 
 ### Corrigido
