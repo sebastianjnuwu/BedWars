@@ -4,6 +4,16 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-200] - 2026-08-08
+
+### Corrigido
+- **Poções da loja viravam água** (`shop/ShopItem.createItemStack`): a tag SNBT nunca era aplicada ao ItemStack — o código tentava deserializar a tag como componente GSON (formato errado para SNBT) e, no `catch`, ainda resetava o stack com `ItemStack.of(...)`, perdendo também display-name/lore. Agora a tag é aplicada via `Bukkit.getUnsafe().modifyItemStack(stack, tag)` (Paper), e o `applyDisplayMeta` só roda quando há nome/lore/encantamentos, evitando sobrescrever a tag. O YAML `shop.yml` já usava o formato correto `{potion_contents:{potion:"minecraft:poison"}}`.
+
+## [0.0.1-199] - 2026-08-08
+
+### Corrigido
+- **Arenas criadas por comando nasciam com valores zerados** (`manager/ArenaManager.create`): ao criar uma arena com `/bw admin create`, os campos `minPlayersPerTeam`, `minTeamsToStart`, `cycleDay`, `cycleWeather`, `spawnMobs` e `spawnAnimals` ficavam em 0/false e eram gravados assim no `arenas/<nome>.yml` — os defaults do loader (`getInt`/`getBoolean` com fallback) nunca eram aplicados porque as chaves já existiam no arquivo. Agora o `create()` aplica explicitamente os defaults (`1`, `2`, `true`, `true`, `true`, `true`, `enabled=false`, `shop=default`) antes dos defaults de forge/geradores.
+
 ## [0.0.1-195] - 2026-08-08
 
 ### Corrigido

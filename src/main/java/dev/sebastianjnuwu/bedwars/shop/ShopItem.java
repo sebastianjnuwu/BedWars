@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -229,17 +230,8 @@ public class ShopItem {
     public ItemStack createItemStack() {
         Material mat = material != null ? material : Material.BARRIER;
         ItemStack stack = new ItemStack(mat, amount);
+        applyTag(stack);
         applyDisplayMeta(stack);
-        if (tag != null) {
-            try {
-                net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(tag);
-            } catch (Exception ignored) {
-                try {
-                    org.bukkit.Color.fromRGB(0);
-                    stack = org.bukkit.inventory.ItemStack.of(stack.getType());
-                } catch (Exception ignoredEx) {}
-            }
-        }
         return stack;
     }
 
@@ -265,8 +257,19 @@ public class ShopItem {
     }
 
     @SuppressWarnings("deprecation")
+    private void applyTag(final ItemStack stack) {
+        if (tag == null || tag.isBlank()) {
+            return;
+        }
+        try {
+            Bukkit.getUnsafe().modifyItemStack(stack, tag);
+        } catch (final Exception ignored) {
+        }
+    }
+
+    @SuppressWarnings("deprecation")
     private void applyDisplayMeta(ItemStack stack) {
-        if (displayName != null || lore != null || (enchants != null && !enchants.isEmpty()) || tag != null) {
+        if (displayName != null || lore != null || (enchants != null && !enchants.isEmpty())) {
             var meta = stack.getItemMeta();
             if (displayName != null) {
                 meta.displayName(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize(displayName));
