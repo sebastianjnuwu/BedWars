@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-194] - 2026-08-08
+
+### Corrigido
+- **Sufocamento ao renascer com spawn ao lado de parede** (`util/LocationUtil.findSafeRespawn`): a busca só procurava para cima na mesma coluna e mantinha o `x/z` fracionário do spawn. Com o spawn perto de um bloco, o jogador renascia com o corpo atravessando a parede e tomava dano de sufocação. Agora a busca é em espiral (raio até 4 blocos), priorizando o ponto mais próximo, e o retorno é centralizado no bloco (`x+0.5`, `z+0.5`).
+
 ## [0.0.1-193] - 2026-08-08
 
 ### Corrigido

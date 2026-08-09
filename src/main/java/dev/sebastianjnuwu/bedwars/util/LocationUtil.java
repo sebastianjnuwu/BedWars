@@ -55,9 +55,12 @@ public final class LocationUtil {
      * Encontra um ponto de respawn seguro próximo ao local de origem.
      * <p>
      * Um local é considerado seguro quando o jogador tem dois blocos de ar
-     * (corpo e cabeça) e um bloco sólido sob os pés. Se o ponto original
-     * estiver ocupado por blocos (morte por sufocamento no respawn), procura
-     * para cima na coluna até o teto do mundo.
+     * (corpo e cabeça) e um bloco sólido sob os pés. A busca é feita em espiral
+     * a partir da coluna original (até 4 blocos de raio) e, dentro de cada
+     * coluna, para cima até o teto do mundo. Isso evita renascer dentro de uma
+     * parede ou colado a um bloco (dano de sufocação). O ponto retornado é
+     * centralizado no bloco (x/z + 0.5) para que o corpo não atravesse blocos
+     * laterais.
      * </p>
      *
      * @param origin local de origem (spawn do time)
@@ -72,9 +75,18 @@ public final class LocationUtil {
         final int baseY = origin.getBlockY();
         final int z = origin.getBlockZ();
         final int maxY = Math.min(world.getMaxHeight() - 2, baseY + 64);
-        for (int y = baseY; y <= maxY; y++) {
-            if (isSafeSpot(world, x, y, z)) {
-                return withY(origin, y);
+        for (int radius = 0; radius <= 4; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                        continue;
+                    }
+                    for (int y = baseY; y <= maxY; y++) {
+                        if (isSafeSpot(world, x + dx, y, z + dz)) {
+                            return centered(world, x + dx, y, z + dz, origin);
+                        }
+                    }
+                }
             }
         }
         return origin.clone();
@@ -89,9 +101,7 @@ public final class LocationUtil {
         return !world.getBlockAt(x, y - 1, z).isPassable();
     }
 
-    private static @NotNull Location withY(final @NotNull Location origin, final int y) {
-        final Location safe = origin.clone();
-        safe.setY(y);
-        return safe;
+    private static @NotNull Location centered(final @NotNull World world, final int x, final int y, final int z, final @NotNull Location origin) {
+        return new Location(world, x + 0.5, y, z + 0.5, origin.getYaw(), origin.getPitch());
     }
 }
