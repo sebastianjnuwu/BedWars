@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-202] - 2026-08-08
+
+### Adicionado
+- **Ranking de kills no fim da partida** (`game/Game.sendEndRanking`): ao encerrar a partida (`endGame`), o chat exibe o top 3 de jogadores por kills (posição, nome, time, kills e mortes), usando novas chaves `game.rank_*` em `lang/pt_BR.yml`.
+
 ## [0.0.1-201] - 2026-08-08
 
 ### Corrigido

@@ -1209,6 +1209,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(5), Duration.ofSeconds(2))
         );
         this.chat.broadcastWithSound(msg, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
+        this.sendEndRanking();
         for (final Player p : this.chat.getPresentPlayers()) {
             final ArenaTeam pt = this.getPlayerTeam(p);
             if (pt != null && pt.getName().equals(winner.getName())) {
@@ -1288,6 +1289,43 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 },
                 200L
         );
+    }
+
+    /**
+     * Exibe no chat o ranking dos jogadores da partida (top 3 por kills).
+     * <p>
+     * Ordena os jogadores pelo número de kills (decrescente) e transmite o
+     * pódio com posição, nome, time, kills e mortes. Mensagens via
+     * {@link LangManager} (chaves {@code game.rank_*}).
+     * </p>
+     */
+    private void sendEndRanking() {
+        final List<GamePlayer> top = this.getGamePlayers().stream()
+                .sorted(Comparator.comparingInt(GamePlayer::getKills).reversed())
+                .limit(3)
+                .toList();
+        final Component header = Component.text(this.lang.raw("game.rank_header"));
+        this.chat.broadcast(header);
+        if (top.isEmpty()) {
+            this.chat.broadcast(Component.text(this.lang.raw("game.rank_empty")));
+            return;
+        }
+        int position = 1;
+        for (final GamePlayer gp : top) {
+            final Player player = Bukkit.getPlayer(gp.getUuid());
+            final String name = player != null ? player.getName() : gp.getUuid().toString();
+            final String teamName = gp.getTeam() != null ? gp.getTeam().getName().toUpperCase() : "-";
+            final Component line = Component.text(this.lang.raw(
+                    "game.rank_line",
+                    String.valueOf(position),
+                    name,
+                    teamName,
+                    String.valueOf(gp.getKills()),
+                    String.valueOf(gp.getDeaths())
+            ));
+            this.chat.broadcast(line);
+            position++;
+        }
     }
 
     private @Nullable ArenaTeam findSmallestTeam() {
