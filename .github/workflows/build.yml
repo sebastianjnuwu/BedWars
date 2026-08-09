@@ -26,11 +26,15 @@ jobs:
       - name: Package (shaded JAR)
         run: mvn -q clean package -DskipTests
 
+      - name: Resolve plugin version
+        id: version
+        run: echo "version=$(mvn -q help:evaluate -Dexpression=revision -DforceStdout)" >> "$GITHUB_OUTPUT"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: sBedWars-jar
-          path: target/sBedWars-*.jar
+          name: sBedWars-v${{ steps.version.outputs.version }}
+          path: core/target/sBedWars-*.jar
           if-no-files-found: error
 
   release:
@@ -54,5 +58,5 @@ jobs:
       - name: Upload release asset
         uses: softprops/action-gh-release@v3
         with:
-          files: target/sBedWars-*.jar
+          files: core/target/sBedWars-*.jar
           generate_release_notes: true

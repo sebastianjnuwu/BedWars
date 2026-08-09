@@ -42,7 +42,7 @@ Antes de usar o BedWars, você precisa preparar um servidor Paper 1.21.4 com os 
   - AdvancedSlimePaper **v4.0+**
   - FancyNPCs **v2.9+** ou Citizens **v2.0+** (um dos dois, para NPCs da loja)
 
-Depois, coloque o arquivo do BedWars gerado em `target/BedWars-1.0.0.jar` na pasta `plugins/` do servidor.
+Depois, coloque o arquivo do BedWars gerado em `core/target/sBedWars-v${revision}.jar` na pasta `plugins/` do servidor.
 
 ### 2. Definir o lobby
 
@@ -383,7 +383,7 @@ Para gerenciar:
 mvn clean package
 ```
 
-O JAR será gerado em `target/BedWars-1.0.0.jar`.
+O JAR será gerado em `core/target/sBedWars-v${revision}.jar`.
 
 # 🤝 Contribuindo
 

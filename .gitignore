@@ -1,9 +1,10 @@
+.github/instructions
+.github/modernize
 target/
-src/test/
+core/target/
+*-pom.xml
 .m2/
 .idea/
 .vscode/
 .codacy/
-*-pom.xml
-.github/instructions
-.github/modernize
+docs/

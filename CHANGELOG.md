@@ -4,6 +4,34 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-207] - 2026-08-09
+
+### Adicionado
+- **Camada de compatibilidade multi-versão** (`compat/`): interfaces `ChatCompat`, `GolemCompat`, `NbtCompat`, `PotionCompat`, `RegistryCompat` e `TeleportCompat` + implementações nativas (`*Impl`) + `CompatProvider` (ponto único de acesso com `init()` no `onEnable`, detecção de `minorVersion()`/`isPaper()`). O core agora depende apenas de API pública estável, removendo chamadas diretas a APIs versionadas do Paper, para permitir builds por faixa de versão (incluindo Spigot legado).
+- **Implementações legadas por faixa de versão** (`compat/*Legacy`): o `CompatProvider` agora seleciona a impl pela versão do servidor — nativa quando a API existe, legada caso contrário:
+  - `TeleportCompatLegacy`: usa `player.teleport(...)` (síncrono) em versões < 1.20, onde `teleportAsync` não existe;
+  - `RegistryCompatLegacy`: usa `Enchantment.getByName(...)` em versões < 1.19.4, onde `Registry.ENCHANTMENT` não existe;
+  - `PotionCompatLegacy`: usa `PotionMeta#setBasePotionData(PotionData)` em versões < 1.20.5, onde `setBasePotionType` não existe;
+  - `GolemCompatLegacy`: sem a Mob Goal API (< 1.20.6), reaplica `setTarget(...)` periodicamente (a cada 4 ticks) com o mesmo resolver de time, deixando a IA vanilla do golem (criado com `setPlayerCreated(false)`) cuidar da perseguição e dano. O dano de `attack` cai para `LivingEntity.damage` usando o atributo `ATTACK_DAMAGE`.
+  - `ChatCompat` e `NbtCompat` seguem nativas em todas as versões (Adventure nativo do Paper desde 1.16.5 e `Bukkit.getUnsafe().modifyItemStack` disponível em todo o Paper).
+  - Limiares: golem `>= 1.20.6`, poção `>= 1.20.5`, registry `>= 1.19.4`, teleporte `>= 1.20` (novo `CompatProvider.isAtLeast(minor, patch)`).
+
+### Alterado
+- **`plugin.yml`**: `api-version` baixado de `1.21` para `1.16` — com a camada de compat usando apenas API estável, o plugin pode carregar em servidores Paper/Purpur 1.16.5+ sem o Paper recusar o load por `api-version` alto.
+- **Build/packaging** (`pom.xml` raiz + `core/pom.xml`): versão única via propriedade CI-friendly `${revision}` definida no POM raiz e herdada pelo módulo (bump agora é feito em um único lugar). `finalName` passou a `sBedWars-v${project.version}` (JAR sem o sufixo `-core`); o shade usa `outputFile` (não gera mais `original-*.jar`) e `createDependencyReducedPom=false` (não gera mais `dependency-reduced-pom.xml`). Resultado: `mvn clean package` → um único `core/target/sBedWars-v${revision}.jar`.
+- **Docs/CI**: `README.md` e `AGENTS.md` atualizados para a estrutura multi-módulo (`core/target/sBedWars-v${revision}.jar`); `.gitignore` passou a ignorar `core/target/`; `build.yml` publica o artifact com nome `sBedWars-v${revision}` (versão resolvida via `help:evaluate`).
+
+### Reestruturado
+- `listener/GameListener`: a IA customizada do golem (`GolemAttackGoal`, classes internas `Goal`/`GoalKey`/`GoalType` do `com.destroystokyo.paper.entity.ai`) foi extraída para `compat/GolemCompat` + `GolemCompatImpl`, mantendo a mesma lógica de alvo, perseguição e cooldown. `GameListener` agora registra a goal via `CompatProvider.golem().registerAttackGoal(...)` com o resolver `findNearestEnemyForGoal`.
+- `shop/ShopItem`: `PotionType.valueOf` → `CompatProvider.potion().applyPotionType(...)`; `Registry.ENCHANTMENT.get(...)` → `CompatProvider.registry().getEnchantment(...)`; `Bukkit.getUnsafe().modifyItemStack(...)` → `CompatProvider.nbt().modifyItemStack(...)`.
+- `util/LocationUtil`: `player.teleportAsync(...)` → `CompatProvider.teleport().teleportAsync(...)`.
+- Chat (envio de `Component`/títulos): ~40 arquivos migrados de `sendMessage(Component)`/`showTitle`/`clearTitle` diretos para `CompatProvider.chat()`, centralizando o caminho de envio no `ChatCompat` (assinatura `CommandSender` para cobrir comandos). Envios de `String` (`lang.raw`) foram mantidos, pois funcionam em qualquer plataforma.
+
+## [0.0.1-206] - 2026-08-09
+
+### Reestruturado
+- **Projeto convertido para Maven multi-módulo** (base da migração multi-versão): o `pom.xml` raiz virou agregador (`<packaging>pom</packaging>`, `groupId`/`version` herdados) e todo o código foi movido para o módulo `core/` (`core/pom.xml` com `artifactId sBedWars-core`, mantendo o `name` `sBedWars` para preservar o nome do plugin). O `checkstyle.xml` permanece na raiz e é referenciado via `${maven.multiModuleProjectDirectory}`. Build e empacotamento continuam iguais (`mvn clean package` → JAR em `core/target/`), validado com `mvn -o clean compile -DskipTests`.
+
 ## [0.0.1-205] - 2026-08-09
 
 ### Corrigido
