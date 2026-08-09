@@ -7,6 +7,8 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionType;
 
 import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
 
@@ -261,10 +263,43 @@ public class ShopItem {
         if (tag == null || tag.isBlank()) {
             return;
         }
+        if (applyPotionTag(stack)) {
+            return;
+        }
         try {
             Bukkit.getUnsafe().modifyItemStack(stack, tag);
         } catch (final Exception ignored) {
         }
+    }
+
+    private boolean applyPotionTag(final ItemStack stack) {
+        if (stack.getType() != Material.SPLASH_POTION
+                && stack.getType() != Material.LINGERING_POTION
+                && stack.getType() != Material.POTION
+                && stack.getType() != Material.TIPPED_ARROW) {
+            return false;
+        }
+        final int potionIdx = tag.indexOf("potion:");
+        if (potionIdx < 0) {
+            return false;
+        }
+        final int valueStart = tag.indexOf('"', potionIdx) + 1;
+        final int valueEnd = tag.indexOf('"', valueStart);
+        if (valueStart <= 0 || valueEnd < valueStart) {
+            return false;
+        }
+        final String potionKey = tag.substring(valueStart, valueEnd);
+        final String simple = potionKey.contains(":") ? potionKey.substring(potionKey.indexOf(':') + 1) : potionKey;
+        final PotionType type;
+        try {
+            type = PotionType.valueOf(simple.toUpperCase());
+        } catch (final IllegalArgumentException ignored) {
+            return false;
+        }
+        final var meta = (PotionMeta) stack.getItemMeta();
+        meta.setBasePotionType(type);
+        stack.setItemMeta(meta);
+        return true;
     }
 
     @SuppressWarnings("deprecation")

@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-201] - 2026-08-08
+
+### Corrigido
+- **Poções da loja continuavam virando água** (`shop/ShopItem.applyTag`): o `modifyItemStack` do Paper converte NBT antigo e não aplica o componente `potion_contents` do sistema de componentes (1.20.5+). Poções agora têm tratamento dedicado: a tag `{potion_contents:{potion:"minecraft:poison"}}` é interpretada e aplicada via `PotionMeta.setBasePotionType(PotionType)` — a API idiomática do Paper 1.21.4. Tags não-poção continuam via `modifyItemStack`.
+
 ## [0.0.1-200] - 2026-08-08
 
 ### Corrigido
