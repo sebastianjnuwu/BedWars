@@ -15,10 +15,12 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Egg;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.SmallFireball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,6 +32,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -608,49 +611,94 @@ public class GameListener implements Listener {
      * Impede dano amigável envolvendo golems de ferro convocados.
      * <p>
      * Um golem não pode danificar o jogador que o convocou nem aliados, e
-     * jogadores do mesmo time não podem danificar o golem. Golems de um time
-     * também não podem danificar golems do próprio time. Dano de inimigos é
-     * mantido normalmente.
+     * jogadores do mesmo time não podem danificar o golem (incluindo dano por
+     * projétil, como a fireball da loja). Golems de um time também não podem
+     * danificar golems do próprio time. Dano de inimigos é mantido
+     * normalmente.
      * </p>
      *
      * @param event o evento de dano por entidade (não nulo)
      */
     @EventHandler
     public void onGolemDamage(final EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof final IronGolem damagerGolem
-                && event.getEntity() instanceof final IronGolem victimGolem) {
-            final ArenaTeam damagerTeam = this.golemOwners.get(damagerGolem.getUniqueId());
-            final ArenaTeam victimTeam = this.golemOwners.get(victimGolem.getUniqueId());
-            if (damagerTeam != null && damagerTeam.getName().equals(victimTeam.getName())) {
+        if (event.getDamager() instanceof final IronGolem damagerGolem) {
+            if (event.getEntity() instanceof final IronGolem victimGolem) {
+                final ArenaTeam damagerTeam = this.golemOwners.get(damagerGolem.getUniqueId());
+                final ArenaTeam victimTeam = this.golemOwners.get(victimGolem.getUniqueId());
+                if (damagerTeam != null && damagerTeam.getName().equals(victimTeam.getName())) {
+                    event.setCancelled(true);
+                }
+                return;
+            }
+            if (event.getEntity() instanceof final Player victim && this.isSameTeam(damagerGolem, victim)) {
                 event.setCancelled(true);
             }
             return;
         }
-        final IronGolem golem;
-        final Player player;
-        if (event.getDamager() instanceof final IronGolem damagerGolem
-                && event.getEntity() instanceof final Player victim) {
-            golem = damagerGolem;
-            player = victim;
-        } else if (event.getEntity() instanceof final IronGolem victimGolem
-                && event.getDamager() instanceof final Player attacker) {
-            golem = victimGolem;
-            player = attacker;
-        } else {
+        if (event.getEntity() instanceof final IronGolem victimGolem) {
+            final Player attacker = this.attackerOf(event.getDamager());
+            if (attacker != null && this.isSameTeam(victimGolem, attacker)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    /**
+     * Impede que um golem convocado mire jogadores do próprio time.
+     * <p>
+     * A IA vanilla pode definir o alvo do golem para quem o danificou
+     * ({@code HurtByTarget}); mesmo com o dano amigável bloqueado por projétil,
+     * este handler garante que aliados nunca virem alvo.
+     * </p>
+     *
+     * @param event o evento de definição de alvo (não nulo)
+     */
+    @EventHandler
+    public void onGolemTarget(final EntityTargetLivingEntityEvent event) {
+        if (!(event.getEntity() instanceof final IronGolem golem)
+                || !(event.getTarget() instanceof final Player target)) {
             return;
         }
+        if (this.isSameTeam(golem, target)) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Resolve o jogador responsável por um atacante (direto ou por projétil).
+     *
+     * @param damager a entidade que causou o dano (não nula)
+     * @return o jogador atirador/agressor ou {@code null}
+     */
+    private @Nullable Player attackerOf(final Entity damager) {
+        if (damager instanceof final Player player) {
+            return player;
+        }
+        if (damager instanceof final Projectile projectile
+                && projectile.getShooter() instanceof final Player shooter) {
+            return shooter;
+        }
+        return null;
+    }
+
+    /**
+     * Verifica se um jogador pertence ao mesmo time do dono do golem.
+     *
+     * @param golem  o golem convocado (não nulo)
+     * @param player o jogador a comparar (não nulo)
+     * @return {@code true} se forem do mesmo time
+     */
+    private boolean isSameTeam(final IronGolem golem, final Player player) {
         final ArenaTeam ownerTeam = this.golemOwners.get(golem.getUniqueId());
         if (ownerTeam == null) {
-            return;
+            return false;
         }
         final Game game = this.gameManager.getPlayerGame(player);
         if (game == null) {
-            return;
+            return false;
         }
         final ArenaTeam playerTeam = game.getPlayerTeam(player);
-        if (playerTeam != null && playerTeam.getName().equals(ownerTeam.getName())) {
-            event.setCancelled(true);
-        }
+        return playerTeam != null && playerTeam.getName().equals(ownerTeam.getName());
     }
 
     /**

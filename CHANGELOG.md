@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-205] - 2026-08-09
+
+### Corrigido
+- **Golem aliado perseguia jogador do mesmo time após dano de fireball** (`listener/GameListener`): o `onGolemDamage` só reconhecia `IronGolem`/`Player` como agressor — projéteis como a fireball da loja passavam direto, o golem tomava dano do aliado e a IA vanilla (`HurtByTarget`) o fazia mirar e perseguir o atirador. O dano amigável agora é bloqueado também para projéteis (`attackerOf` resolve o atirador do projétil), e um novo handler `onGolemTarget` cancela qualquer tentativa da IA de definir um aliado como alvo. Extraído `isSameTeam` para comparar time entre golem e jogador.
+
 ## [0.0.1-204] - 2026-08-09
 
 ### Corrigido
