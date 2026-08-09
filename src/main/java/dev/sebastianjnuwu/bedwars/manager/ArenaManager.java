@@ -998,6 +998,16 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             return null;
         }
         final var arena = new dev.sebastianjnuwu.bedwars.model.Arena(name);
+        arena.setMinPlayersPerTeam(1);
+        arena.setMaxPlayersPerTeam(0);
+        arena.setMinTeamsToStart(2);
+        arena.setTimeLimit(0);
+        arena.setCycleDay(true);
+        arena.setCycleWeather(true);
+        arena.setSpawnMobs(true);
+        arena.setSpawnAnimals(true);
+        arena.setEnabled(false);
+        arena.setShop("default");
         arena.setCountdown(3);
         arena.setRespawnDelay(3);
         // Default generator configs
