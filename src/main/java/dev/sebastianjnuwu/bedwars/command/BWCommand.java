@@ -212,8 +212,10 @@ public class BWCommand implements CommandExecutor, TabCompleter {
             completions.addAll(List.of("spawn", "addteam", "removeteam", "setspawn", "setbed", "addgenerator", "teams", "status", "setcountdown", "shop-npc"));
         } else if (args.length == 5 && args[0].equalsIgnoreCase("admin") && args[1].equalsIgnoreCase("arena")) {
             final String sub = args[3].toLowerCase();
-            if (List.of("addteam", "removeteam", "setspawn", "setbed").contains(sub)) {
+            if (sub.equals("addteam")) {
                 completions.addAll(List.of("azul", "vermelho", "verde", "amarelo", "roxo", "rosa", "laranja", "ciano"));
+            } else if (List.of("removeteam", "setspawn", "setbed").contains(sub)) {
+                addTeams(completions, this.arenaManager.get(args[2]));
             } else if (sub.equals("addgenerator")) {
                 completions.addAll(List.of("ferro", "ouro", "diamante", "esmeralda", "forge"));
             } else if (sub.equals("shop-npc")) {

@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-195] - 2026-08-08
+
+### Corrigido
+- **Autocomplete de times nos comandos de arena** (`command/BWCommand`): os subcomandos `removeteam`, `setspawn` e `setbed` sugeriam uma lista fixa de cores (`azul`, `vermelho`, ...), mesmo que o time não existisse na arena. Agora mostram apenas os times cadastrados, como já fazia o `addgenerator forge`. `addteam` mantém a lista de cores por ser o comando que cria o time.
+
 ## [0.0.1-194] - 2026-08-08
 
 ### Corrigido
