@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-193] - 2026-08-08
+
+### Corrigido
+- **Itens perdidos ao arrastar na GUI da loja** (`shop/ShopListener`): a loja só tratava `InventoryClickEvent`; arrastar (drag) um item sobre os slots da loja movia o item para a GUI e ele se perdia (sumia ao reorganizar/renderizar). Adicionado `onInventoryDrag`: cancela qualquer drag que toque slots da loja (`< 54`), mantendo livre a organização de itens no inventário do jogador.
+
 ## [0.0.1-192] - 2026-08-08
 
 ### Corrigido

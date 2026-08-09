@@ -5,8 +5,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 
 public class ShopListener implements Listener {
+
+    private static final int SHOP_SLOTS = 54;
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
@@ -15,6 +18,22 @@ public class ShopListener implements Listener {
         }
         if (event.getInventory().getHolder() instanceof ShopGui shopGui) {
             shopGui.handleClick(event);
+        }
+    }
+
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) {
+            return;
+        }
+        if (!(event.getInventory().getHolder() instanceof ShopGui)) {
+            return;
+        }
+        for (final int rawSlot : event.getRawSlots()) {
+            if (rawSlot < SHOP_SLOTS) {
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 
