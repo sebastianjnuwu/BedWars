@@ -30,6 +30,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import dev.sebastianjnuwu.bedwars.api.events.PlayerPurchaseEvent;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
+import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
 import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.game.Game;
@@ -468,6 +469,15 @@ public class ShopGui implements InventoryHolder {
                 lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(next.upgradePrice()), this.currencyName(next.upgradeMaterial()))));
                 lore.add(MM.deserialize(this.lang.raw("shop.forge_next_level", String.valueOf(next.level()))));
             }
+        } else if (item.getUpgrade() != null) {
+            final String currencyName = currencyName(item.getCurrency());
+            if (isTeamUpgradeMaxed(item.getUpgrade())) {
+                lore.add(MM.deserialize(this.lang.raw("shop.upgrade_maxed", upgradeName(item.getUpgrade()))));
+            } else {
+                final int next = currentUpgradeLevel(item.getUpgrade()) + 1;
+                lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(upgradePrice(item, next)), currencyName)));
+                lore.add(MM.deserialize(this.lang.raw("shop.forge_next_level", String.valueOf(next))));
+            }
         } else {
             String currencyName = switch (item.getCurrency()) {
                 case IRON -> this.lang.raw("shop.currency_iron");
@@ -476,9 +486,6 @@ public class ShopGui implements InventoryHolder {
                 case EMERALD -> this.lang.raw("shop.currency_emerald");
             };
             lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(item.getPrice()), currencyName)));
-            if (item.getUpgrade() != null) {
-                lore.add(MM.deserialize(this.lang.raw("shop.upgrade_level", String.valueOf(currentUpgradeLevel(item.getUpgrade())))));
-            }
         }
 
         if (item.getUpgrade() != null) {
@@ -593,12 +600,20 @@ public class ShopGui implements InventoryHolder {
             }
             price = next.upgradePrice();
             currencyMaterial = next.upgradeMaterial();
-        } else {
+        } else if (upgrade != null) {
             if (isTeamUpgradeMaxed(upgrade)) {
                 CompatProvider.chat().sendMessage(player, MM.deserialize(this.lang.raw("shop.upgrade_maxed", upgradeName(upgrade))));
                 player.closeInventory();
                 return;
             }
+            currencyMaterial = switch (item.getCurrency()) {
+                case IRON -> Material.IRON_INGOT;
+                case GOLD -> Material.GOLD_INGOT;
+                case DIAMOND -> Material.DIAMOND;
+                case EMERALD -> Material.EMERALD;
+            };
+            price = upgradePrice(item, currentUpgradeLevel(upgrade) + 1);
+        } else {
             currencyMaterial = switch (item.getCurrency()) {
                 case IRON -> Material.IRON_INGOT;
                 case GOLD -> Material.GOLD_INGOT;
@@ -846,8 +861,8 @@ public class ShopGui implements InventoryHolder {
             return true;
         }
         return switch (upgrade) {
-            case "sharpness" -> game.getSharpnessLevel(team) >= 3;
-            case "protection" -> game.getProtectionLevel(team) >= 3;
+            case "sharpness" -> game.getSharpnessLevel(team) >= game.getMaxUpgradeLevel();
+            case "protection" -> game.getProtectionLevel(team) >= game.getMaxUpgradeLevel();
             default -> false;
         };
     }
@@ -862,6 +877,10 @@ public class ShopGui implements InventoryHolder {
             case "protection" -> game.getProtectionLevel(team);
             default -> 0;
         };
+    }
+
+    private int upgradePrice(final ShopItem item, final int level) {
+        return item.getPrice() * level;
     }
 
     private String upgradeName(final String upgrade) {
@@ -923,6 +942,15 @@ public class ShopGui implements InventoryHolder {
             case DIAMOND -> this.lang.raw("shop.currency_diamond");
             case EMERALD -> this.lang.raw("shop.currency_emerald");
             default -> this.lang.raw("shop.currency_diamond");
+        };
+    }
+
+    private String currencyName(final CurrencyType currency) {
+        return switch (currency) {
+            case IRON -> this.lang.raw("shop.currency_iron");
+            case GOLD -> this.lang.raw("shop.currency_gold");
+            case DIAMOND -> this.lang.raw("shop.currency_diamond");
+            case EMERALD -> this.lang.raw("shop.currency_emerald");
         };
     }
 

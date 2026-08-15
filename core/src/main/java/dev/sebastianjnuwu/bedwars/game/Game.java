@@ -641,6 +641,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         }
     }
 
+    public int getMaxUpgradeLevel() {
+        return MAX_TEAM_UPGRADE_LEVEL;
+    }
+
     private int getMaxSharpnessLevel() {
         return MAX_TEAM_UPGRADE_LEVEL;
     }

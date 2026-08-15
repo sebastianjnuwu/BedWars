@@ -4,12 +4,18 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-209] - 2026-08-15
+
+### Alterado
+- **Upgrades `sharpness`/`protection` agora seguem o mesmo fluxo da fornalha** (`shop/ShopGui`): preço escala por nível (`price` base × nível), lore mostra "Preço" + "Próximo nível" (chave `shop.forge_next_level` reaproveitada) e, no nível máximo, a compra é bloqueada com a mensagem `shop.upgrade_maxed` antes de cobrar. Removida a chave `shop.upgrade_level` (nível atual) em favor do fluxo "próximo nível". `Game.getMaxUpgradeLevel()` exposto publicamente para a loja.
+
 ## [0.0.1-208] - 2026-08-15
 
 ### Corrigido
 - **Upgrades de time `sharpness` e `protection` não funcionavam** (`shop/ShopGui`): o `handleUpgrade` só implementava o upgrade `forge`; `sharpness`/`protection` caíam no `default` vazio e o jogador pagava sem receber efeito. Implementados como upgrades por time (níveis I–III), seguindo o padrão do forge:
   - `game/Game`: novos níveis por time (`sharpnessLevels`/`protectionLevels`), métodos `getSharpnessLevel`/`upgradeSharpness`/`getProtectionLevel`/`upgradeProtection` (limite `MAX_TEAM_UPGRADE_LEVEL = 3`) e `applyTeamUpgrades` (aplica `Enchantment.SHARPNESS` nas espadas e `Enchantment.PROTECTION` nas armaduras do time, inclusive no respawn e no início da partida).
   - `shop/ShopGui`: `handleUpgrade` agora roteia `forge`/`sharpness`/`protection`; `purchaseItem` bloqueia a compra quando o upgrade do time já está no nível máximo (antes cobrava e não aplicava); `createDisplayItem` mostra o nível atual via nova chave `shop.upgrade_level`; novas chaves `shop.upgrade_maxed`.
+- **NPE ao comprar item comum na loja** (`shop/ShopGui.purchaseItem`): a checagem `isTeamUpgradeMaxed` era chamada com `upgrade == null` para itens sem upgrade (o switch em null lançava `NullPointerException` no `InventoryClickEvent`). Corrigido com guarda `upgrade != null`.
 
 ## [0.0.1-207] - 2026-08-09
 
