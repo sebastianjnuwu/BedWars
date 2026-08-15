@@ -476,6 +476,9 @@ public class ShopGui implements InventoryHolder {
                 case EMERALD -> this.lang.raw("shop.currency_emerald");
             };
             lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(item.getPrice()), currencyName)));
+            if (item.getUpgrade() != null) {
+                lore.add(MM.deserialize(this.lang.raw("shop.upgrade_level", String.valueOf(currentUpgradeLevel(item.getUpgrade())))));
+            }
         }
 
         if (item.getUpgrade() != null) {
@@ -580,7 +583,8 @@ public class ShopGui implements InventoryHolder {
 
         final Material currencyMaterial;
         final int price;
-        if ("forge".equals(item.getUpgrade())) {
+        final String upgrade = item.getUpgrade();
+        if ("forge".equals(upgrade)) {
             final ForgeLevel next = forgeUpgradeLevel();
             if (next == null || next.upgradeMaterial() == null) {
                 CompatProvider.chat().sendMessage(player, MM.deserialize(this.lang.raw("shop.forge_maxed")));
@@ -590,6 +594,11 @@ public class ShopGui implements InventoryHolder {
             price = next.upgradePrice();
             currencyMaterial = next.upgradeMaterial();
         } else {
+            if (isTeamUpgradeMaxed(upgrade)) {
+                CompatProvider.chat().sendMessage(player, MM.deserialize(this.lang.raw("shop.upgrade_maxed", upgradeName(upgrade))));
+                player.closeInventory();
+                return;
+            }
             currencyMaterial = switch (item.getCurrency()) {
                 case IRON -> Material.IRON_INGOT;
                 case GOLD -> Material.GOLD_INGOT;
@@ -831,27 +840,57 @@ public class ShopGui implements InventoryHolder {
         }
     }
 
+    private boolean isTeamUpgradeMaxed(final String upgrade) {
+        final ArenaTeam team = game.getPlayerTeam(player);
+        if (team == null) {
+            return true;
+        }
+        return switch (upgrade) {
+            case "sharpness" -> game.getSharpnessLevel(team) >= 3;
+            case "protection" -> game.getProtectionLevel(team) >= 3;
+            default -> false;
+        };
+    }
+
+    private int currentUpgradeLevel(final String upgrade) {
+        final ArenaTeam team = game.getPlayerTeam(player);
+        if (team == null) {
+            return 0;
+        }
+        return switch (upgrade) {
+            case "sharpness" -> game.getSharpnessLevel(team);
+            case "protection" -> game.getProtectionLevel(team);
+            default -> 0;
+        };
+    }
+
+    private String upgradeName(final String upgrade) {
+        return switch (upgrade) {
+            case "sharpness" -> "Afiação";
+            case "protection" -> "Proteção";
+            default -> upgrade;
+        };
+    }
+
     private void handleUpgrade(ShopItem item) {
+        final ArenaTeam team = game.getPlayerTeam(player);
+        if (team == null) {
+            return;
+        }
         switch (item.getUpgrade()) {
             case "forge" -> {
-                var team = game.getPlayerTeam(player);
-                if (team != null) {
-                    var arenaTeam = game.getArena().getTeams().stream()
-                            .filter(t -> t.getName().equals(team.getName()))
-                            .findFirst().orElse(null);
-                    if (arenaTeam != null) {
-                        var forge = game.getArena().getGenerators().stream()
-                                .filter(g -> g.getType().equalsIgnoreCase("forge"))
-                                .filter(g -> team.getName().equalsIgnoreCase(g.getTeam()))
-                                .findFirst().orElse(null);
-                        if (forge != null && game instanceof Game g) {
-                            g.upgradeForge(forge);
-                        }
-                    }
+                final ArenaGenerator forge = game.getArena().getGenerators().stream()
+                        .filter(g -> g.getType().equalsIgnoreCase("forge"))
+                        .filter(g -> team.getName().equalsIgnoreCase(g.getTeam()))
+                        .findFirst().orElse(null);
+                if (forge != null) {
+                    game.upgradeForge(forge);
                 }
             }
+            case "sharpness" -> game.upgradeSharpness(team);
+            case "protection" -> game.upgradeProtection(team);
             default -> {
-                // Other upgrades can be implemented later
+                // Outros upgrades não implementados
             }
         }
     }

@@ -274,6 +274,8 @@ shop:
   currency_emerald: "Esmeralda"
   forge_maxed: "<red>Fornalha no nível máximo!</red>"
   forge_next_level: "<gray>Próximo nível: {0}</gray>"
+  upgrade_maxed: "<red>{0} já está no nível máximo!</red>"
+  upgrade_level: "<gray>Nível atual: {0}</gray>"
 
 # ── kick ──────────────────────────────
 kick:

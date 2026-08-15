@@ -21,6 +21,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -72,6 +73,7 @@ import dev.sebastianjnuwu.bedwars.util.LocationUtil;
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
+    private static final int MAX_TEAM_UPGRADE_LEVEL = 3;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -90,6 +92,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final Map<ArenaGenerator, Integer> forgeLevels;
     private final Map<ArenaGenerator, long[]> generatorTicks;
     private final Map<String, long[]> forgeTicks;
+    private final Map<ArenaTeam, Integer> sharpnessLevels;
+    private final Map<ArenaTeam, Integer> protectionLevels;
     private final Map<UUID, Integer> respawnTicks;
     private final Set<UUID> pendingFinalRespawns;
     private final Set<String> placedBlocks;
@@ -129,6 +133,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.forgeLevels = new HashMap<>();
         this.generatorTicks = new HashMap<>();
         this.forgeTicks = new HashMap<>();
+        this.sharpnessLevels = new HashMap<>();
+        this.protectionLevels = new HashMap<>();
         this.respawnTicks = new HashMap<>();
         this.pendingFinalRespawns = new HashSet<>();
         this.placedBlocks = new HashSet<>();
@@ -493,6 +499,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 player.getEnderChest().clear();
                 applyTeamArmor(player, team);
                 giveSpawnItems(player);
+                applyTeamUpgrades(player, team);
                 player.setGameMode(GameMode.SURVIVAL);
                 player.setHealth(20);
                 player.setFoodLevel(20);
@@ -568,6 +575,101 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         Bukkit.getPluginManager().callEvent(new GeneratorUpgradeEvent(this, forge, level, level + 1));
         this.rescheduleForge(forge);
         return true;
+    }
+
+    public int getSharpnessLevel(final ArenaTeam team) {
+        return this.sharpnessLevels.getOrDefault(team, 0);
+    }
+
+    public boolean upgradeSharpness(final ArenaTeam team) {
+        final int level = this.getSharpnessLevel(team);
+        if (level >= this.getMaxSharpnessLevel()) {
+            return false;
+        }
+        this.sharpnessLevels.put(team, level + 1);
+        this.applySharpnessToTeam(team);
+        return true;
+    }
+
+    private void applySharpnessToTeam(final ArenaTeam team) {
+        final int level = this.getSharpnessLevel(team);
+        if (level <= 0) {
+            return;
+        }
+        for (final UUID uuid : this.teams.getOrDefault(team, List.of())) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player == null) {
+                continue;
+            }
+            for (final ItemStack stack : player.getInventory().getContents()) {
+                if (stack != null && isSword(stack.getType())) {
+                    stack.addUnsafeEnchantment(Enchantment.SHARPNESS, level);
+                }
+            }
+        }
+    }
+
+    public int getProtectionLevel(final ArenaTeam team) {
+        return this.protectionLevels.getOrDefault(team, 0);
+    }
+
+    public boolean upgradeProtection(final ArenaTeam team) {
+        final int level = this.getProtectionLevel(team);
+        if (level >= this.getMaxProtectionLevel()) {
+            return false;
+        }
+        this.protectionLevels.put(team, level + 1);
+        this.applyProtectionToTeam(team);
+        return true;
+    }
+
+    private void applyProtectionToTeam(final ArenaTeam team) {
+        final int level = this.getProtectionLevel(team);
+        if (level <= 0) {
+            return;
+        }
+        for (final UUID uuid : this.teams.getOrDefault(team, List.of())) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player == null) {
+                continue;
+            }
+            for (final ItemStack stack : player.getInventory().getArmorContents()) {
+                if (stack != null) {
+                    stack.addUnsafeEnchantment(Enchantment.PROTECTION, level);
+                }
+            }
+        }
+    }
+
+    private int getMaxSharpnessLevel() {
+        return MAX_TEAM_UPGRADE_LEVEL;
+    }
+
+    private int getMaxProtectionLevel() {
+        return MAX_TEAM_UPGRADE_LEVEL;
+    }
+
+    private static boolean isSword(final Material material) {
+        return material.name().endsWith("_SWORD");
+    }
+
+    private void applyTeamUpgrades(final Player player, final ArenaTeam team) {
+        final int sharpness = this.getSharpnessLevel(team);
+        if (sharpness > 0) {
+            for (final ItemStack stack : player.getInventory().getContents()) {
+                if (stack != null && isSword(stack.getType())) {
+                    stack.addUnsafeEnchantment(Enchantment.SHARPNESS, sharpness);
+                }
+            }
+        }
+        final int protection = this.getProtectionLevel(team);
+        if (protection > 0) {
+            for (final ItemStack stack : player.getInventory().getArmorContents()) {
+                if (stack != null) {
+                    stack.addUnsafeEnchantment(Enchantment.PROTECTION, protection);
+                }
+            }
+        }
     }
 
     private void initGeneratorTicks() {
@@ -996,6 +1098,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         player.getInventory().clear();
         applyTeamArmor(player, team);
         giveSpawnItems(player);
+        applyTeamUpgrades(player, team);
         CompatProvider.chat().sendMessage(player, this.lang.text(NamedTextColor.GREEN, "game.respawned"));
 
         final GamePlayer gp = this.players.get(player.getUniqueId());
