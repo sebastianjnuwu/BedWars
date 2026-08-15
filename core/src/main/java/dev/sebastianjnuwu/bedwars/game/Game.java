@@ -1409,7 +1409,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
      */
     private void sendEndRanking() {
         final List<GamePlayer> top = this.getGamePlayers().stream()
-                .sorted(Comparator.comparingInt(GamePlayer::getKills).reversed())
+                .sorted(Comparator.comparingInt((GamePlayer gp) -> gp.getKills()).reversed())
                 .limit(3)
                 .toList();
         final Component header = Component.text(this.lang.raw("game.rank_header"));

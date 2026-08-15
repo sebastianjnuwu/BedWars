@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 public final class NbtCompatImpl implements NbtCompat {
 
     @Override
+    @SuppressWarnings("deprecation")
     public void modifyItemStack(final @NotNull ItemStack stack, final @NotNull String tag) {
         try {
             Bukkit.getUnsafe().modifyItemStack(stack, tag);

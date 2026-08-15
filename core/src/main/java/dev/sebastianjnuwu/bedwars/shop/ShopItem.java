@@ -257,7 +257,6 @@ public class ShopItem {
         return pieces;
     }
 
-    @SuppressWarnings("deprecation")
     private void applyTag(final ItemStack stack) {
         if (tag == null || tag.isBlank()) {
             return;
@@ -293,7 +292,6 @@ public class ShopItem {
         return true;
     }
 
-    @SuppressWarnings("deprecation")
     private void applyDisplayMeta(ItemStack stack) {
         if (displayName != null || lore != null || (enchants != null && !enchants.isEmpty())) {
             var meta = stack.getItemMeta();

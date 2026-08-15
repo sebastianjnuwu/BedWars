@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class PotionCompatLegacy implements PotionCompat {
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
     @Override
     public boolean applyPotionType(final @NotNull PotionMeta meta, final @NotNull String potionKey) {
         final String simple = potionKey.contains(":") ? potionKey.substring(potionKey.indexOf(':') + 1) : potionKey;

@@ -4,6 +4,25 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-212] - 2026-08-15
+
+### Corrigido
+- **Espada nova comprada na loja vinha sem a Afiação do time** (`shop/ShopGui`): o `deliverItem` aplicava a cor da time e entregava o item, mas nunca aplicava o encantamento de Afiação — ao contrário da armadura, que já recebia a Proteção do time (`equipTeamArmor` → `applyTeamProtection`). Adicionado `applyTeamSharpness(ItemStack)` no `deliverItem`: se o item é uma espada (`*_SWORD`) e o time tem upgrade de Afiação (`game.getSharpnessLevel(team)`), aplica `Enchantment.SHARPNESS` no nível do time antes de dar/dropar. Agora a espada comprada (inclusive após já estar no nível máximo) nasce com a Afiação correta.
+
+## [0.0.1-211] - 2026-08-15
+
+### Corrigido
+- **Limpeza de warnings de deprecação/compilação** (build limpo no IDE/`mvn -o clean compile`):
+  - `compat/NbtCompatImpl` e `compat/RegistryCompatImpl`: `@SuppressWarnings("deprecation")` nos usos intencionais de `Bukkit.getUnsafe()` e `Registry.ENCHANTMENT`.
+  - `compat/PotionCompatLegacy`: `@SuppressWarnings("removal")` para `setBasePotionData(PotionData)`/`PotionData` (marcados para remoção desde 1.20.6 — o `"deprecation"` não os cobre).
+  - `shop/ShopItem`: removidos `@SuppressWarnings("deprecation")` desnecessários em `applyTag`/`applyDisplayMeta`.
+  - `game/Game.sendEndRanking`: `Comparator.comparingInt((GamePlayer gp) -> gp.getKills())` com parâmetro tipado no lugar do method reference, eliminando o aviso de null type safety do JDT (e a falha de inferência de tipo).
+
+## [0.0.1-210] - 2026-08-15
+
+### Corrigido
+- **Loja bloqueava compra de armadura de ferro/ouro/diamante quando o time tinha upgrade de Proteção** (`shop/ShopGui`): o `effectivePoints` somava o encantamento de Proteção da armadura equipada (`protectionWeight`), então a couro do time encantada (Proteção I–III) passava a valer mais pontos que ferro/ouro/diamante e o `alreadyHasArmor` retornava "você já tem uma armadura melhor", impedindo o upgrade de material. Como a Proteção é upgrade de time (aplica-se a qualquer armadura), ela foi removida da comparação de pontos (`effectivePoints` agora considera apenas material + atributo `bw_armor`). Além disso, a peça recém-equipada agora recebe a Proteção do time (`applyTeamProtection` no `equipTeamArmor`), mantendo o upgrade ao trocar de couro para ferro/ouro/diamante. Removido o helper `protectionWeight` (sem uso).
+
 ## [0.0.1-209] - 2026-08-15
 
 ### Alterado

@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public final class RegistryCompatImpl implements RegistryCompat {
 
     @Override
+    @SuppressWarnings("deprecation")
     public @Nullable
     Enchantment getEnchantment(final @NotNull String key) {
         final NamespacedKey namespacedKey = NamespacedKey.minecraft(key.toLowerCase());

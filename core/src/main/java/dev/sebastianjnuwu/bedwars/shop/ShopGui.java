@@ -741,17 +741,8 @@ public class ShopGui implements InventoryHolder {
                     }
                 }
             }
-            points += protectionWeight(meta);
         }
         return points;
-    }
-
-    private static int protectionWeight(final ItemMeta meta) {
-        final Enchantment protection = Enchantment.PROTECTION;
-        if (protection == null) {
-            return 0;
-        }
-        return meta.getEnchantLevel(protection) * 2;
     }
 
     private void deliverItem(final ItemStack stack) {
@@ -759,7 +750,19 @@ public class ShopGui implements InventoryHolder {
             equipTeamArmor(stack);
         } else {
             applyTeamColor(stack);
+            applyTeamSharpness(stack);
             giveOrDrop(stack);
+        }
+    }
+
+    private void applyTeamSharpness(final ItemStack stack) {
+        if (stack.getType() == Material.AIR || !stack.getType().name().endsWith("_SWORD")) {
+            return;
+        }
+        final ArenaTeam team = this.game.getPlayerTeam(this.player);
+        final int level = this.game.getSharpnessLevel(team);
+        if (level > 0) {
+            stack.addUnsafeEnchantment(Enchantment.SHARPNESS, level);
         }
     }
 
@@ -799,12 +802,20 @@ public class ShopGui implements InventoryHolder {
                     AttributeModifier.Operation.ADD_NUMBER));
         }
         colored.setItemMeta(meta);
+        applyTeamProtection(colored, team);
         switch (leather) {
             case LEATHER_HELMET -> this.player.getInventory().setHelmet(colored);
             case LEATHER_CHESTPLATE -> this.player.getInventory().setChestplate(colored);
             case LEATHER_LEGGINGS -> this.player.getInventory().setLeggings(colored);
             case LEATHER_BOOTS -> this.player.getInventory().setBoots(colored);
             default -> { }
+        }
+    }
+
+    private void applyTeamProtection(final ItemStack stack, final ArenaTeam team) {
+        final int level = this.game.getProtectionLevel(team);
+        if (level > 0) {
+            stack.addUnsafeEnchantment(Enchantment.PROTECTION, level);
         }
     }
 
