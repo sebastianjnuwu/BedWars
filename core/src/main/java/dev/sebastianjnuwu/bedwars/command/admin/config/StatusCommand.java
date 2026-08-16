@@ -3,7 +3,6 @@ package dev.sebastianjnuwu.bedwars.command.admin.config;
 import java.io.File;
 import java.util.List;
 
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,7 +10,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
-import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
@@ -54,16 +52,6 @@ public class StatusCommand extends BaseCommand implements ArenaSubCommand {
                 .filter(generator -> generator.getType().equalsIgnoreCase("forge"))
                 .count();
         CompatProvider.chat().sendMessage(sender, this.lang.text(NamedTextColor.WHITE, "admin.arena.status_forges", String.valueOf(forgeCount)));
-        final List<ForgeLevel> arenaLevels = arena.getForgeLevels();
-        if (arenaLevels != null) {
-            for (final ForgeLevel fl : arenaLevels) {
-                final String entries = fl.intervals().entrySet().stream()
-                        .map(entry -> this.displayName(entry.getKey()) + ": " + entry.getValue() + "t")
-                        .reduce((left, right) -> left + ", " + right)
-                        .orElse("");
-                CompatProvider.chat().sendMessage(sender, this.lang.text(NamedTextColor.GRAY, "admin.arena.status_forge_level", String.valueOf(fl.level()), entries));
-            }
-        }
         if (missing.isEmpty()) {
             CompatProvider.chat().sendMessage(sender, this.lang.text(NamedTextColor.GREEN, "admin.arena.status_ready"));
         } else {
@@ -72,15 +60,5 @@ public class StatusCommand extends BaseCommand implements ArenaSubCommand {
                 CompatProvider.chat().sendMessage(sender, this.lang.text(NamedTextColor.YELLOW, "admin.arena.status_entry", msg));
             }
         }
-    }
-
-    private String displayName(final Material material) {
-        return switch (material) {
-            case IRON_INGOT -> "Ferro";
-            case GOLD_INGOT -> "Ouro";
-            case DIAMOND -> "Diamante";
-            case EMERALD -> "Esmeralda";
-            default -> material.name();
-        };
     }
 }

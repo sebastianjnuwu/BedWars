@@ -35,6 +35,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 
+import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.events.BedBreakEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GameEndEvent;
 import dev.sebastianjnuwu.bedwars.api.events.GamePlayerDeathEvent;
@@ -59,6 +60,7 @@ import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
+import dev.sebastianjnuwu.bedwars.api.model.UpgradeConfig;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
@@ -72,8 +74,6 @@ import dev.sebastianjnuwu.bedwars.util.LocationUtil;
  * condição de vitória e contagem regressiva de início automático.
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
-
-    private static final int MAX_TEAM_UPGRADE_LEVEL = 3;
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -553,17 +553,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     public @Nullable ForgeLevel getForgeUpgradeLevel(final ArenaGenerator forge) {
-        final int next = this.getForgeLevel(forge) + 1;
-        final List<ForgeLevel> levels = this.arena.getForgeLevels();
-        if (levels == null) {
+        final UpgradeConfig config = this.upgradeConfig("forge");
+        if (config == null) {
             return null;
         }
-        for (final ForgeLevel fl : levels) {
-            if (fl.level() == next) {
-                return fl;
-            }
-        }
-        return null;
+        return config.nextLevel(this.getForgeLevel(forge));
     }
 
     public boolean upgradeForge(final ArenaGenerator forge) {
@@ -642,15 +636,38 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     public int getMaxUpgradeLevel() {
-        return MAX_TEAM_UPGRADE_LEVEL;
+        return this.getMaxSharpnessLevel();
     }
 
     private int getMaxSharpnessLevel() {
-        return MAX_TEAM_UPGRADE_LEVEL;
+        final UpgradeConfig config = this.upgradeConfig("sharpness");
+        return Math.max(1, config == null ? 0 : config.maxLevel());
     }
 
     private int getMaxProtectionLevel() {
-        return MAX_TEAM_UPGRADE_LEVEL;
+        final UpgradeConfig config = this.upgradeConfig("protection");
+        return Math.max(1, config == null ? 0 : config.maxLevel());
+    }
+
+    public @Nullable ForgeLevel getSharpnessUpgradeLevel(final ArenaTeam team) {
+        final UpgradeConfig config = this.upgradeConfig("sharpness");
+        if (config == null) {
+            return null;
+        }
+        return config.nextLevel(this.getSharpnessLevel(team));
+    }
+
+    public @Nullable ForgeLevel getProtectionUpgradeLevel(final ArenaTeam team) {
+        final UpgradeConfig config = this.upgradeConfig("protection");
+        if (config == null) {
+            return null;
+        }
+        return config.nextLevel(this.getProtectionLevel(team));
+    }
+
+    private @Nullable UpgradeConfig upgradeConfig(final String upgrade) {
+        final String shop = this.arena.getShop() == null ? "default" : this.arena.getShop();
+        return ((BedWarsPlugin) this.gameManager.getPlugin()).getShopManager().getUpgradeConfig(shop, upgrade);
     }
 
     private static boolean isSword(final Material material) {
@@ -714,17 +731,22 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
                 this.gameManager.getPlugin().getLogger().warning(this.lang.raw("log.game.forge_skipped", forge.getUniqueId()));
                 continue;
             }
-            this.forgeLevels.put(forge, Math.max(1, this.arena.getForgeDefaultLevel()));
+            this.forgeLevels.put(forge, Math.max(1, this.forgeDefaultLevel()));
             this.putForgeTicks(forge, this.forgeLevels.get(forge));
         }
 
     }
 
+    private int forgeDefaultLevel() {
+        final UpgradeConfig config = this.upgradeConfig("forge");
+        return Math.max(1, config == null ? 1 : config.levelDefault());
+    }
+
     private void putForgeTicks(final ArenaGenerator forge, final int level) {
         Map<Material, Long> intervals = null;
-        var forgeLevels = this.arena.getForgeLevels();
-        if (forgeLevels != null) {
-            for (var fl : forgeLevels) {
+        final UpgradeConfig config = this.upgradeConfig("forge");
+        if (config != null) {
+            for (final ForgeLevel fl : config.levels()) {
                 if (fl.level() == level) {
                     intervals = fl.intervals();
                     break;
@@ -732,7 +754,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             }
         }
         if (intervals == null || intervals.isEmpty()) {
-            this.gameManager.getPlugin().getLogger().warning(this.lang.raw("log.game.put_forge_ticks_warning", forge.getUniqueId(), level, forgeLevels == null ? "null" : forgeLevels.size()));
+            this.gameManager.getPlugin().getLogger().warning(this.lang.raw("log.game.put_forge_ticks_warning", forge.getUniqueId(), level, config == null ? "null" : config.levels().size()));
             return;
         }
         for (final var entry : intervals.entrySet()) {
@@ -751,7 +773,8 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     private int getForgeMaxLevel() {
-        return Math.max(1, this.arena.getForgeMaxLevel());
+        final UpgradeConfig config = this.upgradeConfig("forge");
+        return Math.max(1, config == null ? 1 : config.maxLevel());
     }
 
     private void stopGameTick() {

@@ -4,6 +4,39 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-215] - 2026-08-16
+
+### Adicionado
+- **Upgrades de time configuráveis na loja** (`shop.yml`): nova subseção `upgrade-config:` nos itens com `upgrade:` (fornalha, afiação e proteção), com `max-level`, `level-default` (opcional, só forja) e `levels.<n>.upgrade.price`/`levels.<n>.upgrade.material` — e, para a forja, `<material>.interval`. A configuração agora é global (igual em todas as arenas) e lida pela partida a partir da loja da arena (`arena.getShop()`, fallback `default`).
+
+### Alterado
+- **Novo modelo** `api/model/UpgradeConfig` (`record UpgradeConfig(int maxLevel, int levelDefault, List<ForgeLevel> levels)` com overload `(maxLevel, levels)` e método `nextLevel(currentLevel)`): unifica a configuração de níveis dos três upgrades de time reutilizando o `ForgeLevel` existente; substitui o `TeamUpgradeLevel` (removido).
+- `shop/ShopItem`: novo campo `upgradeConfig` (getter + builder `upgradeConfig(...)`).
+- `shop/ShopManager`: `parseItem` agora lê a subseção `upgrade-config` (novos helpers `parseUpgradeConfig`/`parseUpgradeLevel`/`parseUpgradeMaterial`/`parsePositiveInt`/`parsePositiveLong`); novo método público `getUpgradeConfig(shopName, upgrade)` com busca recursiva nas categorias (`findUpgradeConfig`).
+- `game/Game`: `getForgeUpgradeLevel`, `getForgeMaxLevel`, `getForgeDefaultLevel` (novo helper) e `putForgeTicks`/`initForgeTicks` passam a ler a configuração da loja via `upgradeConfig("forge")` (novo helper que acessa o `ShopManager` pelo nome da loja da arena); `getSharpnessUpgradeLevel`/`getProtectionUpgradeLevel`/`getMaxSharpnessLevel`/`getMaxProtectionLevel` usam `upgradeConfig("sharpness")`/`upgradeConfig("protection")` e retornam `ForgeLevel`; removidos `findUpgradeLevel` e o import de `TeamUpgradeLevel`.
+- `shop/ShopGui`: `teamUpgradeLevel(String)` agora retorna `ForgeLevel` (novo tipo devolvido pelos métodos do `Game`); quando o upgrade está no nível máximo, o item da loja vira `RED_STAINED_GLASS_PANE` (painel de vidro vermelho), mantendo nome/lore.
+- `api/model/Arena` + `model/Arena`: removidos os métodos/campos de upgrades de time — `get/setForgeMaxLevel`, `get/setForgeDefaultLevel`, `get/setForgeLevels`, `get/setSharpnessMaxLevel`, `get/setSharpnessLevels`, `get/setProtectionMaxLevel`, `get/setProtectionLevels` (config movida para a loja).
+- `manager/ArenaManager`: removida a persistência de forge/upgrades da arena (`save`/`loadArenaFromFile`/`create`) e os helpers `writeTeamUpgradeLevels`, `readTeamUpgradeLevels`, `defaultTeamUpgradeLevels` e `forgeCurrencyMaterial`.
+- `command/admin/config/StatusCommand`: removida a listagem de níveis da fornalha (`arena.getForgeLevels()`), que não existe mais na arena.
+- `shop.yml`: os itens de upgrade ganharam `upgrade-config` — afiação/proteção com 3 níveis (2/4/8 diamante) e fornalha com 10 níveis (`level-default: 1`) e os intervalos de geração por material que antes ficavam na arena.
+- `arenas/example.yml`: removidas as seções `forge`, `sharpness` e `protection` (agora configuradas na loja); adicionada nota apontando para o `shop/<loja>.yml`; comentários reescritos de forma objetiva e direta (cada chave explica seu valor e formato sem redundância).
+
+### Corrigido
+- **Intervalos da fornalha nunca eram aplicados** (`shop/ShopManager.parseUpgradeConfig`/`parseUpgradeLevel`): as chaves numéricas do YAML (`levels: 1:`, `2:`...) são lidas pelo SnakeYAML como `Integer`, e o cast `(Map<String, Object>)` lançava `ClassCastException` dentro do `parseItem`, que descartava o item (retornando `null`). Resultado: `upgradeConfig("forge")` era `null` e o `Game.putForgeTicks` logava "intervalos nulos ou vazios, forgeLevels=null" em toda partida. Corrigido iterando com `Map<?, ?>` e convertendo a chave via `String.valueOf(...)`.
+
+## [0.0.1-214] - 2026-08-16
+
+### Adicionado
+- **Upgrades de time configuráveis no YML** (afiação e proteção) seguindo a mesma estrutura da fornalha: nova seção `sharpness` e `protection` no `arenas/<nome>.yml`, com `max-level` e `levels.<n>.upgrade.price`/`levels.<n>.upgrade.material` (moeda: iron | gold | diamond | emerald). O preço e a moeda de cada nível agora vêm da configuração da arena, não mais do preço fixo do item na loja (`price * level`).
+
+### Alterado
+- **Novo modelo** `api/model/TeamUpgradeLevel` (`record TeamUpgradeLevel(int level, int upgradePrice, Material upgradeMaterial)` com overload sem upgrade): espelha o `ForgeLevel` para upgrades de time.
+- `api/model/Arena` + `model/Arena`: novos getters/setters `get/setSharpnessMaxLevel`, `get/setSharpnessLevels`, `get/setProtectionMaxLevel`, `get/setProtectionLevels`; defaults (3 níveis, diamante) no construtor e propagados no `copy()`.
+- `manager/ArenaManager`: `save` grava as seções `sharpness.*`/`protection.*` (via novo helper `writeTeamUpgradeLevels`), `loadArenaFromFile` as lê (via novo helper `readTeamUpgradeLevels`, reutilizando `forgeCurrencyMaterial`), e `create` popula os defaults (`defaultTeamUpgradeLevels` — 3 níveis: 2/4/8 diamante).
+- `game/Game`: removida a constante `MAX_TEAM_UPGRADE_LEVEL`; `getMaxSharpnessLevel`/`getMaxProtectionLevel` agora leem a arena; novos métodos públicos `getSharpnessUpgradeLevel(team)`/`getProtectionUpgradeLevel(team)` retornam o `TeamUpgradeLevel` do próximo nível (via `findUpgradeLevel`); `getMaxUpgradeLevel` passou a delegar para a afiação (mantido para compatibilidade).
+- `shop/ShopGui`: `createDisplayItem` e `purchaseItem` usam o `TeamUpgradeLevel` configurado (preço + moeda por nível) para afiação/proteção, com a mesma lógica de "maxed" da fornalha; removidos os helpers `isTeamUpgradeMaxed`, `currentUpgradeLevel` e `upgradePrice` em favor de `teamUpgradeLevel(String)`.
+- `arenas/example.yml`: documentadas as seções `sharpness` e `protection` (estrutura, regras e 3 níveis de exemplo com diamante).
+
 ## [0.0.1-213] - 2026-08-15
 
 ### Adicionado

@@ -192,18 +192,6 @@ public interface Arena {
      */
     void setLevelTimes(Map<Integer, Integer> levelTimes);
 
-    int getForgeMaxLevel();
-
-    void setForgeMaxLevel(int maxLevel);
-
-    int getForgeDefaultLevel();
-
-    void setForgeDefaultLevel(int defaultLevel);
-
-    List<ForgeLevel> getForgeLevels();
-
-    void setForgeLevels(List<ForgeLevel> levels);
-
     /**
      * Retorna os NPCs de loja configurados para esta arena.
      *

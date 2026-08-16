@@ -1,98 +1,53 @@
 # ══════════════════════════════════════════════════════════════════════════════
 #  ARENA DE EXEMPLO PARA BEDWARS
 # ══════════════════════════════════════════════════════════════════════════════
-#  Copie este arquivo para <nome>.yml na pasta 'arenas/' e ajuste os valores.
-#  Cada chave deste YAML é lida pelo plugin ao carregar a arena.
+#  Copie para arenas/<nome>.yml e ajuste os valores. O plugin lê cada chave ao
+#  carregar a arena.
 #
-#  ── Para criar uma arena do zero (comandos) ──
-#   1. /bw admin arena create <nome>
-#   2. /bw admin arena <nome> addteam azul
-#   3. /bw admin arena <nome> addteam vermelho
-#   4. /bw admin arena <nome> addgenerator forge azul
-#   5. /bw admin arena <nome> addgenerator forge vermelho
-#   6. /bw admin arena <nome> addgenerator ferro
-#   7. /bw admin arena <nome> addgenerator ouro
-#   8. /bw admin arena <nome> addgenerator diamante
-#   9. /bw admin arena <nome> addgenerator esmeralda
-#  10. /bw admin arena <nome> spawn
-#  11. /bw admin arena <nome> setspawn azul
-#  12. /bw admin arena <nome> setbed azul    (fique em cima da cama)
-#  13. /bw admin arena <nome> setspawn vermelho
-#  14. /bw admin arena <nome> setbed vermelho
-#  15. /bw admin arena <nome> shop-npc add <skin>
-#
-#  Os comandos acima já salvam as configurações no YAML automaticamente.
-#  Este arquivo serve como referência de TODAS as opções disponíveis.
+#  Alternativa: crie a arena por comandos — /bw admin arena create <nome> seguido
+#  de addteam <cor>, addgenerator <tipo> [time], spawn, setspawn <cor>, setbed <cor>
+#  e shop-npc add <skin>. Os comandos já salvam o YAML; este arquivo serve como
+#  referência de todas as opções.
 # ══════════════════════════════════════════════════════════════════════════════
 
 # ── Configurações gerais ───────────────────────────────────────────────────────
 
-# Se a arena está liberada para partidas.
-# true  = jogadores podem entrar / iniciar
-# false = a arena é ignorada
+# Libera a arena para partidas. false = a arena é ignorada.
 enabled: false
 
-# Nome do mundo-base da arena (o template).
-# A partida roda em uma CÓPIA chamada bw_<nome>, criada a partir deste mundo.
-# ⚠️  Nunca edite o mundo original durante uma partida.
+# Mundo-base (template). A partida roda numa CÓPIA chamada bw_<nome>.
+# Nunca edite o mundo original durante uma partida.
 world: "bw_example"
 
-# Coordenadas onde o schematic do mapa é colado: "x,y,z" (canto do mapa).
+# Canto do mapa onde o schematic é colado.
 paste: "0,64,0"
 
-# Tamanho do schematic em blocos: "x,y,z" (preenchido ao salvar o schematic).
+# Tamanho do schematic em blocos (preenchido ao salvar o schematic).
 schematic_size: "25,10,25"
 
-# ══ INÍCIO DA PARTIDA (por time) ═════════════════════════════════════
-# O countdown inicia quando o número de times "ativos" atinge teams.min-teams.
-# Um time é ativo quando tem ao menos teams.min-players jogadores.
-#
-#   teams.min-players: 1   → um time com 1+ jogador já conta como ativo
-#   teams.max-players: 0   → teto por time; 0 = derivar do modo da partida
-#                            (solo=1, dupla=2, trio=3, quarteto=4)
-#   teams.min-teams: 2     → quantos times ativos são necessários para iniciar
-#
-# Exemplo: 6 times, dupla (max 2 por time), min-players 1, min-teams 2 →
-# 🔴1 🔵1 (resto vazio) = 2 jogadores em 2 times ativos → countdown inicia.
-
-# Tempo (em segundos) da contagem regressiva antes da partida começar.
+# ── Início da partida ──────────────────────────────────────────────────────────
+# O countdown inicia quando times.min-teams estiverem ativos.
+# Um time é ativo quando tem teams.min-players ou mais jogadores.
 countdown: 15
 
-# ══ TEMPO DA PARTIDA ═══════════════════════════════════════════════════
-
-# Tempo máximo de duração da partida.
-# Valor em segundos.
-#
-# 0 = Sem limite.
-#
-# Recomendado:
-# 600  = 10 minutos (Ultra rápido)
-# 900  = 15 minutos (Rápido)
-# 1200 = 20 minutos (Competitivo) ⭐
-# 1500 = 25 minutos (Casual)
-# 1800 = 30 minutos (Muito longo)
-
+# ── Duração ────────────────────────────────────────────────────────────────────
+# Tempo máximo de partida em segundos. 0 = sem limite.
 time-limit: 1200
 
-# Quando o tempo acabar:
-#
-# 1º Time com mais jogadores vivos.
-# 2º Se empatar, vence o time cuja cama ainda está intacta.
-# 3º Se ambos estiverem sem cama, vence o time com mais abates.
-# 4º Persistindo empate, a partida termina empatada.
+# Desempate ao estourar o tempo (em ordem):
+# 1º mais jogadores vivos · 2º cama intacta · 3º mais abates · 4º empate.
 
 # ── Ambiente do mundo da partida ──
-cycle_day: true        # true = o ciclo dia/noite continua normal
-cycle_weather: true    # true = o clima pode mudar
-spawn_mobs: true       # true = mobs hostis podem spawnar naturalmente
-spawn_animals: true    # true = animais podem spawnar naturalmente
+cycle_day: true        # ciclo dia/noite normal
+cycle_weather: true    # clima pode mudar
+spawn_mobs: true       # mobs hostis spawnam naturalmente
+spawn_animals: true    # animais spawnam naturalmente
 spawn_item:
   - WOODEN_SWORD
+
 # Comandos liberados durante a partida (além de /bw e /bedwars).
-# O jogador poderá executar apenas estes comandos enquanto estiver na partida.
-# Formato: nome do comando SEM a barra "/" (aceita com barra também).
-#   "g"   libera /g
-#   "msg" libera /msg e /msg <jogador> ...
+# Formato: nome do comando, com ou sem a barra "/".
+# Ex.: "g" libera /g; "msg" libera /msg.
 enable-cmd:
   - "g"
 
@@ -102,16 +57,9 @@ difficulty: "EASY"
 # Hora fixa do mundo: DAY | NIGHT | SUNSET | MIDNIGHT (ou 0-24000).
 time: "DAY"
 
-# ── Geradores de recursos ──────────────────────────────────────────────────────
-# Cada gerador tem uma chave UUID única (gerada pelo plugin). Geradores com
-# location: null são ignorados automaticamente ao carregar.
-#
-# Campos por gerador:
-#   type             tipo do gerador: iron | gold | diamond | emerald | forge
-#   location         posição: "<mundo>,x,y,z,yaw,pitch"
-#   origin_block     bloco onde o item aparece (muda o visual do gerador)
-#   origin_block_above bloco logo acima do gerador
-#   team             OBRIGATÓRIO para type: forge — time dono da fornalha
+# ── Geradores ──────────────────────────────────────────────────────────────────
+# Chave = UUID do gerador (gerado pelo plugin). location: null é ignorado.
+# Campos: type, location, origin_block, origin_block_above e team (só forge).
 generators:
   # Ferro (cada time normalmente tem um)
   550e8400-e29b-41d4-a716-446655440001:
@@ -152,16 +100,15 @@ generators:
     origin_block: "minecraft:stone"
     origin_block_above: "minecraft:air"
 
-# ── Intervalos por nível de cada gerador base ─────────────────────────────────
-# Cada gerador base (iron/gold/diamond/emerald) tem a própria progressão de
-# níveis: 'levels.<nivel>' é o intervalo (em ticks, 20 = 1 segundo) do nível n.
-# O nível ativo é definido por 'level-times' (minutos da partida -> nível),
+# ── Intervalos por nível dos geradores base ────────────────────────────────────
+# levels.<nivel> = intervalo em ticks (20 = 1s) no nível n.
+# O nível ativo é definido em 'level-times' (minutos da partida -> nível),
 # comum a todos os geradores base.
 generator_config:
   iron:
-    material: "IRON_INGOT"   # item solto (nome do Material do Minecraft)
+    material: "IRON_INGOT"   # item solto (Material do Minecraft)
     levels:
-      1: 40                  # nível 1: 40 ticks = 2 segundos
+      1: 40                  # 2s
       2: 35
       3: 30
       4: 25
@@ -169,7 +116,7 @@ generator_config:
   gold:
     material: "GOLD_INGOT"
     levels:
-      1: 120                 # nível 1: 120 ticks = 6 segundos
+      1: 120                 # 6s
       2: 100
       3: 80
       4: 60
@@ -177,7 +124,7 @@ generator_config:
   diamond:
     material: "DIAMOND"
     levels:
-      1: 600                 # nível 1: 600 ticks = 30 segundos
+      1: 600                 # 30s
       2: 500
       3: 400
       4: 300
@@ -185,161 +132,32 @@ generator_config:
   emerald:
     material: "EMERALD"
     levels:
-      1: 1200                # nível 1: 1200 ticks = 60 segundos
+      1: 1200                # 60s
       2: 1000
       3: 800
       4: 600
       5: 400
 
-# ── Níveis da fornalha (upgrades do gerador do time) ──────────────────────────
-# A fornalha começa no 'level-default' e é melhorada pelo time na loja.
-# Cada nível define:
-#   upgrade.price    quanto custa comprar o próximo nível
-#   upgrade.material moeda do upgrade: iron | gold | diamond | emerald
-#   <material>       intervalo (em ticks) de cada item nesse nível
-#
-# Regras:
-#   - O nível 'max-level' NÃO tem upgrade (é o último).
-#   - Intervalos menores = gerador mais rápido.
-forge:
-  level-default: 1    # nível em que a fornalha começa cada partida
-  max-level: 10       # nível máximo alcançável
-
-  levels:
-    # Nível 1 — só ferro, upgrade custa 3 ferro
-    1:
-      upgrade:
-        price: 3
-        material: iron
-      iron_ingot:
-        interval: 20
-
-    # Nível 2 — ferro + ouro, upgrade custa 5 ferro
-    2:
-      upgrade:
-        price: 5
-        material: iron
-      iron_ingot:
-        interval: 18
-      gold_ingot:
-        interval: 100
-
-    # Nível 3 — upgrade custa 8 ferro
-    3:
-      upgrade:
-        price: 8
-        material: iron
-      iron_ingot:
-        interval: 16
-      gold_ingot:
-        interval: 90
-
-    # Nível 4 — ganha diamante, upgrade custa 10 ferro
-    4:
-      upgrade:
-        price: 10
-        material: iron
-      iron_ingot:
-        interval: 14
-      gold_ingot:
-        interval: 80
-      diamond:
-        interval: 1200
-
-    # Nível 5 — upgrade custa 15 ferro
-    5:
-      upgrade:
-        price: 15
-        material: iron
-      iron_ingot:
-        interval: 12
-      gold_ingot:
-        interval: 70
-      diamond:
-        interval: 1000
-
-    # Nível 6 — a partir daqui a moeda do upgrade vira OURO; ganha esmeralda
-    6:
-      upgrade:
-        price: 20
-        material: gold
-      iron_ingot:
-        interval: 10
-      gold_ingot:
-        interval: 60
-      diamond:
-        interval: 800
-      emerald:
-        interval: 2400
-
-    # Nível 7 — upgrade custa 25 ouro
-    7:
-      upgrade:
-        price: 25
-        material: gold
-      iron_ingot:
-        interval: 8
-      gold_ingot:
-        interval: 50
-      diamond:
-        interval: 700
-      emerald:
-        interval: 2000
-
-    # Nível 8 — upgrade custa 30 ouro
-    8:
-      upgrade:
-        price: 30
-        material: gold
-      iron_ingot:
-        interval: 6
-      gold_ingot:
-        interval: 40
-      diamond:
-        interval: 600
-      emerald:
-        interval: 1600
-
-    # Nível 9 — upgrade custa 40 ouro
-    9:
-      upgrade:
-        price: 40
-        material: gold
-      iron_ingot:
-        interval: 5
-      gold_ingot:
-        interval: 30
-      diamond:
-        interval: 500
-      emerald:
-        interval: 1400
-
-    # Nível 10 (máximo) — SEM upgrade, gerador no pico de velocidade
-    10:
-      iron_ingot:
-        interval: 4
-      gold_ingot:
-        interval: 20
-      diamond:
-        interval: 400
-      emerald:
-        interval: 1200
+# ── Upgrades de time (fornalha, afiação e proteção) ───────────────────────────
+# São configurados na loja (shop/<loja>.yml), na seção `upgrade-config:` dos
+# itens com `upgrade:`. Não se configuram upgrades aqui na arena.
 
 # ── Times ──────────────────────────────────────────────────────────────────────
-# Cada time precisa de: nome (chave), cor, spawn, spawn_block e cama.
-# As chaves min-players/max-players/min-teams não são times: definem o mínimo de
-# jogadores para um time ser considerado "ativo", o teto por time (0 = modo) e
-# quantos times ativos são necessários para o countdown iniciar.
+# Chaves min-players/max-players/min-teams: requisitos para iniciar a partida.
+# min-players: jogadores por time para o time contar como ativo.
+# max-players: teto por time; 0 = derivar do modo (solo=1, dupla=2, trio=3, quarteto=4).
+# min-teams:   times ativos necessários para o countdown iniciar.
 teams:
   min-players: 1
   max-players: 0
   min-teams: 2
+  # Cada time precisa de: nome (chave), cor, spawn, spawn_block e bed.
   azul:
-    color: "blue"          # cor do time (ChatColor / tag no placar)
+    color: "blue"          # cor do time (tag no placar)
     spawn: "bw_example,5,65,5,0,0"   # onde o jogador nasce
     spawn_block: "minecraft:stone"   # bloco do chão do spawn
-    bed: "bw_example,5,64,5,0,0"     # posição da cama (bloco do pé da cama)
-    bed_facing: "NORTH"    # direção da cama: NORTH | SOUTH | EAST | WEST
+    bed: "bw_example,5,64,5,0,0"     # bloco do pé da cama
+    bed_facing: "NORTH"    # NORTH | SOUTH | EAST | WEST
   vermelho:
     color: "red"
     spawn: "bw_example,-5,65,-5,0,0"
@@ -348,7 +166,7 @@ teams:
     bed_facing: "SOUTH"
 
 # ── Spawn da arena / lobby ─────────────────────────────────────────────────────
-# Onde os jogadores caem ao entrar na arena e o bloco do chão desse spawn.
+# Onde o jogador cai ao entrar na arena e o bloco do chão desse spawn.
 arena_spawn: "bw_example,0,65,0,0,0"
 spawn_block: "minecraft:obsidian"
 
@@ -356,11 +174,10 @@ spawn_block: "minecraft:obsidian"
 lobby: "world,0,64,0,0,0"
 
 # ── Loja (Shop NPCs) ───────────────────────────────────────────────────────────
-# Nome do layout de loja usado (definido em shop.yml).
+# Layout de loja usado (definido em shop/<nome>.yml).
 shop: "default"
 
-# NPCs de loja espalhados pelo mapa.
-# Cada NPC tem: localização, skin (nick do jogador) e nome exibido.
+# NPCs de loja espalhados pelo mapa. Campos: location, skin (nick) e displayName.
 shop_npcs:
   0:
     location: "bw_example,3,65,3,0,0"

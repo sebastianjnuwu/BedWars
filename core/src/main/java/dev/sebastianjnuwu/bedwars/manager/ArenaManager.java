@@ -30,7 +30,6 @@ import dev.sebastianjnuwu.bedwars.api.events.ArenaSaveEvent;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 import dev.sebastianjnuwu.bedwars.api.model.ShopNpc;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
@@ -687,20 +686,6 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             }
         }
 
-        // Forge levels
-        config.set("forge.max-level", arena.getForgeMaxLevel());
-        config.set("forge.level-default", arena.getForgeDefaultLevel());
-        for (ForgeLevel fl : arena.getForgeLevels()) {
-            String levelPath = "forge.levels." + fl.level();
-            if (fl.upgradeMaterial() != null && fl.upgradePrice() > 0) {
-                config.set(levelPath + ".upgrade.price", fl.upgradePrice());
-                config.set(levelPath + ".upgrade.material", fl.upgradeMaterial().name().toLowerCase().replace("_ingot", ""));
-            }
-            for (var entry : fl.intervals().entrySet()) {
-                config.set(levelPath + "." + entry.getKey().name().toLowerCase() + ".interval", entry.getValue());
-            }
-        }
-
         // Teams
         config.set("teams", null);
         for (final ArenaTeam team : arena.getTeams()) {
@@ -842,21 +827,6 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
         arena.setGeneratorConfigs(genConfigs);
         // Default level times (minutos -> nivel)
         arena.setLevelTimes(java.util.Map.of(0, 1, 5, 2, 10, 3, 15, 4, 20, 5));
-        // Default forge levels
-        arena.setForgeMaxLevel(10);
-        arena.setForgeDefaultLevel(1);
-        List<ForgeLevel> forgeLevels = new java.util.ArrayList<>();
-        forgeLevels.add(new ForgeLevel(1, Map.of(Material.IRON_INGOT, 20L), 3, Material.IRON_INGOT));
-        forgeLevels.add(new ForgeLevel(2, Map.of(Material.IRON_INGOT, 18L, Material.GOLD_INGOT, 100L), 5, Material.IRON_INGOT));
-        forgeLevels.add(new ForgeLevel(3, Map.of(Material.IRON_INGOT, 16L, Material.GOLD_INGOT, 90L), 8, Material.IRON_INGOT));
-        forgeLevels.add(new ForgeLevel(4, Map.of(Material.IRON_INGOT, 14L, Material.GOLD_INGOT, 80L, Material.DIAMOND, 1200L), 10, Material.IRON_INGOT));
-        forgeLevels.add(new ForgeLevel(5, Map.of(Material.IRON_INGOT, 12L, Material.GOLD_INGOT, 70L, Material.DIAMOND, 1000L), 15, Material.IRON_INGOT));
-        forgeLevels.add(new ForgeLevel(6, Map.of(Material.IRON_INGOT, 10L, Material.GOLD_INGOT, 60L, Material.DIAMOND, 800L, Material.EMERALD, 2400L), 20, Material.GOLD_INGOT));
-        forgeLevels.add(new ForgeLevel(7, Map.of(Material.IRON_INGOT, 8L, Material.GOLD_INGOT, 50L, Material.DIAMOND, 700L, Material.EMERALD, 2000L), 25, Material.GOLD_INGOT));
-        forgeLevels.add(new ForgeLevel(8, Map.of(Material.IRON_INGOT, 6L, Material.GOLD_INGOT, 40L, Material.DIAMOND, 600L, Material.EMERALD, 1600L), 30, Material.GOLD_INGOT));
-        forgeLevels.add(new ForgeLevel(9, Map.of(Material.IRON_INGOT, 5L, Material.GOLD_INGOT, 30L, Material.DIAMOND, 500L, Material.EMERALD, 1400L), 40, Material.GOLD_INGOT));
-        forgeLevels.add(new ForgeLevel(10, Map.of(Material.IRON_INGOT, 4L, Material.GOLD_INGOT, 20L, Material.DIAMOND, 400L, Material.EMERALD, 1200L)));
-        arena.setForgeLevels(forgeLevels);
         this.arenas.put(name, arena);
         this.save(arena);
         return arena;
@@ -1128,63 +1098,12 @@ public class ArenaManager implements dev.sebastianjnuwu.bedwars.api.ArenaManager
             }
         }
 
-        if (config.contains("forge")) {
-            arena.setForgeMaxLevel(config.getInt("forge.max-level", 10));
-            arena.setForgeDefaultLevel(config.getInt("forge.level-default", 1));
-            List<ForgeLevel> levels = new java.util.ArrayList<>();
-            ConfigurationSection forgeLevels = config.getConfigurationSection("forge.levels");
-            if (forgeLevels != null) {
-                for (String levelKey : forgeLevels.getKeys(false)) {
-                    try {
-                        int level = Integer.parseInt(levelKey);
-                        String levelPath = "forge.levels." + levelKey;
-                        Map<Material, Long> intervals = new java.util.HashMap<>();
-                        ConfigurationSection items = config.getConfigurationSection(levelPath);
-                        if (items != null) {
-                            for (String itemName : items.getKeys(false)) {
-                                Material mat = Material.matchMaterial(itemName);
-                                if (mat == null) {
-                                    mat = Material.matchMaterial(itemName + "_INGOT");
-                                }
-                                long interval = config.getLong(levelPath + "." + itemName + ".interval", 0L);
-                                if (mat != null && interval > 0L) {
-                                    intervals.put(mat, interval);
-                                }
-                            }
-                        }
-                        if (!intervals.isEmpty()) {
-                            int upgradePrice = config.getInt(levelPath + ".upgrade.price", 0);
-                            Material upgradeMaterial = forgeCurrencyMaterial(config.getString(levelPath + ".upgrade.material"));
-                            levels.add(new ForgeLevel(level, intervals, upgradePrice, upgradeMaterial));
-                        }
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-            if (!levels.isEmpty()) {
-                arena.setForgeLevels(levels);
-            }
-        }
-
         if (targetWorld == null) {
             final World loadWorld = arena.getWorldName() != null ? Bukkit.getWorld(arena.getWorldName()) : null;
             Bukkit.getPluginManager().callEvent(new ArenaLoadEvent(arena, loadWorld));
             this.diskConfigs.put(name, config);
         }
         return arena;
-    }
-
-    private static @Nullable Material forgeCurrencyMaterial(final @Nullable String name) {
-        if (name == null) {
-            return null;
-        }
-        return switch (name.trim().toLowerCase()) {
-            case "iron", "iron_ingot" -> Material.IRON_INGOT;
-            case "gold", "gold_ingot" -> Material.GOLD_INGOT;
-            case "diamond" -> Material.DIAMOND;
-            case "emerald" -> Material.EMERALD;
-            default -> null;
-        };
     }
 
     private static List<String> parseEnabledCommands(final Object raw) {

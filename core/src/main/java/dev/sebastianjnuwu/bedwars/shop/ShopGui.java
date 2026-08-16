@@ -464,19 +464,22 @@ public class ShopGui implements InventoryHolder {
         if ("forge".equals(item.getUpgrade())) {
             final ForgeLevel next = forgeUpgradeLevel();
             if (next == null || next.upgradeMaterial() == null) {
+                stack.setType(Material.RED_STAINED_GLASS_PANE);
+                meta = stack.getItemMeta();
                 lore.add(MM.deserialize(this.lang.raw("shop.forge_maxed")));
             } else {
                 lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(next.upgradePrice()), this.currencyName(next.upgradeMaterial()))));
                 lore.add(MM.deserialize(this.lang.raw("shop.forge_next_level", String.valueOf(next.level()))));
             }
         } else if (item.getUpgrade() != null) {
-            final String currencyName = currencyName(item.getCurrency());
-            if (isTeamUpgradeMaxed(item.getUpgrade())) {
+            final ForgeLevel next = teamUpgradeLevel(item.getUpgrade());
+            if (next == null || next.upgradeMaterial() == null) {
+                stack.setType(Material.RED_STAINED_GLASS_PANE);
+                meta = stack.getItemMeta();
                 lore.add(MM.deserialize(this.lang.raw("shop.upgrade_maxed", upgradeName(item.getUpgrade()))));
             } else {
-                final int next = currentUpgradeLevel(item.getUpgrade()) + 1;
-                lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(upgradePrice(item, next)), currencyName)));
-                lore.add(MM.deserialize(this.lang.raw("shop.forge_next_level", String.valueOf(next))));
+                lore.add(MM.deserialize(this.lang.raw("shop.price", String.valueOf(next.upgradePrice()), this.currencyName(next.upgradeMaterial()))));
+                lore.add(MM.deserialize(this.lang.raw("shop.forge_next_level", String.valueOf(next.level()))));
             }
         } else {
             String currencyName = switch (item.getCurrency()) {
@@ -601,18 +604,14 @@ public class ShopGui implements InventoryHolder {
             price = next.upgradePrice();
             currencyMaterial = next.upgradeMaterial();
         } else if (upgrade != null) {
-            if (isTeamUpgradeMaxed(upgrade)) {
+            final ForgeLevel next = teamUpgradeLevel(upgrade);
+            if (next == null || next.upgradeMaterial() == null) {
                 CompatProvider.chat().sendMessage(player, MM.deserialize(this.lang.raw("shop.upgrade_maxed", upgradeName(upgrade))));
                 player.closeInventory();
                 return;
             }
-            currencyMaterial = switch (item.getCurrency()) {
-                case IRON -> Material.IRON_INGOT;
-                case GOLD -> Material.GOLD_INGOT;
-                case DIAMOND -> Material.DIAMOND;
-                case EMERALD -> Material.EMERALD;
-            };
-            price = upgradePrice(item, currentUpgradeLevel(upgrade) + 1);
+            price = next.upgradePrice();
+            currencyMaterial = next.upgradeMaterial();
         } else {
             currencyMaterial = switch (item.getCurrency()) {
                 case IRON -> Material.IRON_INGOT;
@@ -866,32 +865,16 @@ public class ShopGui implements InventoryHolder {
         }
     }
 
-    private boolean isTeamUpgradeMaxed(final String upgrade) {
+    private @Nullable ForgeLevel teamUpgradeLevel(final String upgrade) {
         final ArenaTeam team = game.getPlayerTeam(player);
         if (team == null) {
-            return true;
+            return null;
         }
         return switch (upgrade) {
-            case "sharpness" -> game.getSharpnessLevel(team) >= game.getMaxUpgradeLevel();
-            case "protection" -> game.getProtectionLevel(team) >= game.getMaxUpgradeLevel();
-            default -> false;
+            case "sharpness" -> game.getSharpnessUpgradeLevel(team);
+            case "protection" -> game.getProtectionUpgradeLevel(team);
+            default -> null;
         };
-    }
-
-    private int currentUpgradeLevel(final String upgrade) {
-        final ArenaTeam team = game.getPlayerTeam(player);
-        if (team == null) {
-            return 0;
-        }
-        return switch (upgrade) {
-            case "sharpness" -> game.getSharpnessLevel(team);
-            case "protection" -> game.getProtectionLevel(team);
-            default -> 0;
-        };
-    }
-
-    private int upgradePrice(final ShopItem item, final int level) {
-        return item.getPrice() * level;
     }
 
     private String upgradeName(final String upgrade) {

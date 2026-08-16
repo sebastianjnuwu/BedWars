@@ -11,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GeneratorConfig;
 import dev.sebastianjnuwu.bedwars.api.model.ShopNpc;
 
@@ -51,9 +50,6 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
     private String shop;
     private Map<String, GeneratorConfig> generatorConfigs;
     private Map<Integer, Integer> levelTimes;
-    private int forgeMaxLevel;
-    private int forgeDefaultLevel;
-    private List<ForgeLevel> forgeLevels;
     private List<ShopNpc> shopNpcs;
     private List<String> enabledCommands;
     private List<Material> spawnItems;
@@ -69,7 +65,6 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.name = name;
         this.enabled = false;
         this.generatorConfigs = new HashMap<>();
-        this.forgeLevels = new ArrayList<>();
         this.shopNpcs = new ArrayList<>();
         this.enabledCommands = new ArrayList<>();
         this.spawnItems = new ArrayList<>();
@@ -468,30 +463,6 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         this.levelTimes = levelTimes;
     }
 
-    public int getForgeMaxLevel() {
-        return forgeMaxLevel;
-    }
-
-    public void setForgeMaxLevel(int maxLevel) {
-        this.forgeMaxLevel = maxLevel;
-    }
-
-    public int getForgeDefaultLevel() {
-        return forgeDefaultLevel;
-    }
-
-    public void setForgeDefaultLevel(int defaultLevel) {
-        this.forgeDefaultLevel = defaultLevel;
-    }
-
-    public List<ForgeLevel> getForgeLevels() {
-        return forgeLevels;
-    }
-
-    public void setForgeLevels(List<ForgeLevel> levels) {
-        this.forgeLevels = levels;
-    }
-
     /**
      * Retorna os NPCs da loja desta arena.
      *
@@ -604,9 +575,6 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
         copy.shop = this.shop;
         copy.generatorConfigs = this.generatorConfigs != null ? new HashMap<>(this.generatorConfigs) : new HashMap<>();
         copy.levelTimes = this.levelTimes != null ? new HashMap<>(this.levelTimes) : null;
-        copy.forgeMaxLevel = this.forgeMaxLevel;
-        copy.forgeDefaultLevel = this.forgeDefaultLevel;
-        copy.forgeLevels = this.forgeLevels != null ? new ArrayList<>(this.forgeLevels) : new ArrayList<>();
         copy.shopNpcs = this.shopNpcs != null ? new ArrayList<>(this.shopNpcs) : new ArrayList<>();
         copy.enabledCommands = this.enabledCommands != null ? new ArrayList<>(this.enabledCommands) : new ArrayList<>();
         copy.spawnItems = this.spawnItems != null ? new ArrayList<>(this.spawnItems) : new ArrayList<>();

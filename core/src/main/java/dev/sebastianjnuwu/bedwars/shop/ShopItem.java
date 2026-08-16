@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 
 import dev.sebastianjnuwu.bedwars.api.model.CurrencyType;
+import dev.sebastianjnuwu.bedwars.api.model.UpgradeConfig;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 
 /**
@@ -32,6 +33,7 @@ public class ShopItem {
     private final int price;
     private final CurrencyType currency;
     private final String upgrade;
+    private final UpgradeConfig upgradeConfig;
 
     // Positioning
     private final int skip;
@@ -53,6 +55,7 @@ public class ShopItem {
         this.price = builder.price;
         this.currency = builder.currency;
         this.upgrade = builder.upgrade;
+        this.upgradeConfig = builder.upgradeConfig;
         this.skip = builder.skip;
         this.column = builder.column;
         this.row = builder.row;
@@ -167,6 +170,15 @@ public class ShopItem {
      */
     public String getUpgrade() {
         return upgrade;
+    }
+
+    /**
+     * Retorna a configuração de níveis do upgrade do time, se houver.
+     *
+     * @return configuração de níveis ou {@code null}
+     */
+    public UpgradeConfig getUpgradeConfig() {
+        return upgradeConfig;
     }
 
     /**
@@ -330,6 +342,7 @@ public class ShopItem {
         private int price;
         private CurrencyType currency;
         private String upgrade;
+        private UpgradeConfig upgradeConfig;
         private int skip;
         private Integer column;
         private Integer row;
@@ -389,6 +402,11 @@ public class ShopItem {
 
         public Builder upgrade(String upgrade) {
             this.upgrade = upgrade;
+            return this;
+        }
+
+        public Builder upgradeConfig(UpgradeConfig upgradeConfig) {
+            this.upgradeConfig = upgradeConfig;
             return this;
         }
 
