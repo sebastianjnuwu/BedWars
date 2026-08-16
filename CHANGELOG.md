@@ -4,6 +4,24 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-213] - 2026-08-15
+
+### Adicionado
+- **Arquitetura de providers de mundo** (`world/`): nova interface `WorldProvider` (contrato do ciclo de vida dos mundos de partida — `id`, `isAvailable`, `buildWorld`, `buildWorldAsync`, `deleteWorld`, `applyWorldSettings`, `templateExists`, `saveTemplate`, `getTemplateFolder`) com duas implementações independentes:
+  - `SchematicWorldProvider` (backend ativo): movido do `manager/ArenaManager` o fluxo de criar/colar/finalizar mundo (WorldCreator + VoidGenerator + Schematic/FAWE), incluindo `createOrLoadWorld`, `pasteSchematic`, `finalizeWorld`, `clearWorldEntities` e `applyWorldSettings`; `buildWorldAsync` cria o void na main, cola o schematic async e conclui na main (callback via scheduler do plugin).
+  - `SlimeWorldProvider` (sistema paralelo): estende o `SchematicWorldProvider`, herdando o fluxo de criar/colar/finalizar, mas cria os mundos de partida como mundos Slime vazios gerenciados pelo `SlimeManager` (`createEmptySlimeWorld` via `createVoidSlimeWorld` + `loadWorld`). Se a criação do mundo Slime falhar, cai no mundo void padrão (WorldCreator) para não impedir a partida. `applyWorldSettings` herdado. O `id()`/`isAvailable()` refletem o ASP.
+  - `WorldProviders` (ponto único, no padrão do `CompatProvider`): `init(plugin, lang)` no `onEnable` escolhe o backend **automaticamente** por `SlimeManager.isAvailable()` — Slime quando disponível, senão Schematic; `world()` expõe o singleton com guard de inicialização. **Sem** nova chave de config (`world-backend` não foi adicionado).
+- **Log de backend no startup** (`lang/pt_BR.yml`, seção `startup`): novas chaves `world_backend_schematic` e `world_backend_slime` usadas pelo `WorldProviders.init`.
+
+### Corrigido
+- **Partidas não iniciavam em servidores com AdvancedSlimePaper** (`world/SlimeWorldProvider`): a seleção automática escolhia o backend Slime (ASP presente), mas o pipeline de template Slime estava incompleto — o `loadTemplate` exigia `level.dat`, que o formato de mundo do Paper 1.21.4 (`paper-world.yml`, sem `level.dat`) não possui, então `readVanillaWorld` falhava e o `/bw start` lançava "Template não encontrado: <arena>". Corrigido o `SlimeWorldProvider` para **construir os mundos de partida a partir do schematic da arena** (cria um mundo Slime vazio via ASP e cola o `.schem`/`.bwmap`), reutilizando o fluxo comprovado do `SchematicWorldProvider` (via herança) — o que torna o backend Slime funcional para iniciar partidas sem depender do template vanilla incompatível. `createOrLoadWorld` virou `protected` no `SchematicWorldProvider` para permitir a sobrescrita.
+- **VersionChecker mostrava "v${revision}" na versão publicada** (`util/VersionChecker.parseVersion`): o `pom.xml` raiz usa versão CI-friendly (`<version>${revision}</version>`), então o primeiro `<version>` do arquivo no GitHub era o placeholder `${revision}`, exibido literalmente na comparação. Corrigido o `parseVersion` para resolver o placeholder: quando o valor lido é `${<prop>}`, ele lê a tag `<prop>` correspondente (ex.: `<revision>0.0.1-213</revision>`) e usa o valor resolvido.
+
+### Alterado
+- `manager/ArenaManager`: o campo `WorldManager` foi substituído por `WorldProvider` (constructor agora `(plugin, WorldProvider, mapsFolder)`). `resetArenaMap`, `createInstance`, `createInstanceAsync`, `ensureWorldLoaded` e `delete` passam a delegar a construção/remoção ao provider; `applyWorldSettings` virou delegate público; adicionado método público `deleteWorld(String)` (usado pelo `EditCommand`); removidos `getWorldManager` e os métodos/imports de `Schematic`/`VoidGenerator`/`WorldCreator`/`Entity`/`Player`/`Difficulty`/`GameRule` que ficaram sem uso.
+- `command/admin/arena/EditCommand`: `arenaManager.getWorldManager().deleteWorld(...)` → `arenaManager.deleteWorld(...)` (o fluxo de edição com WorldCreator+VoidGenerator direto permanece inalterado).
+- `BedWarsPlugin.onEnable`: `WorldProviders.init(this, this.lang)` no lugar de `new WorldManager(this)`; `new ArenaManager(this, WorldProviders.world(), mapsFolder)`.
+
 ## [0.0.1-212] - 2026-08-15
 
 ### Corrigido

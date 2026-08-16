@@ -43,7 +43,7 @@ Base: `core/src/main/java/dev/sebastianjnuwu/bedwars`:
 | `template/` | Persistência de templates (sistema paralelo — ver gotchas) |
 | `ui/` | GUIs |
 | `util/` | Utilitários |
-| `world/` | Abstrações de mundo (`WorldManager`, `VoidGenerator`, `Schematic`) |
+| `world/` | Abstrações de mundo (`WorldProvider`, `SchematicWorldProvider`, `SlimeWorldProvider`, `WorldProviders`, `WorldManager`, `Schematic`, `VoidGenerator`) |
 
 ## Comandos
 
@@ -60,11 +60,10 @@ mvn clean package                  # gera o JAR final
 
 ## Arquitetura — pontos críticos
 
-- **Sistema de mundos ATIVO (runtime):** `manager/ArenaManager` + `world/WorldManager` + `world/Schematic`.
-  - Arenas são salvas como YAML em `arenas/<nome>.yml`; mapas como schematics FAWE (`.schem`/`.bwmap`) em `maps/`.
-  - Mundos de partida são `bw_<nome>`, criados com `WorldCreator` + `VoidGenerator`, recriados do schematic a cada reset.
-  - `ArenaManager.resetArenaMap(name)` (chamado por `Game.forceEnd()`/`endGame()`) faz: unload + delete verificados do mundo (`WorldManager.deleteWorld`) → novo mundo void → `Schematic.paste` → `flush`. Retorna `boolean`; em falha loga `log.arena_manager.reset_error`.
-- **Sistema Slime paralelo (NÃO ativo):** `arena/ArenaManager`, `reset/ResetManager`, `slime/*`, `template/*`, `world/SimpleWorldManager` formam uma implementação paralela que **não está conectada** no `BedWarsPlugin.onEnable()`. Não trate como sistema de produção; mudanças devem priorizar o sistema Schematic acima.
+- **Sistema de mundos ATIVO (runtime):** `manager/ArenaManager` delega a construção/remoção dos mundos ao backend ativo via interface `world/WorldProvider`, selecionado **automaticamente** por `world/WorldProviders` (`WorldProviders.init` no `onEnable`): `SlimeWorldProvider` quando `SlimeManager.isAvailable()`, senão `SchematicWorldProvider` (o backend padrão de produção). **Nenhuma** chave de config controla a escolha.
+  - `SchematicWorldProvider`: mundos de partida `bw_<nome>` criados com `WorldCreator` + `VoidGenerator`, recriados do schematic FAWE (`.schem`/`.bwmap`) a cada reset via `Schematic.paste`.
+  - `manager/ArenaManager`: `resetArenaMap(name)` (chamado por `Game.forceEnd()`/`endGame()`) faz `WorldProvider.deleteWorld` → novo mundo void → `Schematic.paste` → `flush`. Retorna `boolean`; em falha loga `log.arena_manager.reset_error`.
+- **Sistema Slime paralelo (NÃO ativo):** `arena/ArenaManager`, `reset/ResetManager`, `template/*`, `world/SimpleWorldManager` formam uma implementação paralela que **não está conectada** no `BedWarsPlugin.onEnable()`. O `SlimeWorldProvider`/`SlimeManager` só é usado quando o servidor realmente tem ASP disponível; ele constrói os mundos de partida a partir do schematic da arena (mundo Slime vazio + paste), então não depende de templates vanilla — não trate como sistema de produção garantido; mudanças devem priorizar o sistema Schematic acima.
 - **`Game` usa a `Arena` do cache** (referências de mundo atualizadas em memória via `updateWorldReferences` e persistidas por `flush`).
 - Regras do `ARCHITECTURE.md`: zero WorldEdit em runtime, operações de mundo assíncronas (`teleportAsync`) quando possível, templates read-only, partidas sempre em cópias/instâncias, descarregamento seguro no fim de partida.
 - Comandos de admin são executados na **main thread**; **[EVITAR]** criar workloads pesados fora dela sem necessidade.

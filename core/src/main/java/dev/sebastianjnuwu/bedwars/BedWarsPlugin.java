@@ -32,7 +32,7 @@ import dev.sebastianjnuwu.bedwars.shop.NpcListener;
 import dev.sebastianjnuwu.bedwars.shop.ShopListener;
 import dev.sebastianjnuwu.bedwars.shop.ShopManager;
 import dev.sebastianjnuwu.bedwars.util.VersionChecker;
-import dev.sebastianjnuwu.bedwars.world.WorldManager;
+import dev.sebastianjnuwu.bedwars.world.WorldProviders;
 
 public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
 
@@ -78,11 +78,11 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             this.getLogger().info(this.lang.raw("version_check.disabled"));
         }
 
-        final WorldManager worldManager = new WorldManager(this);
+        WorldProviders.init(this, this.lang);
         final File mapsFolder = new File(this.getDataFolder(), "maps");
         mapsFolder.mkdirs();
 
-        this.arenaManager = new ArenaManager(this, worldManager, mapsFolder);
+        this.arenaManager = new ArenaManager(this, WorldProviders.world(), mapsFolder);
         this.arenaManager.load();
         this.dataManager.register(this.arenaManager);
 

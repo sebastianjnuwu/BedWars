@@ -111,7 +111,7 @@ public class EditCommand extends BaseCommand implements SubCommand {
         World world = Bukkit.getWorld(worldName);
         final boolean reusingSession = world != null && this.editorManager.isBeingEdited(name);
         if (world == null || (!this.arenaManager.isWorldClean(worldName) && !reusingSession)) {
-            if (world != null && !this.arenaManager.getWorldManager().deleteWorld(worldName)) {
+            if (world != null && !this.arenaManager.deleteWorld(worldName)) {
                 CompatProvider.chat().sendMessage(sender, this.lang.text(NamedTextColor.RED, "edit.world_not_found"));
                 return;
             }

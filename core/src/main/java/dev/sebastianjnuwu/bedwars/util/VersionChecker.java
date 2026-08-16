@@ -95,13 +95,28 @@ public class VersionChecker {
     }
 
     private String parseVersion(final String xml) {
-        final String tag = "<version>";
-        final int start = xml.indexOf(tag);
+        final String raw = findTagValue(xml, "<version>", "</version>");
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        final String trimmed = raw.trim();
+        if (trimmed.startsWith("${") && trimmed.endsWith("}")) {
+            final String property = trimmed.substring(2, trimmed.length() - 1);
+            final String resolved = findTagValue(xml, "<" + property + ">", "</" + property + ">");
+            if (resolved != null && !resolved.isBlank()) {
+                return resolved.trim();
+            }
+        }
+        return trimmed;
+    }
+
+    private static String findTagValue(final String xml, final String openTag, final String closeTag) {
+        final int start = xml.indexOf(openTag);
         if (start == -1) {
             return null;
         }
-        final int valueStart = start + tag.length();
-        final int valueEnd = xml.indexOf("</version>", valueStart);
+        final int valueStart = start + openTag.length();
+        final int valueEnd = xml.indexOf(closeTag, valueStart);
         if (valueEnd == -1) {
             return null;
         }
