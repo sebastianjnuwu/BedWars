@@ -92,7 +92,7 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
         this.shopManager.loadDefaults();
 
         this.getServer().getPluginManager().registerEvents(new ArenaListener(this.arenaManager, this.gameManager, this.editorManager), this);
-        this.getServer().getPluginManager().registerEvents(new GameListener(this.gameManager), this);
+        new GameListener(this.gameManager).registerAll();
         this.getServer().getPluginManager().registerEvents(new UIListener(this.arenaManager, this.gameManager), this);
         this.getServer().getPluginManager().registerEvents(new ShopListener(), this);
 

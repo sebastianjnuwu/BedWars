@@ -4,6 +4,17 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-218] - 2026-08-17
+
+### Refatorado
+- **`game/Game.java` reduzido de 1794 → 354 linhas** (padrão `ChatManager`): extraídos `game/GameItems.java` (constantes de item, cores de lã/armadura, helpers estáticos), `game/GameLifecycle.java` (criação, `killPlayer`, `becomeSpectator`, respawns pendentes, `endGame`/`forceEnd`), `game/GameUpgrades.java` (upgrades de time, níveis de afiação/proteção/forja, `GameUpgrades` com `forgeKey`/`isSword`), `game/GameTicker.java` (ciclo de ticks, contagem regressiva, tempo limite com marcos, `countdownPitch`), `game/GameCombat.java` (dano entre jogadores, `GamePlayerDamageByPlayerEvent`) e `game/GameEnding.java` (anúncio de fim de partida, stats, reset). O `Game` virou fachada: campos de estado package-private acessados pelos helpers; chamadas cruzadas via `game.items()`, `game.lifecycle()`, `game.upgrades()`, `game.ticker()`, `game.combat()`, `game.ending()`. `Game.getWoolColor`/`getArmorColor` (static) movidos para `GameItems`; `shop/ShopGui` atualizado para usá-los.
+- **`manager/ArenaManager.java` reduzido de ~1180 → fachada**: extraídos `manager/ArenaPersistence.java` (load/save/flush/serialização de localizações, comandos habilitados, busca de arquivos de arena) e `manager/ArenaWorldService.java` (backend de mundos: `ensureArenaReady`, `resetArenaMap`, criação/remoção de instâncias, `updateWorldReferences`, `restoreBeds`, marcadores). O `ArenaManager` virou fachada com campos package-private (`plugin`, `arenas`, `arenasFolder`, `mapsFolder`, `worldProvider`, `lang`, `diskConfigs`, `cleanWorlds`, `instanceCounters`) e `persistence()`/`worldService()` privados com accessor `persistence()`.
+- **`listener/GameListener.java` reduzido de 1131 → fachada de registro**: extraídos `listener/GameCombatListener.java` (morte, respawn, dano no vazio, dano geral, friendly-fire), `listener/GameItemListener.java` (fireball, ovo de ponte, drop, proteção de armadura no inventário, pickup, craft), `listener/GameGolemListener.java` (golem: convocação, dano amigável, alvo, IA e tick de limpeza com mapa `golemOwners` privado) e `listener/GamePlayerListener.java` (quebra/colocação de blocos, camas, explosões, comandos bloqueados, quit/kick). `GameListener.registerAll()` registra os quatro; `BedWarsPlugin.onEnable` passou a chamá-lo.
+- **`shop/ShopGui.java` reduzido de 976 → fachada de estado**: extraídos `shop/ShopGuiRenderer.java` (renderização: título, borda, categorias, produtos, paginação, grade de slots, centralização) e `shop/ShopPurchase.java` (compra: validação de saldo, armaduras, upgrades, kits recursivos, `PlayerPurchaseEvent`). Helpers no mesmo pacote acessam o estado package-private da fachada; `ShopGui.handleClick` orquestra navegação/delegação.
+
+### Corrigido
+- Imports não usados e acessos privados em `Game`, `GameLifecycle`, `GameTicker`, `ArenaManager` e `ShopGuiRenderer`/`ShopPurchase` detectados pelo checkstyle/build durante a extração (resolvidos).
+
 ## [0.0.1-217] - 2026-08-16
 
 ### Alterado
