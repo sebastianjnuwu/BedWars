@@ -4,6 +4,11 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-219] - 2026-08-17
+
+### Corrigido
+- **Mensagem de moeda insuficiente mostrava o material cru** (`shop/ShopPurchase.purchaseItem`): ao comprar sem saldo, o `shop.not_enough` recebia `currencyMaterial.name().toLowerCase()` (ex.: "gold_ingot") em vez do nome da moeda. Agora usa `gui.currencyName(currencyMaterial)` (ex.: "Ouro", "Esmeralda") — mapeamento que cobre `IRON_INGOT`, `GOLD_INGOT`, `DIAMOND` e `EMERALD` via `lang/pt_BR.yml` (`shop.currency_iron/gold/diamond/emerald`).
+
 ## [0.0.1-218] - 2026-08-17
 
 ### Refatorado

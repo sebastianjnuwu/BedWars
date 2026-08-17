@@ -88,7 +88,7 @@ class ShopPurchase {
         int has = countCurrency(gui.player, currencyMaterial);
 
         if (has < price) {
-            CompatProvider.chat().sendMessage(gui.player, MM.deserialize(gui.lang.raw("shop.not_enough", currencyMaterial.name().toLowerCase())));
+            CompatProvider.chat().sendMessage(gui.player, MM.deserialize(gui.lang.raw("shop.not_enough", gui.currencyName(currencyMaterial))));
             gui.player.closeInventory();
             return;
         }
