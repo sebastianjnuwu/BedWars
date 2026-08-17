@@ -4,6 +4,23 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-221] - 2026-08-17
+
+### Refatorado
+- **Nova regra de tamanho no `AGENTS.md`** (seção "Estilo de código"): arquivos-fonte não devem ultrapassar **~350 linhas** (meta flexível, bom senso); acima disso, o arquivo deve ser subdividido em helpers de composição no mesmo pacote, mantendo uma fachada que delega. Exceção: código embarcado de terceiros (`libs/bstats`).
+- **`game/Game.java` (412 → 341)**: extraídos `game/GameQueries.java` (consultas de jogadores/estado: `isSpectator`, `isBedless`, `isEliminated`, `getPlayerTeam`, `getGamePlayer`, `isPlaying`, `trackPlacedBlock`/`isPlacedBlock`, `getPlayerCount`, `isFull`, `getGamePlayers`, `getPlayers`, `getSpectatorPlayers`, `broadcast`, `blockKey`), `game/GameCodeGenerator.java` (código público de 6 caracteres) e `game/GameDebug.java` (log de depuração). A fachada mantém os delegadores públicos.
+- **`manager/GameManager.java` (403 → 333)**: extraídos `manager/GameLookup.java` (buscas de partida: `findFirstByArenaName`, `findGameByCode`, `findOpenGame`, `listOpenCodes`) e `manager/GameValidator.java` (validação de arena: spawn, times mínimos, camas e forjas por time).
+- **`game/GameLifecycle.java` (387 → 349)**: extraídos `game/GameTeamPicker.java` (seleção de times: `findSmallestTeam`, `findNamedTeam`, `maxTeamSlots`, `largestValidMode`) e `game/GamePlayerSnapshot.java` (backup/restauração de inventário e reexibição de jogadores de outras partidas).
+- **`shop/ShopGuiRenderer.java` (378 → 199)**: extraído `shop/ShopSlotGrid.java` (cálculo de grade: `computeSlots`, `placeItem`, `centerGrid` e constantes `ITEMS_START`/`ITEMS_END`/`ITEMS_PER_PAGE`).
+- **`shop/ShopPurchase.java` (371 → 210)**: extraído `shop/ShopArmorLogic.java` (lógica de armaduras: `alreadyHasArmor`, `collectArmorPieces`, `equippedArmor`, `effectivePoints`, `equipTeamArmor`, `leatherFor`, `armorPoints`, `armorToughness` e proteção do time).
+- **`manager/ArenaWorldService.java` (368 → 326)**: extraído `manager/ArenaWorldReferenceUpdater.java` (re-sincronização de spawns, camas, geradores e NPCs para o mundo recém-construído).
+- **`manager/ArenaYamlMapper.java` (409 → 331)**: extraídos `manager/ArenaLocationCodec.java` (serialização/parsing de localizações `mundo,x,y,z,yaw,pitch`, incluindo `rebase` para instâncias) e `manager/ArenaCommandParser.java` (normalização de `enabled-commands`).
+- **`game/GameEnding.java` (353 → 277)**: extraído `game/GameTimeLimit.java` (limite de tempo: avisos em marcos, contagem final, desempate por jogadores vivos/berço/kills e vitória/empate).
+
+### Corrigido
+- Imports não usados (`ArenaTeam`, `ArenaMode`, `Bukkit`, `Component`, `CompatProvider`, `Collectors`, `Objects`, `MiniMessage`, `GameItems`, `Color`, `Attribute`, etc.) removidos das fachadas durante as extrações (checkstyle 0 violações).
+- `ShopPurchase.deliverItem` re-adicionado após remoção acidental durante a extração de `ShopArmorLogic` (o build detectou os símbolos faltantes).
+
 ## [0.0.1-220] - 2026-08-17
 
 ### Refatorado

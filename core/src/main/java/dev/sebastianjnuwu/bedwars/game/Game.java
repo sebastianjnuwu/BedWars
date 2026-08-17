@@ -6,20 +6,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
-
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
@@ -28,7 +21,6 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
-import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.manager.GameManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
@@ -45,8 +37,6 @@ import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
-    private static final MiniMessage MM = MiniMessage.miniMessage();
-
     final GameManager gameManager;
     final ShopNpcManager shopNpcManager;
     final ChatManager chat;
@@ -56,6 +46,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final GameTicker ticker;
     private final GameCombat combat;
     private final GameEnding ending;
+    private final GameQueries queries;
     final LangManager lang;
     final Arena arena;
     final ArenaMode mode;
@@ -105,9 +96,10 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         this.ticker = new GameTicker(this);
         this.combat = new GameCombat(this);
         this.ending = new GameEnding(this);
+        this.queries = new GameQueries(this);
         this.arena = arena;
         this.mode = mode;
-        this.code = generateCode();
+        this.code = GameCodeGenerator.generate();
         this.teams = new HashMap<>();
         this.players = new HashMap<>();
         this.eliminatedTeams = new HashSet<>();
@@ -146,19 +138,6 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.code;
     }
 
-    /**
-     * Gera um código aleatório de 6 caracteres alfanuméricos em maiúsculas.
-     */
-    private static String generateCode() {
-        final String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        final StringBuilder sb = new StringBuilder(6);
-        final ThreadLocalRandom random = ThreadLocalRandom.current();
-        for (int i = 0; i < 6; i++) {
-            sb.append(alphabet.charAt(random.nextInt(alphabet.length())));
-        }
-        return sb.toString();
-    }
-
     public GameState getState() {
         return this.state;
     }
@@ -170,13 +149,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
      * @param args argumentos de formatação da mensagem
      */
     void debug(final String key, final Object... args) {
-        if (this.gameManager.getConfigManager().isDebugEnabled()) {
-            Bukkit.getLogger().info("[BedWars] " + this.lang.raw(key, args));
-        }
+        GameDebug.log(this, key, args);
     }
 
     public boolean isSpectator(final Player player) {
-        return this.spectators.contains(player.getUniqueId());
+        return this.queries.isSpectator(player);
     }
 
     public void joinAsSpectator(final Player player) {
@@ -188,38 +165,31 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     public boolean isBedless(final ArenaTeam team) {
-        return this.bedlessTeams.contains(team);
+        return this.queries.isBedless(team);
     }
 
     public boolean isEliminated(final ArenaTeam team) {
-        return this.eliminatedTeams.contains(team);
+        return this.queries.isEliminated(team);
     }
 
     public @Nullable ArenaTeam getPlayerTeam(final Player player) {
-        final GamePlayer gp = this.players.get(player.getUniqueId());
-        return gp != null ? gp.getTeam() : null;
+        return this.queries.getPlayerTeam(player);
     }
 
     public @Nullable GamePlayer getGamePlayer(final Player player) {
-        return this.players.get(player.getUniqueId());
+        return this.queries.getGamePlayer(player);
     }
 
     public boolean isPlaying(final Player player) {
-        final GamePlayer gp = this.players.get(player.getUniqueId());
-        return gp != null && gp.isAlive() && this.state == GameState.PLAYING;
+        return this.queries.isPlaying(player);
     }
 
     public void trackPlacedBlock(final Location location) {
-        this.placedBlocks.add(blockKey(location));
+        this.queries.trackPlacedBlock(location);
     }
 
     public boolean isPlacedBlock(final Location location) {
-        return this.placedBlocks.contains(blockKey(location));
-    }
-
-    private static String blockKey(final Location location) {
-        return location.getWorld().getName() + ":" + location.getBlockX()
-                + ":" + location.getBlockY() + ":" + location.getBlockZ();
+        return this.queries.isPlacedBlock(location);
     }
 
     public void join(final Player player) {
@@ -303,12 +273,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     }
 
     public int getPlayerCount() {
-        return this.players.size();
+        return this.queries.getPlayerCount();
     }
 
     public boolean isFull() {
-        final int capacity = this.arena.getTeams().size() * this.lifecycle.maxTeamSlots();
-        return this.players.size() >= capacity;
+        return this.queries.isFull();
     }
 
     public Map<ArenaTeam, List<UUID>> getTeams() {
@@ -317,29 +286,19 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
     @Override
     public Collection<GamePlayer> getGamePlayers() {
-        return this.players.values();
+        return this.queries.getGamePlayers();
     }
 
     public Collection<Player> getPlayers() {
-        return this.players.keySet().stream()
-                .map(Bukkit::getPlayer)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return this.queries.getPlayers();
     }
 
     public Collection<Player> getSpectatorPlayers() {
-        return this.spectators.stream()
-                .map(Bukkit::getPlayer)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return this.queries.getSpectatorPlayers();
     }
 
     public void broadcast(final String message) {
-        final Component component = MM.deserialize(message);
-        this.players.keySet().stream()
-                .map(Bukkit::getPlayer)
-                .filter(Objects::nonNull)
-                .forEach(p -> CompatProvider.chat().sendMessage(p, component));
+        this.queries.broadcast(message);
     }
 
     public void forceEnd() {
@@ -356,56 +315,26 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.mode;
     }
 
-    /**
-     * Retorna o gerenciador de itens desta partida.
-     *
-     * @return gerenciador de itens (não nulo)
-     */
     GameItems items() {
         return this.items;
     }
 
-    /**
-     * Retorna o gerenciador de ciclo de vida dos jogadores.
-     *
-     * @return gerenciador de ciclo de vida (não nulo)
-     */
     GameLifecycle lifecycle() {
         return this.lifecycle;
     }
 
-    /**
-     * Retorna o gerenciador de upgrades da partida.
-     *
-     * @return gerenciador de upgrades (não nulo)
-     */
     GameUpgrades upgrades() {
         return this.upgrades;
     }
 
-    /**
-     * Retorna o gerenciador de ticks da partida.
-     *
-     * @return gerenciador de ticks (não nulo)
-     */
     GameTicker ticker() {
         return this.ticker;
     }
 
-    /**
-     * Retorna o gerenciador de combate da partida.
-     *
-     * @return gerenciador de combate (não nulo)
-     */
     GameCombat combat() {
         return this.combat;
     }
 
-    /**
-     * Retorna o gerenciador de encerramento da partida.
-     *
-     * @return gerenciador de encerramento (não nulo)
-     */
     GameEnding ending() {
         return this.ending;
     }

@@ -12,7 +12,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import dev.sebastianjnuwu.bedwars.api.events.PlayerJoinGameEvent;
 import dev.sebastianjnuwu.bedwars.api.events.PlayerLeaveGameEvent;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
@@ -28,6 +27,8 @@ public final class GameLifecycle {
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
     private final Game game;
+    private final GameTeamPicker teamPicker;
+    private final GamePlayerSnapshot snapshot;
 
     /**
      * Cria o gerenciador de ciclo de vida para a partida informada.
@@ -36,6 +37,8 @@ public final class GameLifecycle {
      */
     public GameLifecycle(final Game game) {
         this.game = game;
+        this.teamPicker = new GameTeamPicker(game);
+        this.snapshot = new GamePlayerSnapshot(game);
     }
 
     /**
@@ -76,17 +79,17 @@ public final class GameLifecycle {
 
         final ArenaTeam team;
         if (teamName != null) {
-            team = this.findNamedTeam(teamName);
+            team = this.teamPicker.findNamedTeam(teamName);
             if (team == null) {
                 CompatProvider.chat().sendMessage(player, this.game.lang.text(NamedTextColor.RED, "game.team_not_found", teamName));
                 return;
             }
-            if (this.game.teams.get(team).size() >= this.maxTeamSlots()) {
+            if (this.game.teams.get(team).size() >= this.teamPicker.maxTeamSlots()) {
                 CompatProvider.chat().sendMessage(player, this.game.lang.text(NamedTextColor.RED, "game.team_full"));
                 return;
             }
         } else {
-            team = this.findSmallestTeam();
+            team = this.teamPicker.findSmallestTeam();
             if (team == null) {
                 CompatProvider.chat().sendMessage(player, this.game.lang.text(NamedTextColor.RED, "game.no_teams_available"));
                 return;
@@ -100,7 +103,7 @@ public final class GameLifecycle {
         this.game.debug("debug.player_joined", player.getName(), this.game.arena.getName(),
                 team.getName(), this.game.players.size());
 
-        this.saveInventory(player);
+        this.snapshot.save(player);
 
         Bukkit.getPluginManager().callEvent(new PlayerJoinGameEvent(this.game, player));
 
@@ -164,12 +167,12 @@ public final class GameLifecycle {
             CompatProvider.chat().sendMessage(player, this.game.lang.text(NamedTextColor.RED, "game.already_in_team"));
             return;
         }
-        final ArenaTeam newTeam = this.findNamedTeam(teamName);
+        final ArenaTeam newTeam = this.teamPicker.findNamedTeam(teamName);
         if (newTeam == null) {
             CompatProvider.chat().sendMessage(player, this.game.lang.text(NamedTextColor.RED, "game.team_not_found", teamName));
             return;
         }
-        if (this.game.teams.get(newTeam).size() >= this.maxTeamSlots()) {
+        if (this.game.teams.get(newTeam).size() >= this.teamPicker.maxTeamSlots()) {
             CompatProvider.chat().sendMessage(player, this.game.lang.text(NamedTextColor.RED, "game.team_full"));
             return;
         }
@@ -190,7 +193,7 @@ public final class GameLifecycle {
      */
     public void leave(final Player player) {
         if (this.game.state == GameState.ENDING) {
-            this.restoreInventory(player);
+            this.snapshot.restore(player);
             this.game.gameManager.removePlayerMapping(player);
             return;
         }
@@ -206,7 +209,7 @@ public final class GameLifecycle {
         }
 
         // Restaura inventario do mundo normal
-        this.restoreInventory(player);
+        this.snapshot.restore(player);
 
         final Location lobby = this.game.gameManager.getConfigManager().getLobby();
         if (lobby != null) {
@@ -265,7 +268,7 @@ public final class GameLifecycle {
 
         this.game.debug("debug.player_spectator", player.getName(), this.game.arena.getName());
         this.game.spectators.add(player.getUniqueId());
-        this.saveInventory(player);
+        this.snapshot.save(player);
 
         CompatProvider.chat().sendMessage(player, MM.deserialize(this.game.lang.raw("game.game_code", this.game.code)));
 
@@ -303,10 +306,7 @@ public final class GameLifecycle {
      * @return o menor time ou {@code null} se não houver times disponíveis
      */
     public @Nullable ArenaTeam findSmallestTeam() {
-        return this.game.teams.keySet().stream()
-                .filter(t -> !this.game.eliminatedTeams.contains(t))
-                .min(java.util.Comparator.comparingInt(t -> this.game.teams.get(t).size()))
-                .orElse(null);
+        return this.teamPicker.findSmallestTeam();
     }
 
     /**
@@ -316,12 +316,7 @@ public final class GameLifecycle {
      * @return o time encontrado ou {@code null}
      */
     public @Nullable ArenaTeam findNamedTeam(final String name) {
-        for (final ArenaTeam team : this.game.teams.keySet()) {
-            if (team.getName().equalsIgnoreCase(name)) {
-                return team;
-            }
-        }
-        return null;
+        return this.teamPicker.findNamedTeam(name);
     }
 
     /**
@@ -330,26 +325,7 @@ public final class GameLifecycle {
      * @return capacidade máxima por time
      */
     public int maxTeamSlots() {
-        final int arenaMax = this.game.arena.getMaxPlayersPerTeam();
-        if (arenaMax > 0) {
-            return arenaMax;
-        }
-        final ArenaMode mode = this.game.mode;
-        if (mode != null) {
-            return mode.getTeamSize();
-        }
-        return this.largestValidMode().getTeamSize();
-    }
-
-    private ArenaMode largestValidMode() {
-        final int teamCount = this.game.teams.size();
-        ArenaMode largest = ArenaMode.SOLO;
-        for (final ArenaMode mode : ArenaMode.values()) {
-            if (mode.isValidFor(teamCount) && mode.getTeamSize() > largest.getTeamSize()) {
-                largest = mode;
-            }
-        }
-        return largest;
+        return this.teamPicker.maxTeamSlots();
     }
 
     /**
@@ -358,14 +334,7 @@ public final class GameLifecycle {
      * @param player jogador cujo estado será salvo (não nulo)
      */
     public void saveInventory(final Player player) {
-        final var manager = this.game.gameManager.getPlayerStateManager();
-        if (manager.hasSavedState(player)) {
-            if (!this.game.players.containsKey(player.getUniqueId()) && !this.game.spectators.contains(player.getUniqueId())) {
-                this.game.gameManager.getPlugin().getLogger().warning(this.game.lang.raw("debug.player_orphan_snapshot", player.getUniqueId().toString()));
-                manager.restorePlayerState(player);
-            }
-        }
-        manager.savePlayerState(player);
+        this.snapshot.save(player);
     }
 
     /**
@@ -375,13 +344,6 @@ public final class GameLifecycle {
      * @param player jogador cujo estado será restaurado (não nulo)
      */
     public void restoreInventory(final Player player) {
-        this.game.gameManager.getPlayerStateManager().restorePlayerState(player);
-        for (final Player online : Bukkit.getOnlinePlayers()) {
-            if (this.game == this.game.gameManager.getPlayerGame(online)) {
-                continue;
-            }
-            player.showPlayer(this.game.gameManager.getPlugin(), online);
-            online.showPlayer(this.game.gameManager.getPlugin(), player);
-        }
+        this.snapshot.restore(player);
     }
 }

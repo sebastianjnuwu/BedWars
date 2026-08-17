@@ -15,7 +15,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.game.Game;
@@ -39,6 +38,8 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     private final EditorManager editorManager;
     private final PlayerStateManager playerStateManager;
     private final GameJoinQueue joinQueue;
+    private final GameLookup lookup;
+    private final GameValidator validator;
 
     public GameManager(final JavaPlugin plugin, final ArenaManager arenaManager, final ConfigManager configManager, final LangManager lang, final EditorManager editorManager) {
         this.plugin = plugin;
@@ -51,6 +52,8 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         this.editorManager = editorManager;
         this.playerStateManager = new PlayerStateManager(plugin, lang);
         this.joinQueue = new GameJoinQueue(this);
+        this.lookup = new GameLookup(this);
+        this.validator = new GameValidator(this);
     }
 
     public JavaPlugin getPlugin() {
@@ -79,7 +82,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public @Nullable dev.sebastianjnuwu.bedwars.api.model.Game getGame(final String arenaName) {
-        return this.findFirstByArenaName(arenaName);
+        return this.lookup.findFirstByArenaName(arenaName);
     }
 
     public @Nullable Game getGameByWorld(final String worldName) {
@@ -98,34 +101,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
 
     @Override
     public List<String> validateArena(final Arena arena) {
-        final List<String> missing = new ArrayList<>();
-        if (arena.getArenaSpawn() == null) {
-            missing.add(this.lang.raw("game.validate_spawn", arena.getName()));
-        }
-        if (arena.getTeams().size() < 2) {
-            missing.add(this.lang.raw("game.validate_teams", arena.getName()));
-        }
-        if (arena.getMinTeamsToStart() > arena.getTeams().size()) {
-            missing.add(this.lang.raw("game.validate_min_teams", arena.getName()));
-        }
-        for (final ArenaTeam team : arena.getTeams()) {
-            if (team.getSpawn() == null) {
-                missing.add(this.lang.raw("game.validate_team_spawn", team.getName()));
-            }
-            if (team.getBed() == null) {
-                missing.add(this.lang.raw("game.validate_team_bed", team.getName()));
-            }
-            final long forgeCount = arena.getGenerators().stream()
-                    .filter(generator -> generator.getType().equalsIgnoreCase("forge"))
-                    .filter(generator -> team.getName().equalsIgnoreCase(generator.getTeam()))
-                    .count();
-            if (forgeCount == 0) {
-                missing.add(this.lang.raw("game.validate_team_forge", team.getName()));
-            } else if (forgeCount > 1) {
-                missing.add(this.lang.raw("game.validate_team_forge_duplicate", team.getName()));
-            }
-        }
-        return missing;
+        return this.validator.validate(arena);
     }
 
     @Override
@@ -157,7 +133,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
                 CompatProvider.chat().sendMessage(player, this.lang.text(NamedTextColor.RED, "game.already_in_game"));
                 return;
             }
-            final Game target = this.findGameByCode(code);
+            final Game target = this.lookup.findGameByCode(code);
             if (target == null || !target.getArena().getName().equalsIgnoreCase(arenaName)) {
                 CompatProvider.chat().sendMessage(player, this.lang.text(NamedTextColor.RED, "game.code_not_found", code));
                 return;
@@ -202,9 +178,9 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
             return;
         }
 
-        Game game = this.findOpenGame(arenaName, mode);
+        Game game = this.lookup.findOpenGame(arenaName, mode);
         if (game == null) {
-            final Game active = this.findFirstByArenaName(arenaName);
+            final Game active = this.lookup.findFirstByArenaName(arenaName);
             if (active != null && active.getState() != GameState.WAITING && active.getState() != GameState.STARTING) {
                 active.joinAsSpectator(player);
                 this.playerGames.put(player.getUniqueId(), active);
@@ -251,9 +227,9 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     }
 
     private void startGame(final String arenaName, final boolean force) {
-        Game game = this.findOpenGame(arenaName, null);
+        Game game = this.lookup.findOpenGame(arenaName, null);
         if (game == null) {
-            game = this.findFirstByArenaName(arenaName);
+            game = this.lookup.findFirstByArenaName(arenaName);
         }
         if (game == null || (game.getState() != GameState.WAITING && game.getState() != GameState.STARTING)) {
             final Arena arena = this.arenaManager.get(arenaName);
@@ -302,7 +278,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
     public void removeGame(final String key) {
         Game game = this.games.get(key);
         if (game == null) {
-            game = this.findFirstByArenaName(key);
+            game = this.lookup.findFirstByArenaName(key);
             if (game != null) {
                 this.games.remove(this.gameKey(game.getArena()));
             }
@@ -319,30 +295,6 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         this.debug("debug.room_closed", removed.getArena().getName());
     }
 
-    private @Nullable Game findFirstByArenaName(final String arenaName) {
-        for (final Game game : this.games.values()) {
-            if (game.getArena().getName().equalsIgnoreCase(arenaName)) {
-                return game;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Busca uma partida pelo código público (case-insensitive).
-     *
-     * @param code código da partida (não nulo)
-     * @return a partida correspondente, ou {@code null} se não existir
-     */
-    private @Nullable Game findGameByCode(final String code) {
-        for (final Game game : this.games.values()) {
-            if (game.getCode().equalsIgnoreCase(code)) {
-                return game;
-            }
-        }
-        return null;
-    }
-
     /**
      * Retorna os códigos das partidas abertas (em lobby/início) de uma arena,
      * usado para autocompletar o argumento {@code --code}.
@@ -351,29 +303,7 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
      * @return lista de códigos das partidas abertas (nunca nula)
      */
     public List<String> listOpenCodes(final String arenaName) {
-        final List<String> codes = new ArrayList<>();
-        for (final Game game : this.games.values()) {
-            final Arena arena = game.getArena();
-            if (arena.getName().equalsIgnoreCase(arenaName)
-                    && (game.getState() == GameState.WAITING || game.getState() == GameState.STARTING)
-                    && !game.isFull()) {
-                codes.add(game.getCode());
-            }
-        }
-        return codes;
-    }
-
-    private @Nullable Game findOpenGame(final String arenaName, final @Nullable ArenaMode mode) {
-        for (final Game game : this.games.values()) {
-            final Arena arena = game.getArena();
-            if (arena.getName().equalsIgnoreCase(arenaName)
-                    && (mode == null || game.getMode() == mode)
-                    && (game.getState() == GameState.WAITING || game.getState() == GameState.STARTING)
-                    && !game.isFull()) {
-                return game;
-            }
-        }
-        return null;
+        return this.lookup.listOpenCodes(arenaName);
     }
 
     String gameKey(final Arena arena) {
