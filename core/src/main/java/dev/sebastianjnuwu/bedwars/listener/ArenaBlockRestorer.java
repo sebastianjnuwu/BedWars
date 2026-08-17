@@ -18,7 +18,7 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.arena.ArenaManager;
 
 /**
  * Responsável por restaurar os marcadores de uma arena quando quebrados no

@@ -20,6 +20,7 @@ import dev.sebastianjnuwu.bedwars.hook.CitizensHook;
 import dev.sebastianjnuwu.bedwars.hook.FancyNpcsHook;
 import dev.sebastianjnuwu.bedwars.hook.NpcHook;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.shop.gui.ShopGui;
 
 /**
  * Gerencia o ciclo de vida dos NPCs da loja para as arenas do BedWars.

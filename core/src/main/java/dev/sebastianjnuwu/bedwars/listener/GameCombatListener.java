@@ -21,7 +21,7 @@ import dev.sebastianjnuwu.bedwars.api.model.Game;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.api.model.StatType;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.manager.game.GameManager;
 import dev.sebastianjnuwu.bedwars.util.LocationUtil;
 
 /**

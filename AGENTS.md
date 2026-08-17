@@ -97,7 +97,7 @@ v0.0.1-059 - fix: reset de arena nao limpa o mundo (unload/delete verificados)
 ## Estilo de código
 
 - Java 21; seguir os padrões existentes: parâmetros `final`, switch expressions, visibilidade restrita (private sempre que possível).
-- **[OBRIGATÓRIO]** Arquivos-fonte não devem ultrapassar **~350 linhas** (meta flexível; use o bom senso). Qualquer arquivo acima disso deve ser subdividido em helpers de composição no mesmo pacote — mantendo uma fachada que delega. Exceção: código embarcado de terceiros (`libs/bstats`).
+- **[OBRIGATÓRIO]** Arquivos-fonte não devem ultrapassar **~350 linhas** (meta flexível; use o bom senso). Qualquer arquivo acima disso deve ser subdividido em helpers de composição — no mesmo pacote ou em subpacotes temáticos (`game/combat`, `shop/gui`, `manager/arena` etc.) — mantendo uma fachada pública que delega. Exceção: código embarcado de terceiros (`libs/bstats`).
 - **[NUNCA]** adicionar comentários salvo se solicitado.
 - Logs e mensagens ao jogador em **português**; identificadores em **inglês**.
 - Mensagens do jogador via `LangManager` (chaves em `lang/pt_BR.yml`) — não hardcoded.

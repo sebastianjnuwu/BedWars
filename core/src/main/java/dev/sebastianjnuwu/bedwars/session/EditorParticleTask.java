@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.arena.ArenaManager;
 
 /**
  * Spawna partículas de poeira coloridas acima de cada ponto definido de uma arena

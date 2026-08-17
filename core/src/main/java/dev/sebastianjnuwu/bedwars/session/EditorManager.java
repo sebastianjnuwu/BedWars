@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.manager.arena.ArenaManager;
 
 /**
  * Gerencia sessões de edição de arenas.
@@ -86,7 +87,7 @@ public class EditorManager {
      */
     public void startParticleTask(final Player player,
                                    final String arenaName,
-                                   final dev.sebastianjnuwu.bedwars.manager.ArenaManager arenaManager) {
+                                   final ArenaManager arenaManager) {
         // Cancel any stale task for this arena first
         this.cancelParticleTask(arenaName);
 
@@ -155,7 +156,7 @@ public class EditorManager {
     // ── shutdown ─────────────────────────────────────────────────────────
 
     public void shutdown(final @Nullable dev.sebastianjnuwu.bedwars.manager.ConfigManager configManager,
-                         final @Nullable dev.sebastianjnuwu.bedwars.manager.ArenaManager arenaManager,
+                         final @Nullable ArenaManager arenaManager,
                          final @Nullable LangManager lang) {
         org.bukkit.Location lobby = configManager != null ? configManager.getLobby() : null;
         if (lobby == null && !Bukkit.getWorlds().isEmpty()) {

@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.Game;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.manager.game.GameManager;
 
 /**
  * Listener responsável pelos itens especiais e inventário da partida de BedWars.

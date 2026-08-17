@@ -20,7 +20,7 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.manager.game.GameManager;
 
 public class TeamSelectionGui implements InventoryHolder {
 

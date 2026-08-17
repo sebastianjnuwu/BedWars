@@ -15,8 +15,8 @@ import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.game.Game;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.manager.arena.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.game.GameManager;
 import dev.sebastianjnuwu.bedwars.ui.ConfirmExitGui;
 import dev.sebastianjnuwu.bedwars.ui.TeamSelectionGui;
 

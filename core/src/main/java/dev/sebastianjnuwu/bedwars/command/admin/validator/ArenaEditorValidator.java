@@ -8,7 +8,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.arena.ArenaManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 public final class ArenaEditorValidator {

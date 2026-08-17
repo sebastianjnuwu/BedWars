@@ -7,6 +7,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
+import dev.sebastianjnuwu.bedwars.shop.gui.ShopGui;
+
 public class ShopListener implements Listener {
 
     private static final int SHOP_SLOTS = 54;

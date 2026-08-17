@@ -15,6 +15,9 @@ import org.jetbrains.annotations.Nullable;
 import dev.sebastianjnuwu.bedwars.BedWarsPlugin;
 import dev.sebastianjnuwu.bedwars.api.model.UpgradeConfig;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
+import dev.sebastianjnuwu.bedwars.shop.model.ShopCategory;
+import dev.sebastianjnuwu.bedwars.shop.model.ShopItem;
+import dev.sebastianjnuwu.bedwars.shop.parser.ShopConfigParser;
 
 /**
  * Gerencia as lojas do plugin.

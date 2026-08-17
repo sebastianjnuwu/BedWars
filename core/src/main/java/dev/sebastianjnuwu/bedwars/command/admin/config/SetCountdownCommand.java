@@ -13,9 +13,9 @@ import dev.sebastianjnuwu.bedwars.command.BaseCommand;
 import dev.sebastianjnuwu.bedwars.command.admin.ArenaSubCommand;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.ArenaManager;
 import dev.sebastianjnuwu.bedwars.manager.ConfigManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.manager.arena.ArenaManager;
+import dev.sebastianjnuwu.bedwars.manager.game.GameManager;
 import dev.sebastianjnuwu.bedwars.session.EditorManager;
 
 /**

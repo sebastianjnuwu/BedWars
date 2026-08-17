@@ -21,8 +21,16 @@ import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.ForgeLevel;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
+import dev.sebastianjnuwu.bedwars.game.combat.GameCombat;
+import dev.sebastianjnuwu.bedwars.game.ending.GameEnding;
+import dev.sebastianjnuwu.bedwars.game.lifecycle.GameLifecycle;
+import dev.sebastianjnuwu.bedwars.game.ticker.GameTicker;
+import dev.sebastianjnuwu.bedwars.game.upgrade.GameUpgrades;
+import dev.sebastianjnuwu.bedwars.game.util.GameCodeGenerator;
+import dev.sebastianjnuwu.bedwars.game.util.GameDebug;
+import dev.sebastianjnuwu.bedwars.game.util.GameQueries;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
-import dev.sebastianjnuwu.bedwars.manager.GameManager;
+import dev.sebastianjnuwu.bedwars.manager.game.GameManager;
 import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
 
 /**
@@ -37,9 +45,9 @@ import dev.sebastianjnuwu.bedwars.shop.ShopNpcManager;
  */
 public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
 
-    final GameManager gameManager;
-    final ShopNpcManager shopNpcManager;
-    final ChatManager chat;
+    public final GameManager gameManager;
+    public final ShopNpcManager shopNpcManager;
+    public final ChatManager chat;
     private final GameItems items;
     private final GameLifecycle lifecycle;
     private final GameUpgrades upgrades;
@@ -47,29 +55,29 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private final GameCombat combat;
     private final GameEnding ending;
     private final GameQueries queries;
-    final LangManager lang;
-    final Arena arena;
-    final ArenaMode mode;
-    final String code;
-    final Map<ArenaTeam, List<UUID>> teams;
-    final Map<UUID, GamePlayer> players;
-    final Set<ArenaTeam> eliminatedTeams;
-    final Set<ArenaTeam> bedlessTeams;
-    final Set<UUID> spectators;
-    final Map<ArenaGenerator, Integer> forgeLevels;
-    final Map<ArenaGenerator, long[]> generatorTicks;
-    final Map<String, long[]> forgeTicks;
-    final Map<ArenaTeam, Integer> sharpnessLevels;
-    final Map<ArenaTeam, Integer> protectionLevels;
-    final Map<UUID, Integer> respawnTicks;
-    final Set<UUID> pendingFinalRespawns;
-    final Set<String> placedBlocks;
-    GameState state;
-    BukkitTask gameTickTask;
-    int tick;
-    int countdownSeconds;
-    int timeLimitWarning;
-    final Set<Integer> timeLimitWarningsSent = new HashSet<>();
+    public final LangManager lang;
+    public final Arena arena;
+    public final ArenaMode mode;
+    public final String code;
+    public final Map<ArenaTeam, List<UUID>> teams;
+    public final Map<UUID, GamePlayer> players;
+    public final Set<ArenaTeam> eliminatedTeams;
+    public final Set<ArenaTeam> bedlessTeams;
+    public final Set<UUID> spectators;
+    public final Map<ArenaGenerator, Integer> forgeLevels;
+    public final Map<ArenaGenerator, long[]> generatorTicks;
+    public final Map<String, long[]> forgeTicks;
+    public final Map<ArenaTeam, Integer> sharpnessLevels;
+    public final Map<ArenaTeam, Integer> protectionLevels;
+    public final Map<UUID, Integer> respawnTicks;
+    public final Set<UUID> pendingFinalRespawns;
+    public final Set<String> placedBlocks;
+    public GameState state;
+    public BukkitTask gameTickTask;
+    public int tick;
+    public int countdownSeconds;
+    public int timeLimitWarning;
+    public final Set<Integer> timeLimitWarningsSent = new HashSet<>();
 
     /**
      * Constrói uma nova instância de partida para a arena informada.
@@ -148,7 +156,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
      * @param key  chave da mensagem no arquivo de língua
      * @param args argumentos de formatação da mensagem
      */
-    void debug(final String key, final Object... args) {
+    public void debug(final String key, final Object... args) {
         GameDebug.log(this, key, args);
     }
 
@@ -315,27 +323,27 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
         return this.mode;
     }
 
-    GameItems items() {
+    public GameItems items() {
         return this.items;
     }
 
-    GameLifecycle lifecycle() {
+    public GameLifecycle lifecycle() {
         return this.lifecycle;
     }
 
-    GameUpgrades upgrades() {
+    public GameUpgrades upgrades() {
         return this.upgrades;
     }
 
-    GameTicker ticker() {
+    public GameTicker ticker() {
         return this.ticker;
     }
 
-    GameCombat combat() {
+    public GameCombat combat() {
         return this.combat;
     }
 
-    GameEnding ending() {
+    public GameEnding ending() {
         return this.ending;
     }
 }

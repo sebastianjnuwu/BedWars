@@ -4,6 +4,19 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-222] - 2026-08-17
+
+### Refatorado
+- **Reorganização em subpacotes temáticos** (mantendo comportamento idêntico): a regra do `AGENTS.md` "helpers no mesmo pacote" passa a permitir subpacotes temáticos, mantendo as fachadas públicas que delegam.
+- **`game/` subdividido**: `game/combat/GameCombat.java`, `game/ending/GameEnding.java` + `GameTimeLimit.java`, `game/lifecycle/GameLifecycle.java` + `GamePlayerSnapshot.java` + `GameTeamPicker.java`, `game/ticker/GameTicker.java` + `GameGeneratorTicker.java`, `game/upgrade/GameUpgrades.java` + `GameForge.java`, `game/util/GameCodeGenerator.java` + `GameDebug.java` + `GameQueries.java`. `Game.java` permanece como fachada (campos de estado e accessors `public`), com imports cruzados entre subpacotes via `Game`.
+- **`shop/` subdividido**: `shop/gui/` (ShopGui, ShopGuiRenderer, ShopSlotGrid, ShopPurchase, ShopArmorLogic), `shop/model/` (ShopItem, ShopItemBuilder, ShopCategory), `shop/parser/` (ShopConfigParser, ShopUpgradeParser). A raiz mantém ShopManager, ShopNpcManager, ShopListener, NpcListener e CitizensNpcListener.
+- **`manager/` subdividido**: `manager/arena/` (ArenaManager, ArenaPersistence, ArenaWorldService, ArenaYamlMapper, ArenaLocationCodec, ArenaCommandParser, MapFileResolver, ArenaBedRestorer, ArenaMarkerBlocks, ArenaWorldReferenceUpdater) e `manager/game/` (GameManager, GameJoinQueue, GameLookup, GameValidator). A raiz mantém ConfigManager, DataManager e PlayerStateManager.
+- Imports atualizados nos 45 arquivos externos (`manager.ArenaManager` → `manager.arena.ArenaManager`, `manager.GameManager` → `manager.game.GameManager`, `shop.ShopGui` → `shop.gui.ShopGui`).
+
+### Corrigido
+- Import `de.oliver.fancynpcs.api.events.NpcInteractEvent` restaurado em `shop/NpcListener.java` (não pertence a nenhum grupo do `ImportOrder`).
+- FQN inline de `manager.ArenaManager` em `session/EditorManager.java` substituído por import + nome curto.
+
 ## [0.0.1-221] - 2026-08-17
 
 ### Refatorado
