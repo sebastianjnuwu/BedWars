@@ -4,10 +4,16 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-217] - 2026-08-16
+
+### Alterado
+- **Avisos de tempo limite em múltiplos marcos** (`game/Game.handleTimeLimit`): o aviso de fim de partida agora é enviado ao chat nos segundos 60, 45, 30, 15 e 10 restantes (uma vez cada, rastreado por `Set<Integer> timeLimitWarningsSent`), em vez de apenas aos 30s. O gatilho deixou de depender de `remaining == 30` (que nunca disparava com limites menores que 30s, ex.: 15s) e passa a usar os marcos fixos. Mantém o título 5, 4, 3, 2, 1 com subtítulo nos últimos 5s e o som de bip.
+- **Cor dos avisos de tempo limite** (`lang/pt_BR.yml`): `time_limit_warning`, `time_limit_warning_once` e `time_limit_ending` alteradas de `§c` (vermelho) para `§e` (amarelo); o envio no chat usa `NamedTextColor.GOLD`. Nova chave de debug `debug.time_limit_warning_sent` para diagnóstico no console.
+
 ## [0.0.1-216] - 2026-08-16
 
 ### Corrigido
-- **Contagem regressiva do tempo limite spammava o chat** (`game/Game.handleTimeLimit`): a cada 5 segundos nos últimos 20% da partida era enviada a mensagem `game.time_limit_warning` ("O tempo limite será atingido em {0} segundo(s)!") no chat de todos os jogadores. Agora, nos últimos 5 segundos a partida mostra uma contagem regressiva no título (5, 4, 3, 2, 1) com a nova chave `game.time_limit_ending` e o som de bip — sem mensagens repetidas no chat.
+- **Contagem regressiva do tempo limite spammava o chat** (`game/Game.handleTimeLimit`): a cada 5 segundos nos últimos 20% da partida era enviada a mensagem `game.time_limit_warning` ("O tempo limite será atingido em {0} segundo(s)!") no chat de todos os jogadores. Agora o aviso é único: a 30 segundos do fim o chat recebe `game.time_limit_warning_once` ("A partida termina em {0} segundos!") uma vez; nos últimos 5 segundos o título mostra a contagem 5, 4, 3, 2, 1 com o subtítulo `game.time_limit_ending` ("A partida vai acabar!") e som de bip — sem mensagens repetidas no chat.
 - `shop/ShopGui`: removidos os warnings de deprecação de `ItemStack#setType` ao trocar o item maxed para `RED_STAINED_GLASS_PANE` (agora usa `new ItemStack(...)` com a mesma quantidade).
 
 ## [0.0.1-215] - 2026-08-16

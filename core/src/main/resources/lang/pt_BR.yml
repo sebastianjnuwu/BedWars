@@ -198,8 +198,9 @@ game:
   respawn_subtitle: "§7Renascendo em {0} segundos..."
   respawned: "§aVocê reviveu!"
   no_bed: "Sua cama foi destruída! Aguarde o fim da partida."
-  time_limit_warning: "§cO tempo limite será atingido em {0} segundo(s)!"
-  time_limit_ending: "§cFim da partida"
+  time_limit_warning: "§eO tempo limite será atingido em {0} segundo(s)!"
+  time_limit_warning_once: "§eA partida termina em {0} segundos!"
+  time_limit_ending: "§eA partida vai acabar!"
   time_limit_winner: "§7Tempo limite atingido! O time §c{0} §7venceu por ter mais jogadores."
   time_limit_tie: "§7Tempo limite atingido! Partida empatada."
   validate_spawn: "Spawn da arena (use /bw admin arena {0} spawn)"
@@ -382,6 +383,7 @@ ui:
 # ── Mensagens de debug (console) ──
 debug:
   game_started: "Partida iniciada em {0} (jogadores: {1})"
+  time_limit_warning_sent: "Aviso de fim de partida enviado em {0} (restante: {1}s, limite: {2}s)"
   game_ended: "Partida encerrada em {0} (vencedor: {1})"
   game_force_ended: "Partida forçada a terminar em {0}"
   countdown_started: "Contagem iniciada em {0} ({1}s, jogadores: {2})"

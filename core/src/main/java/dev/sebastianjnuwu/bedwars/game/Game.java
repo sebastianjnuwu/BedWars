@@ -102,6 +102,7 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
     private int tick;
     private int countdownSeconds;
     private int timeLimitWarning;
+    private final Set<Integer> timeLimitWarningsSent = new HashSet<>();
 
     /**
      * Constrói uma nova instância de partida para a arena informada.
@@ -1248,6 +1249,11 @@ public class Game implements dev.sebastianjnuwu.bedwars.api.model.Game {
             return;
         }
         final int remaining = limitSeconds - (this.tick / 20);
+        if (remaining > 0 && (remaining == 60 || remaining == 45 || remaining == 30 || remaining == 15 || remaining == 10)
+                && this.timeLimitWarningsSent.add(remaining)) {
+            this.chat.broadcast(this.lang.text(NamedTextColor.GOLD, "game.time_limit_warning_once", remaining));
+            this.debug("debug.time_limit_warning_sent", this.arena.getName(), remaining, limitSeconds);
+        }
         if (remaining > 0 && remaining <= 5 && remaining != this.timeLimitWarning) {
             this.timeLimitWarning = remaining;
             final Title title = Title.title(
