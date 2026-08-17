@@ -75,7 +75,7 @@ public class SlimeManager {
             dest.mkdirs();
 
             // Copia os arquivos do mundo para o template
-            copyWorldFolder(world.getWorldFolder(), dest);
+            SlimeFileUtil.copyWorldFolder(plugin, world.getWorldFolder(), dest);
 
             plugin.getLogger().info(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.template_saved", name));
         });
@@ -179,7 +179,7 @@ public class SlimeManager {
                 }
 
                 // Aplica configurações da arena
-                applyArenaSettings(world, arena);
+                SlimeWorldSettings.apply(world, arena);
 
                 return world;
 
@@ -215,7 +215,7 @@ public class SlimeManager {
     public void deleteInstance(@NotNull String instanceName) {
         unloadInstance(instanceName);
         final File folder = getInstanceFolder(instanceName);
-        deleteFolder(folder);
+        SlimeFileUtil.deleteFolder(folder);
     }
 
     /**
@@ -296,113 +296,5 @@ public class SlimeManager {
      */
     public @NotNull File getTemplateFolder(@NotNull String name) {
         return new File(templatesFolder, name);
-    }
-
-    /**
-     * Aplica configurações da arena ao mundo.
-     *
-     * @param world mundo
-     * @param arena arena
-     */
-    @SuppressWarnings("deprecation")
-    private void applyArenaSettings(@NotNull World world, @NotNull Arena arena) {
-        if (arena.getDifficulty() != null) {
-            try {
-                world.setDifficulty(org.bukkit.Difficulty.valueOf(arena.getDifficulty().toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-
-        if (arena.getTime() != null) {
-            switch (arena.getTime().toUpperCase()) {
-                case "DAY" -> world.setTime(1000);
-                case "NOON" -> world.setTime(6000);
-                case "SUNSET" -> world.setTime(12000);
-                case "NIGHT" -> world.setTime(13000);
-                case "MIDNIGHT" -> world.setTime(18000);
-                default -> {
-                }
-            }
-        }
-
-        if (arena.getWeather() != null) {
-            switch (arena.getWeather().toUpperCase()) {
-                case "CLEAR" -> {
-                    world.setStorm(false);
-                    world.setThundering(false);
-                }
-                case "RAIN" -> {
-                    world.setStorm(true);
-                    world.setThundering(false);
-                }
-                case "THUNDER" -> {
-                    world.setStorm(true);
-                    world.setThundering(true);
-                }
-                default -> {
-                }
-            }
-        }
-
-        world.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, arena.isCycleDay());
-        world.setGameRule(org.bukkit.GameRule.DO_WEATHER_CYCLE, arena.isCycleWeather());
-        world.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, arena.isSpawnMobs());
-        world.setAnimalSpawnLimit(arena.isSpawnAnimals() ? -1 : 0);
-        world.setMonsterSpawnLimit(arena.isSpawnMobs() ? -1 : 0);
-    }
-
-    private void copyWorldFolder(@NotNull File source, @NotNull File target) {
-        if (!source.isDirectory()) {
-            return;
-        }
-
-        if (!target.exists() && !target.mkdirs()) {
-            plugin.getLogger().severe(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.directory_create_error", target));
-            return;
-        }
-
-        final File[] files = source.listFiles();
-        if (files == null) {
-            return;
-        }
-
-        for (final File file : files) {
-            if (isIgnoredFile(file.getName())) {
-                continue;
-            }
-
-            final File targetFile = new File(target, file.getName());
-            if (file.isDirectory()) {
-                copyWorldFolder(file, targetFile);
-            } else {
-                try {
-                    java.nio.file.Files.copy(file.toPath(), targetFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception e) {
-                    plugin.getLogger().warning(((BedWarsPlugin) this.plugin).getLang().raw("log.slime_manager.copy_error", file.getName(), e.getMessage()));
-                }
-            }
-        }
-    }
-
-    private boolean isIgnoredFile(@NotNull String name) {
-        return name.equals("uid.dat") || name.equals("session.dat") || name.equals("session.lock");
-    }
-
-    private void deleteFolder(@NotNull File path) {
-        if (!path.exists()) {
-            return;
-        }
-
-        final File[] files = path.listFiles();
-        if (files != null) {
-            for (final File file : files) {
-                if (file.isDirectory()) {
-                    deleteFolder(file);
-                } else {
-                    file.delete();
-                }
-            }
-        }
-        path.delete();
     }
 }

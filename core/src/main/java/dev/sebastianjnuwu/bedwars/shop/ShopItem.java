@@ -43,25 +43,25 @@ public class ShopItem {
     private final String pagebreak;
     private final Integer absolute;
 
-    private ShopItem(Builder builder) {
-        this.material = builder.material;
-        this.armorSet = builder.armorSet;
-        this.contents = builder.contents;
-        this.amount = builder.amount;
-        this.displayName = builder.displayName;
-        this.lore = builder.lore;
-        this.enchants = builder.enchants;
-        this.tag = builder.tag;
-        this.price = builder.price;
-        this.currency = builder.currency;
-        this.upgrade = builder.upgrade;
-        this.upgradeConfig = builder.upgradeConfig;
-        this.skip = builder.skip;
-        this.column = builder.column;
-        this.row = builder.row;
-        this.linebreak = builder.linebreak;
-        this.pagebreak = builder.pagebreak;
-        this.absolute = builder.absolute;
+    ShopItem(ShopItemBuilder builder) {
+        this.material = builder.getMaterial();
+        this.armorSet = builder.getArmorSet();
+        this.contents = builder.getContents();
+        this.amount = builder.getAmount();
+        this.displayName = builder.getDisplayName();
+        this.lore = builder.getLore();
+        this.enchants = builder.getEnchants();
+        this.tag = builder.getTag();
+        this.price = builder.getPrice();
+        this.currency = builder.getCurrency();
+        this.upgrade = builder.getUpgrade();
+        this.upgradeConfig = builder.getUpgradeConfig();
+        this.skip = builder.getSkip();
+        this.column = builder.getColumn();
+        this.row = builder.getRow();
+        this.linebreak = builder.getLinebreak();
+        this.pagebreak = builder.getPagebreak();
+        this.absolute = builder.getAbsolute();
     }
 
     /**
@@ -324,129 +324,6 @@ public class ShopItem {
                 }
             }
             stack.setItemMeta(meta);
-        }
-    }
-
-    /**
-     * Construtor fluente de {@link ShopItem}.
-     */
-    public static class Builder {
-        private Material material;
-        private List<Material> armorSet;
-        private List<ShopItem> contents;
-        private int amount = 1;
-        private String displayName;
-        private List<String> lore;
-        private Map<String, Integer> enchants;
-        private String tag;
-        private int price;
-        private CurrencyType currency;
-        private String upgrade;
-        private UpgradeConfig upgradeConfig;
-        private int skip;
-        private Integer column;
-        private Integer row;
-        private String linebreak;
-        private String pagebreak;
-        private Integer absolute;
-
-        public Builder material(Material material) {
-            this.material = material;
-            return this;
-        }
-
-        public Builder armorSet(List<Material> armorSet) {
-            this.armorSet = armorSet;
-            return this;
-        }
-
-        public Builder contents(List<ShopItem> contents) {
-            this.contents = contents;
-            return this;
-        }
-
-        public Builder amount(int amount) {
-            this.amount = amount;
-            return this;
-        }
-
-        public Builder displayName(String displayName) {
-            this.displayName = displayName;
-            return this;
-        }
-
-        public Builder lore(List<String> lore) {
-            this.lore = lore;
-            return this;
-        }
-
-        public Builder enchants(Map<String, Integer> enchants) {
-            this.enchants = enchants;
-            return this;
-        }
-
-        public Builder tag(String tag) {
-            this.tag = tag;
-            return this;
-        }
-
-        public Builder price(int price) {
-            this.price = price;
-            return this;
-        }
-
-        public Builder currency(CurrencyType currency) {
-            this.currency = currency;
-            return this;
-        }
-
-        public Builder upgrade(String upgrade) {
-            this.upgrade = upgrade;
-            return this;
-        }
-
-        public Builder upgradeConfig(UpgradeConfig upgradeConfig) {
-            this.upgradeConfig = upgradeConfig;
-            return this;
-        }
-
-        public Builder skip(int skip) {
-            this.skip = skip;
-            return this;
-        }
-
-        public Builder column(Integer column) {
-            this.column = column;
-            return this;
-        }
-
-        public Builder row(Integer row) {
-            this.row = row;
-            return this;
-        }
-
-        public Builder linebreak(String linebreak) {
-            this.linebreak = linebreak;
-            return this;
-        }
-
-        public Builder pagebreak(String pagebreak) {
-            this.pagebreak = pagebreak;
-            return this;
-        }
-
-        public Builder absolute(Integer absolute) {
-            this.absolute = absolute;
-            return this;
-        }
-
-        /**
-         * Constrói o {@link ShopItem} final.
-         *
-         * @return item construído
-         */
-        public ShopItem build() {
-            return new ShopItem(this);
         }
     }
 }

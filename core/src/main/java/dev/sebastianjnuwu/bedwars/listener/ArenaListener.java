@@ -1,9 +1,6 @@
 package dev.sebastianjnuwu.bedwars.listener;
 
-import java.util.List;
-
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Player;
@@ -15,14 +12,15 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.Nullable;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import dev.sebastianjnuwu.bedwars.api.model.Arena;
-import dev.sebastianjnuwu.bedwars.api.model.ArenaGenerator;
 import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
@@ -36,6 +34,7 @@ import dev.sebastianjnuwu.bedwars.session.EditorManager;
  * Garante que jogadores que não estão em uma partida ativa não possam interagir com o mundo
  * da arena (quebrar blocos, colocar blocos, sofrer dano, perder fome ou executar comandos).
  * Durante o modo edição ({@link EditorManager}), jogadores podem modificar livremente a arena.
+ * A restauração de marcadores quebrados (spawn, cama, gerador) fica em {@link ArenaBlockRestorer}.
  * </p>
  *
  * @see EditorManager
@@ -47,6 +46,7 @@ public class ArenaListener implements Listener {
     private final GameManager gameManager;
     private final EditorManager editorManager;
     private final LangManager lang;
+    private final ArenaBlockRestorer blockRestorer;
 
     /**
      * Constrói um novo {@code ArenaListener}.
@@ -60,54 +60,7 @@ public class ArenaListener implements Listener {
         this.gameManager = gameManager;
         this.editorManager = editorManager;
         this.lang = gameManager.getLang();
-    }
-
-    /**
-     * Verifica se um jogador deve ser protegido de interagir com o mundo da arena.
-     * <p>
-     * Um jogador <b>não</b> é protegido se:
-     * <ul>
-     *   <li>Estiver em uma partida ativa ({@link GameManager#isInGame(Player)})</li>
-     *   <li>Não estiver em um mundo de arena (nome do mundo não começa com "bw_")</li>
-     *   <li>Estiver no modo edição da arena atual</li>
-     * </ul>
-     * </p>
-     *
-     * @param player o jogador a ser verificado (não nulo)
-     * @return {@code true} se o jogador deve ser protegido, {@code false} caso contrário
-     */
-    private boolean shouldProtect(final Player player) {
-        if (this.gameManager.isInGame(player)) {
-            return false;
-        }
-        final Arena arena = this.getArena(player);
-        if (arena == null) {
-            return false;
-        }
-        if (this.editorManager.isEditing(player, arena.getName())) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Obtém a arena associada ao mundo em que o jogador se encontra.
-     * <p>
-     * O nome do mundo deve começar com o prefixo "bw_". O restante do nome é usado
-     * como identificador da arena.
-     * </p>
-     *
-     * @param player o jogador (não nulo)
-     * @return a arena correspondente ao mundo do jogador, ou {@code null} se o mundo
-     *         não for um mundo de arena ou a arena não estiver registrada
-     */
-    private @Nullable Arena getArena(final Player player) {
-        final String worldName = player.getWorld().getName();
-        if (!worldName.startsWith("bw_")) {
-            return null;
-        }
-        final String arenaName = worldName.substring(3);
-        return this.arenaManager.get(arenaName);
+        this.blockRestorer = new ArenaBlockRestorer(this.arenaManager, this.lang);
     }
 
     /**
@@ -134,108 +87,7 @@ public class ArenaListener implements Listener {
         if (!this.editorManager.isEditing(player, arena.getName())) {
             return;
         }
-
-        final Block block = event.getBlock();
-        if (this.tryRestoreArenaSpawn(arena, block, event)) {
-            return;
-        }
-        if (this.tryRestoreTeamSpawn(arena, block, event)) {
-            return;
-        }
-        if (this.tryRestoreBed(arena, block, event)) {
-            return;
-        }
-        this.tryRestoreGenerator(arena, block, event);
-    }
-
-    private boolean tryRestoreArenaSpawn(final Arena arena, final Block block, final BlockBreakEvent event) {
-        if (arena.getArenaSpawn() == null || arena.getSpawnBlockData() == null) {
-            return false;
-        }
-        final Location spawnBlock = arena.getArenaSpawn().getBlock().getRelative(0, -1, 0).getLocation();
-        if (!this.isSameBlock(spawnBlock, block.getLocation())) {
-            return false;
-        }
-        event.setCancelled(true);
-        event.setDropItems(false);
-        block.setBlockData(org.bukkit.Bukkit.createBlockData(arena.getSpawnBlockData()), false);
-        arena.setArenaSpawn(null);
-        arena.setSpawnBlockData(null);
-        this.arenaManager.save(arena);
-        block.getWorld().getPlayers().stream()
-                .filter(p -> p.getWorld().equals(block.getWorld()))
-                .forEach(p -> CompatProvider.chat().sendMessage(p, this.lang.text(NamedTextColor.YELLOW, "edit.arena_spawn_removed")));
-        return true;
-    }
-
-    private boolean tryRestoreTeamSpawn(final Arena arena, final Block block, final BlockBreakEvent event) {
-        for (final ArenaTeam team : arena.getTeams()) {
-            if (team.getSpawn() == null || team.getSpawnBlockData() == null) {
-                continue;
-            }
-            final Location markerLoc = team.getSpawn().getBlock().getRelative(0, -1, 0).getLocation();
-            if (!this.isSameBlock(markerLoc, block.getLocation())) {
-                continue;
-            }
-            event.setCancelled(true);
-            event.setDropItems(false);
-            block.setBlockData(org.bukkit.Bukkit.createBlockData(team.getSpawnBlockData()), false);
-            team.setSpawn(null);
-            team.setSpawnBlockData(null);
-            this.arenaManager.save(arena);
-            block.getWorld().getPlayers().stream()
-                    .filter(p -> p.getWorld().equals(block.getWorld()))
-                    .forEach(p -> CompatProvider.chat().sendMessage(p, this.lang.text(NamedTextColor.YELLOW, "edit.team_spawn_removed", team.getName())));
-            return true;
-        }
-        return false;
-    }
-
-    private boolean tryRestoreBed(final Arena arena, final Block block, final BlockBreakEvent event) {
-        if (!(block.getBlockData() instanceof final Bed bedData)) {
-            return false;
-        }
-
-        // Normalise to foot location regardless of which part was broken
-        final Location clickedLoc = block.getLocation();
-        final Location footLoc;
-        if (bedData.getPart() == Bed.Part.HEAD) {
-            final org.bukkit.block.BlockFace facing = bedData.getFacing();
-            footLoc = clickedLoc.clone().add(
-                    -facing.getModX(), -facing.getModY(), -facing.getModZ());
-        } else {
-            footLoc = clickedLoc;
-        }
-
-        for (final ArenaTeam team : arena.getTeams()) {
-            if (team.getBed() == null) {
-                continue;
-            }
-            if (!this.isSameBlock(team.getBed(), footLoc)) {
-                continue;
-            }
-
-            event.setCancelled(true);
-            event.setDropItems(false);
-            // Remove both bed blocks
-            footLoc.getBlock().setType(Material.AIR, false);
-            // Calculate head position from facing stored in team
-            if (team.getBedFacing() != null) {
-                try {
-                    final org.bukkit.block.BlockFace face = org.bukkit.block.BlockFace.valueOf(team.getBedFacing().toUpperCase());
-                    final Location headLoc = footLoc.clone().add(face.getModX(), face.getModY(), face.getModZ());
-                    headLoc.getBlock().setType(Material.AIR, false);
-                } catch (final IllegalArgumentException ignored) { }
-            }
-            team.setBed(null);
-            team.setBedFacing(null);
-            this.arenaManager.save(arena);
-            block.getWorld().getPlayers().stream()
-                    .filter(p -> p.getWorld().equals(block.getWorld()))
-                    .forEach(p -> CompatProvider.chat().sendMessage(p, this.lang.text(NamedTextColor.YELLOW, "edit.bed_removed", team.getName())));
-            return true;
-        }
-        return false;
+        this.blockRestorer.tryRestore(arena, event);
     }
 
     /**
@@ -258,73 +110,19 @@ public class ArenaListener implements Listener {
             return;
         }
 
-        // Se estiver em modo edição e a cama pertence a algum time da arena, cancela
         if (this.editorManager.isEditing(player, arena.getName())) {
             for (final ArenaTeam team : arena.getTeams()) {
                 if (team.getBed() == null) {
                     continue;
                 }
-                final Location footLoc = this.getBedFootLocation(block);
-                if (footLoc != null && this.isSameBlock(team.getBed(), footLoc)) {
+                final Location footLoc = this.blockRestorer.getBedFootLocation(block);
+                if (footLoc != null && this.blockRestorer.isSameBlock(team.getBed(), footLoc)) {
                     event.setCancelled(true);
                     CompatProvider.chat().sendMessage(player, this.lang.text(NamedTextColor.YELLOW, "edit.setbed_hint"));
                     return;
                 }
             }
         }
-    }
-
-    private Location getBedFootLocation(final Block bedBlock) {
-        if (!(bedBlock.getBlockData() instanceof final Bed bedData)) {
-            return null;
-        }
-        final Location clickedLoc = bedBlock.getLocation();
-        if (bedData.getPart() == Bed.Part.HEAD) {
-            final org.bukkit.block.BlockFace facing = bedData.getFacing();
-            return clickedLoc.clone().add(-facing.getModX(), -facing.getModY(), -facing.getModZ());
-        }
-        return clickedLoc;
-    }
-
-    private void tryRestoreGenerator(final Arena arena, final Block block, final BlockBreakEvent event) {
-        final List<ArenaGenerator> gens = arena.getGenerators();
-        for (int i = 0; i < gens.size(); i++) {
-            final ArenaGenerator gen = gens.get(i);
-            final Location loc = gen.getLocation();
-            if (loc == null) {
-                continue;
-            }
-            if (this.isSameBlock(loc, block.getLocation())) {
-                event.setCancelled(true);
-                event.setDropItems(false);
-                final Block markerBlock = loc.getBlock();
-                if (gen.getOriginBlockData() != null) {
-                    markerBlock.setBlockData(org.bukkit.Bukkit.createBlockData(gen.getOriginBlockData()), false);
-                } else {
-                    markerBlock.setType(Material.AIR, false);
-                }
-                arena.getGenerators().remove(i);
-                this.arenaManager.save(arena);
-                block.getWorld().getPlayers().stream()
-                        .filter(p -> p.getWorld().equals(block.getWorld()))
-                        .forEach(p -> CompatProvider.chat().sendMessage(p, this.lang.text(NamedTextColor.YELLOW, "edit.generator_removed", gen.getType())));
-                return;
-            }
-        }
-    }
-
-    /**
-     * Verifica se duas localizações referem-se ao mesmo bloco (mesmo mundo e coordenadas).
-     *
-     * @param a primeira localização (não nula)
-     * @param b segunda localização (não nula)
-     * @return {@code true} se ambas as localizações apontam para o mesmo bloco
-     */
-    private boolean isSameBlock(final Location a, final Location b) {
-        return a.getWorld().equals(b.getWorld())
-                && a.getBlockX() == b.getBlockX()
-                && a.getBlockY() == b.getBlockY()
-                && a.getBlockZ() == b.getBlockZ();
     }
 
     /**
@@ -429,7 +227,7 @@ public class ArenaListener implements Listener {
      * @param event o evento de saída (não nulo)
      */
     @EventHandler
-    public void onPlayerQuit(final org.bukkit.event.player.PlayerQuitEvent event) {
+    public void onPlayerQuit(final PlayerQuitEvent event) {
         final Player player = event.getPlayer();
         final String arenaName = this.editorManager.getPlayerArena(player);
         if (arenaName != null) {
@@ -446,7 +244,7 @@ public class ArenaListener implements Listener {
      * Cancela o jogador dormir em camas — tanto em modo edição quanto em partidas.
      */
     @EventHandler
-    public void onPlayerBedEnter(final org.bukkit.event.player.PlayerBedEnterEvent event) {
+    public void onPlayerBedEnter(final PlayerBedEnterEvent event) {
         final Player player = event.getPlayer();
         final String worldName = player.getWorld().getName();
 
@@ -469,5 +267,53 @@ public class ArenaListener implements Listener {
                 return;
             }
         }
+    }
+
+    /**
+     * Verifica se um jogador deve ser protegido de interagir com o mundo da arena.
+     * <p>
+     * Um jogador <b>não</b> é protegido se:
+     * <ul>
+     *   <li>Estiver em uma partida ativa ({@link GameManager#isInGame(Player)})</li>
+     *   <li>Não estiver em um mundo de arena (nome do mundo não começa com "bw_")</li>
+     *   <li>Estiver no modo edição da arena atual</li>
+     * </ul>
+     * </p>
+     *
+     * @param player o jogador a ser verificado (não nulo)
+     * @return {@code true} se o jogador deve ser protegido, {@code false} caso contrário
+     */
+    private boolean shouldProtect(final Player player) {
+        if (this.gameManager.isInGame(player)) {
+            return false;
+        }
+        final Arena arena = this.getArena(player);
+        if (arena == null) {
+            return false;
+        }
+        if (this.editorManager.isEditing(player, arena.getName())) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Obtém a arena associada ao mundo em que o jogador se encontra.
+     * <p>
+     * O nome do mundo deve começar com o prefixo "bw_". O restante do nome é usado
+     * como identificador da arena.
+     * </p>
+     *
+     * @param player o jogador (não nulo)
+     * @return a arena correspondente ao mundo do jogador, ou {@code null} se o mundo
+     *         não for um mundo de arena ou a arena não estiver registrada
+     */
+    private @Nullable Arena getArena(final Player player) {
+        final String worldName = player.getWorld().getName();
+        if (!worldName.startsWith("bw_")) {
+            return null;
+        }
+        final String arenaName = worldName.substring(3);
+        return this.arenaManager.get(arenaName);
     }
 }

@@ -17,44 +17,45 @@ import dev.sebastianjnuwu.bedwars.api.model.ShopNpc;
 /**
  * Representa uma arena de BedWars. Contém todas as informações de configuração
  * de uma arena, incluindo nome, lobby, spawns, times, geradores, dimensões do
- * schematic e dados de sessão de edição.
+ * schematic e dados de sessão de edição. A cópia profunda para instâncias de
+ * partida fica em {@link ArenaCopier}.
  */
 public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
 
-    private final String name;
-    private Location lobby;
-    private boolean enabled;
-    private String worldName;
-    private String mapName;
-    private int pasteX;
-    private int pasteY;
-    private int pasteZ;
-    private int schematicWidth;
-    private int schematicHeight;
-    private int schematicLength;
-    private Location arenaSpawn;
-    private String spawnBlockData;
-    private int minPlayersPerTeam;
-    private int maxPlayersPerTeam;
-    private int minTeamsToStart;
-    private int countdown;
-    private int respawnDelay;
-    private int timeLimit;
-    private String difficulty;
-    private String time;
-    private String weather;
-    private boolean cycleDay;
-    private boolean cycleWeather;
-    private boolean spawnMobs;
-    private boolean spawnAnimals;
-    private String shop;
-    private Map<String, GeneratorConfig> generatorConfigs;
-    private Map<Integer, Integer> levelTimes;
-    private List<ShopNpc> shopNpcs;
-    private List<String> enabledCommands;
-    private List<Material> spawnItems;
-    private final List<ArenaTeam> teams;
-    private final List<ArenaGenerator> generators;
+    final String name;
+    Location lobby;
+    boolean enabled;
+    String worldName;
+    String mapName;
+    int pasteX;
+    int pasteY;
+    int pasteZ;
+    int schematicWidth;
+    int schematicHeight;
+    int schematicLength;
+    Location arenaSpawn;
+    String spawnBlockData;
+    int minPlayersPerTeam;
+    int maxPlayersPerTeam;
+    int minTeamsToStart;
+    int countdown;
+    int respawnDelay;
+    int timeLimit;
+    String difficulty;
+    String time;
+    String weather;
+    boolean cycleDay;
+    boolean cycleWeather;
+    boolean spawnMobs;
+    boolean spawnAnimals;
+    String shop;
+    Map<String, GeneratorConfig> generatorConfigs;
+    Map<Integer, Integer> levelTimes;
+    List<ShopNpc> shopNpcs;
+    List<String> enabledCommands;
+    List<Material> spawnItems;
+    final List<ArenaTeam> teams;
+    final List<ArenaGenerator> generators;
 
     /**
      * Cria uma nova arena.
@@ -546,63 +547,6 @@ public class Arena implements dev.sebastianjnuwu.bedwars.api.model.Arena {
      * @return cópia independente desta arena
      */
     public Arena copy() {
-        final Arena copy = new Arena(this.name);
-        copy.lobby = this.lobby;
-        copy.enabled = this.enabled;
-        copy.worldName = this.worldName;
-        copy.mapName = this.mapName;
-        copy.pasteX = this.pasteX;
-        copy.pasteY = this.pasteY;
-        copy.pasteZ = this.pasteZ;
-        copy.schematicWidth = this.schematicWidth;
-        copy.schematicHeight = this.schematicHeight;
-        copy.schematicLength = this.schematicLength;
-        copy.arenaSpawn = this.arenaSpawn;
-        copy.spawnBlockData = this.spawnBlockData;
-        copy.minPlayersPerTeam = this.minPlayersPerTeam;
-        copy.maxPlayersPerTeam = this.maxPlayersPerTeam;
-        copy.minTeamsToStart = this.minTeamsToStart;
-        copy.countdown = this.countdown;
-        copy.respawnDelay = this.respawnDelay;
-        copy.timeLimit = this.timeLimit;
-        copy.difficulty = this.difficulty;
-        copy.time = this.time;
-        copy.weather = this.weather;
-        copy.cycleDay = this.cycleDay;
-        copy.cycleWeather = this.cycleWeather;
-        copy.spawnMobs = this.spawnMobs;
-        copy.spawnAnimals = this.spawnAnimals;
-        copy.shop = this.shop;
-        copy.generatorConfigs = this.generatorConfigs != null ? new HashMap<>(this.generatorConfigs) : new HashMap<>();
-        copy.levelTimes = this.levelTimes != null ? new HashMap<>(this.levelTimes) : null;
-        copy.shopNpcs = this.shopNpcs != null ? new ArrayList<>(this.shopNpcs) : new ArrayList<>();
-        copy.enabledCommands = this.enabledCommands != null ? new ArrayList<>(this.enabledCommands) : new ArrayList<>();
-        copy.spawnItems = this.spawnItems != null ? new ArrayList<>(this.spawnItems) : new ArrayList<>();
-        for (final ArenaGenerator gen : this.generators) {
-            final dev.sebastianjnuwu.bedwars.model.ArenaGenerator genCopy =
-                    new dev.sebastianjnuwu.bedwars.model.ArenaGenerator(gen.getUniqueId(), gen.getType(), gen.getLocation());
-            genCopy.setTeam(gen.getTeam());
-            genCopy.setOriginBlockData(gen.getOriginBlockData());
-            genCopy.setOriginBlockDataAbove(gen.getOriginBlockDataAbove());
-            copy.generators.add(genCopy);
-        }
-        for (final ArenaTeam team : this.teams) {
-            final dev.sebastianjnuwu.bedwars.model.ArenaTeam teamCopy =
-                    new dev.sebastianjnuwu.bedwars.model.ArenaTeam(team.getName(), team.getColor());
-            teamCopy.setSpawn(team.getSpawn());
-            teamCopy.setSpawnBlockData(team.getSpawnBlockData());
-            teamCopy.setBed(team.getBed());
-            teamCopy.setBedFacing(team.getBedFacing());
-            if (team.getForge() != null) {
-                for (final ArenaGenerator genCopy : copy.generators) {
-                    if (genCopy.getUniqueId().equals(team.getForge().getUniqueId())) {
-                        teamCopy.setForge(genCopy);
-                        break;
-                    }
-                }
-            }
-            copy.teams.add(teamCopy);
-        }
-        return copy;
+        return ArenaCopier.copy(this);
     }
 }

@@ -4,6 +4,17 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-220] - 2026-08-17
+
+### Refatorado
+- **`listener/ArenaListener.java` reduzido → fachada**: extraído `listener/ArenaBlockRestorer.java` com a restauração de marcadores de edição quebrados (`tryRestoreArenaSpawn`/`tryRestoreTeamSpawn`/`tryRestoreBed`/`tryRestoreGenerator`, além de `getBedFootLocation` e `isSameBlock`). O listener mantém os handlers e delega via `blockRestorer`; dependências `Location`/`Bukkit.createBlockData` movidas para o helper.
+- **`shop/ShopItem.java` reduzido**: o builder fluente interno (≈120 linhas) extraído para `shop/ShopItemBuilder.java` (classe própria no mesmo pacote, com getters package-private); `ShopItem` passou a expor construtor package-private `ShopItem(ShopItemBuilder)` e o `shop/ShopConfigParser` agora usa `ShopItemBuilder`.
+- **`arena/ArenaManager.java` (sistema Slime paralelo) reduzido → fachada**: extraído `arena/ArenaFileStore.java` com a persistência YAML das arenas (`load`/`save`, serialização de localizações, `setIfNotNull`). O manager mantém instâncias, templates, criação/reset/deleção e delega a persistência ao `fileStore`.
+- **`slime/SlimeManager.java` reduzido**: extraídos `slime/SlimeWorldSettings.java` (aplicação de dificuldade/tempo/clima/regras do mundo) e `slime/SlimeFileUtil.java` (cópia recursiva de mundos, exclusão de pastas, filtro de arquivos ignorados). Aplicação de settings em `createInstance` passou a chamar `SlimeWorldSettings.apply`.
+
+### Corrigido
+- **`arena/ArenaFileStore`**: corrigido o import inválido (`as ModelArena`) durante a extração — o conflito de nome entre `api.model.Arena` e `model.Arena` é resolvido importando o `api` e usando fully-qualified name inline no `model` (regra de name clash do AGENTS.md).
+
 ## [0.0.1-219] - 2026-08-17
 
 ### Corrigido
