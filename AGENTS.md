@@ -20,30 +20,46 @@ Você é um assistente sênior de engenharia Java que mantém o plugin **BedWars
 
 ## Estrutura do código
 
-Base: `core/src/main/java/dev/sebastianjnuwu/bedwars`:
+Base: `core/src/main/java/dev/sebastianjnuwu/bedwars`. Use o **mapa de navegação** abaixo para localizar classes sem procurar (economiza tokens — não varra a árvore inteira para achar o que já está mapeado aqui).
 
-| Pacote | Responsabilidade |
-|--------|------------------|
-| `api/` | Interfaces e eventos públicos (`ArenaManager`, `Game`, eventos em `api/events`, modelos em `api/model`) |
-| `arena/` | Lógica de arena e instâncias (sistema Slime — ver gotchas) |
-| `command/` | Sistema de comandos (`BaseCommand`/`SubCommand`; subcomandos em `command/admin/...`) |
-| `compat/` | Camada de compatibilidade multi-versão (`CompatProvider`, interfaces + impls nativas/legadas) |
-| `editor/` | Editor de arenas (`ArenaCreator`, validação) |
-| `game/` | Core do jogo, `GameState`, ciclos de ticks |
-| `lang/` | Internacionalização (`lang/pt_BR.yml`) |
-| `libs/` | Código embarcado (bStats) |
-| `listener/` | Listeners do Bukkit |
-| `manager/` | Managers singletons (`ArenaManager`, `GameManager`, `ConfigManager`) |
-| `model/` | POJOs e modelos de dados |
-| `queue/` | Filas de espera |
-| `reset/` | Descarte de instâncias (sistema Slime — ver gotchas) |
-| `session/` | Sessões de edição ativa (`EditorManager`) |
-| `shop/` | Loja e NPCs (`ShopNpcManager`) |
-| `slime/` | Wrapper SlimeWorld (sistema paralelo — ver gotchas) |
-| `template/` | Persistência de templates (sistema paralelo — ver gotchas) |
-| `ui/` | GUIs |
-| `util/` | Utilitários |
-| `world/` | Abstrações de mundo (`WorldProvider`, `SchematicWorldProvider`, `SlimeWorldProvider`, `WorldProviders`, `WorldManager`, `Schematic`, `VoidGenerator`) |
+```text
+bedwars/
+├── api/                    # API pública: interfaces + eventos (api/events/) + modelos (api/model/)
+├── arena/                  # Lógica de arena/instâncias (sistema Slime PARALELO — ver gotchas)
+├── command/                # BaseCommand/SubCommand + BWCommand; admin em command/admin/ (arena/, config/, generator/, team/, validator/)
+├── compat/                 # CompatProvider + impls multi-versão (Chat, Golem, Nbt, Potion, Registry, Teleport)
+├── editor/                 # ArenaCreator, validação
+├── game/                   # Core do jogo. Fachada Game + GameItems; helpers em subpacotes:
+│   ├── combat/   GameCombat                    # mortes, respawn, camas, eliminação, vitória
+│   ├── ending/   GameEnding, GameTimeLimit     # fim de partida + limite de tempo
+│   ├── lifecycle/ GameLifecycle, GamePlayerSnapshot, GameTeamPicker
+│   ├── ticker/   GameTicker, GameGeneratorTicker  # ciclos de ticks, countdown, geradores
+│   ├── upgrade/  GameUpgrades, GameForge       # upgrades de time e forjas
+│   └── util/     GameCodeGenerator, GameDebug, GameQueries  # código, log, consultas
+├── hook/                   # NPCs da loja: CitizensHook, FancyNpcsHook, NpcHook
+├── lang/                   # LangManager + lang/pt_BR.yml
+├── libs/                   # Código embarcado (bStats)
+├── listener/               # Listeners Bukkit (Arena, Game, UI, NPCs da loja)
+├── manager/                # Managers singletons. Raiz: ConfigManager, DataManager, PlayerStateManager
+│   ├── arena/   ArenaManager, ArenaPersistence, ArenaWorldService, ArenaYamlMapper,
+│   │            ArenaLocationCodec, ArenaCommandParser, MapFileResolver,
+│   │            ArenaBedRestorer, ArenaMarkerBlocks, ArenaWorldReferenceUpdater
+│   └── game/    GameManager, GameJoinQueue, GameLookup, GameValidator
+├── model/                  # POJOs e modelos de dados
+├── queue/                  # Filas de espera (QueueManager)
+├── reset/                  # Descarte de instâncias (sistema Slime PARALELO — ver gotchas)
+├── session/                # EditorManager, sessões de edição ativa
+├── shop/                   # Loja e NPCs. Fachada ShopManager, ShopNpcManager, ShopListener, NpcListener, CitizensNpcListener
+│   ├── gui/     ShopGui, ShopGuiRenderer, ShopSlotGrid, ShopPurchase, ShopArmorLogic
+│   ├── model/   ShopItem, ShopItemBuilder, ShopCategory
+│   └── parser/  ShopConfigParser, ShopUpgradeParser
+├── slime/                  # Wrapper SlimeWorld (sistema PARALELO — ver gotchas)
+├── template/               # Persistência de templates (sistema PARALELO — ver gotchas)
+├── ui/                     # GUIs (TeamSelectionGui, etc.)
+├── util/                   # Utilitários (LocationUtil)
+└── world/                  # WorldProvider, WorldProviders, SchematicWorldProvider, SlimeWorldProvider,
+                            # WorldManager, Schematic, VoidGenerator
+```
 
 ## Comandos
 
@@ -60,9 +76,9 @@ mvn clean package                  # gera o JAR final
 
 ## Arquitetura — pontos críticos
 
-- **Sistema de mundos ATIVO (runtime):** `manager/ArenaManager` delega a construção/remoção dos mundos ao backend ativo via interface `world/WorldProvider`, selecionado **automaticamente** por `world/WorldProviders` (`WorldProviders.init` no `onEnable`): `SlimeWorldProvider` quando `SlimeManager.isAvailable()`, senão `SchematicWorldProvider` (o backend padrão de produção). **Nenhuma** chave de config controla a escolha.
+- **Sistema de mundos ATIVO (runtime):** `manager/arena/ArenaManager` delega a construção/remoção dos mundos ao backend ativo via interface `world/WorldProvider`, selecionado **automaticamente** por `world/WorldProviders` (`WorldProviders.init` no `onEnable`): `SlimeWorldProvider` quando `SlimeManager.isAvailable()`, senão `SchematicWorldProvider` (o backend padrão de produção). **Nenhuma** chave de config controla a escolha.
   - `SchematicWorldProvider`: mundos de partida `bw_<nome>` criados com `WorldCreator` + `VoidGenerator`, recriados do schematic FAWE (`.schem`/`.bwmap`) a cada reset via `Schematic.paste`.
-  - `manager/ArenaManager`: `resetArenaMap(name)` (chamado por `Game.forceEnd()`/`endGame()`) faz `WorldProvider.deleteWorld` → novo mundo void → `Schematic.paste` → `flush`. Retorna `boolean`; em falha loga `log.arena_manager.reset_error`.
+  - `manager/arena/ArenaManager`: `resetArenaMap(name)` (chamado por `Game.forceEnd()`/`endGame()`) faz `WorldProvider.deleteWorld` → novo mundo void → `Schematic.paste` → `flush`. Retorna `boolean`; em falha loga `log.arena_manager.reset_error`.
 - **Sistema Slime paralelo (NÃO ativo):** `arena/ArenaManager`, `reset/ResetManager`, `template/*`, `world/SimpleWorldManager` formam uma implementação paralela que **não está conectada** no `BedWarsPlugin.onEnable()`. O `SlimeWorldProvider`/`SlimeManager` só é usado quando o servidor realmente tem ASP disponível; ele constrói os mundos de partida a partir do schematic da arena (mundo Slime vazio + paste), então não depende de templates vanilla — não trate como sistema de produção garantido; mudanças devem priorizar o sistema Schematic acima.
 - **`Game` usa a `Arena` do cache** (referências de mundo atualizadas em memória via `updateWorldReferences` e persistidas por `flush`).
 - Regras do `ARCHITECTURE.md`: zero WorldEdit em runtime, operações de mundo assíncronas (`teleportAsync`) quando possível, templates read-only, partidas sempre em cópias/instâncias, descarregamento seguro no fim de partida.
@@ -137,7 +153,8 @@ private int cooldownFor(final GameState state) {
 
 1. Antes de iniciar qualquer tarefa, crie/consulte a **task list** do contexto (ferramenta de tarefas da IA) com o plano de trabalho e mantenha o progresso atualizado em tempo real.
 2. Entenda o fluxo afetado (leia `README.md`/`ARCHITECTURE.md`/`CHANGELOG.md` e o código vizinho) antes de editar.
-3. Faça mudanças pequenas e idiomáticas ao padrão existente.
-4. Valide com `mvn -o clean compile -DskipTests` (checkstyle incluso).
-5. Atualize o `CHANGELOG.md` com a mudança (ver Convenção de commits).
-6. Ao finalizar, ofereça o commit seguindo a convenção (nunca commitar por conta própria).
+3. **[ECONOMIA DE TOKENS]** Localize as classes pelo **mapa de navegação** acima; leia apenas os arquivos relevantes ao fluxo alterado (método/chamador) — **não** leia o arquivo inteiro quando basta a seção afetada.
+4. Faça mudanças pequenas e idiomáticas ao padrão existente.
+5. Valide com `mvn -o clean compile -DskipTests` (checkstyle incluso).
+6. Atualize o `CHANGELOG.md` com a mudança (ver Convenção de commits).
+7. Ao finalizar, ofereça o commit seguindo a convenção (nunca commitar por conta própria).

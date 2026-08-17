@@ -5,7 +5,7 @@
 Este documento define a arquitetura técnica oficial do sistema de mapas do plugin BedWars.
 O objetivo é garantir um sistema escalável, isolado e performático, evitando a carga desnecessária de WorldEdit/Schematics durante o tempo de execução (runtime) de partidas.
 
-> ⚠️ **Sistemas de mundos — IMPORTANTE.** O sistema **ativo** em runtime é o baseado em **schematic**: `manager/ArenaManager` delega ao backend ativo via interface `world/WorldProvider`, selecionado **automaticamente** por `world/WorldProviders` (`init` no `onEnable`): `SlimeWorldProvider` quando `SlimeManager.isAvailable()`, senão `SchematicWorldProvider` (backend de produção). As arenas são persistidas em `arenas/<nome>.yml`, os mapas como schematics FAWE em `maps/`, e os mundos de partida `bw_<nome>` são recriados via unload/delete verificado + `VoidGenerator` + paste do schematic a cada reset (`ArenaManager.resetArenaMap`). O sistema **Slime/ASP descrito nos diagramas abaixo é uma implementação paralela e NÃO ativa** (`arena/ArenaManager`, `reset/ResetManager`, `slime/*`, `template/*`, `world/SimpleWorldManager`) — não está conectado no `BedWarsPlugin.onEnable()`. Alterações devem priorizar o sistema Schematic; o Slime não deve ser tratado como produção.
+> ⚠️ **Sistemas de mundos — IMPORTANTE.** O sistema **ativo** em runtime é o baseado em **schematic**: `manager/arena/ArenaManager` delega ao backend ativo via interface `world/WorldProvider`, selecionado **automaticamente** por `world/WorldProviders` (`init` no `onEnable`): `SlimeWorldProvider` quando `SlimeManager.isAvailable()`, senão `SchematicWorldProvider` (backend de produção). As arenas são persistidas em `arenas/<nome>.yml`, os mapas como schematics FAWE em `maps/`, e os mundos de partida `bw_<nome>` são recriados via unload/delete verificado + `VoidGenerator` + paste do schematic a cada reset (`ArenaManager.resetArenaMap`). O sistema **Slime/ASP descrito nos diagramas abaixo é uma implementação paralela e NÃO ativa** (`arena/ArenaManager`, `reset/ResetManager`, `slime/*`, `template/*`, `world/SimpleWorldManager`) — não está conectado no `BedWarsPlugin.onEnable()`. Alterações devem priorizar o sistema Schematic; o Slime não deve ser tratado como produção.
 
 ## Pilares Tecnológicos
 
@@ -52,7 +52,7 @@ end
 
 subgraph ARENA_SYSTEM["🎮 Sistema de Arena"]
 
-    SchematicStorage --> ArenaManager["manager/ArenaManager"]
+    SchematicStorage --> ArenaManager["manager/arena/ArenaManager"]
 
     ArenaManager --> ArenaCache["Cache de Arenas\narenas/<nome>.yml"]
 
@@ -161,30 +161,34 @@ end
 
 ## Estrutura de Código (Package Map)
 
-A organização segue padrões de alta coesão e baixo acoplamento:
+A organização segue padrões de alta coesão e baixo acoplamento. O mapa de navegação completo (por classe) está no `AGENTS.md` — aqui apenas a visão por pacote:
 
 ```text
 dev.sebastianjnuwu.bedwars
-├── api/            # Interfaces e Eventos públicos para extensões
-├── arena/          # Lógica de Arena e estados de instância
-├── command/        # Sistema de comandos (BaseCommand, SubCommand)
-├── editor/         # Lógica específica do editor de arenas
-├── game/           # Core do jogo e estados de partida
-├── hook/           # Integrações com backends de NPC (FancyNpcs, Citizens)
+├── api/            # Interfaces e Eventos públicos para extensões (api/events, api/model)
+├── arena/          # Lógica de Arena e instâncias (sistema Slime PARALELO, não ativo)
+├── command/        # Sistema de comandos (BaseCommand/SubCommand; admin em command/admin)
+├── compat/         # CompatProvider + impls multi-versão (Chat, Golem, Nbt, Potion, Registry, Teleport)
+├── editor/         # Lógica específica do editor de arenas (ArenaCreator)
+├── game/           # Core do jogo. Fachada Game + GameItems; helpers em combat/, ending/, lifecycle/,
+│                   # ticker/, upgrade/, util/
+├── hook/           # Integrações com backends de NPC (FancyNpcs, Citizens) — NpcHook
 ├── lang/           # Internacionalização (lang/pt_BR.yml) via LangManager
 ├── libs/           # Código embarcado (bStats)
-├── listener/       # Eventos do Bukkit (Arena, Game, UI)
-├── manager/        # Managers singleton (ArenaManager, GameManager, etc.)
+├── listener/       # Eventos do Bukkit (Arena, Game, UI, NPCs da loja)
+├── manager/        # Managers singleton: raiz (ConfigManager, DataManager, PlayerStateManager) +
+│                   # subpacotes arena/ (persistência/mundo de arena) e game/ (GameManager, filas, validação)
 ├── model/          # POJOs e modelos de dados
-├── queue/          # Gerenciamento de filas de espera
-├── reset/          # Lógica de descarte de instâncias após partida
-├── session/        # Sessões de edição ativa
-├── shop/           # Loja (ShopManager, ShopCategory, ShopItem, ShopGui) e NPCs
+├── queue/          # Gerenciamento de filas de espera (QueueManager)
+├── reset/          # Lógica de descarte de instâncias (sistema Slime PARALELO, não ativo)
+├── session/        # Sessões de edição ativa (EditorManager)
+├── shop/           # Loja: raiz (ShopManager, ShopNpcManager, listeners) + gui/, model/, parser/
 ├── slime/          # Wrapper para SlimeWorld e carregamento de templates (NÃO ativo)
 ├── template/       # Gerenciamento de persistência de templates (NÃO ativo)
 ├── ui/             # Interfaces de usuário (GUIs)
 ├── util/           # Utilitários (LocationUtil)
-└── world/          # Abstrações de Mundo (WorldProvider, SchematicWorldProvider, SlimeWorldProvider, WorldProviders, WorldManager, Schematic, VoidGenerator)
+└── world/          # Abstrações de Mundo (WorldProvider, WorldProviders, SchematicWorldProvider,
+                    # SlimeWorldProvider, WorldManager, Schematic, VoidGenerator)
 ```
 
 ---
@@ -196,7 +200,7 @@ dev.sebastianjnuwu.bedwars
 Utiliza `ArenaCreator` para gerar mundos `VOID` sem física.
 O `ArenaEditorValidator` garante que a arena possua todos os requisitos (spawns, camas, geradores) antes de permitir o `save`.
 
-### 2. Sistema de Mundos (`world/`, `manager/`)
+### 2. Sistema de Mundos (`world/`, `manager/arena/`)
 
 Sistema **ativo** baseado em schematic (backend de produção):
 
@@ -204,14 +208,14 @@ Sistema **ativo** baseado em schematic (backend de produção):
 - `world/WorldProviders`: ponto único — `init(plugin, lang)` no `onEnable` escolhe o backend **automaticamente** por `SlimeManager.isAvailable()` (Slime se disponível, senão Schematic); `world()` expõe o singleton. **Sem** chave de config.
 - `world/SchematicWorldProvider`: cria mundos void (`bw_<nome>` via `WorldCreator` + `VoidGenerator`), cola o schematic FAWE (`.schem`/`.bwmap`) e finaliza (limpeza de entidades, spawn e settings). `buildWorldAsync` cola fora da main e conclui na main.
 - `world/Schematic`: captura e aplica schematics FAWE — usado apenas no load/save/restore, nunca em runtime.
-- `manager/ArenaManager`: `resetArenaMap(name)` delega ao provider o ciclo de reset — `WorldProvider.deleteWorld` → novo mundo void → `Schematic.paste` → `flush`. Retorna `boolean`; em falha loga `log.arena_manager.reset_error`.
+- `manager/arena/ArenaManager`: `resetArenaMap(name)` delega ao provider o ciclo de reset — `WorldProvider.deleteWorld` → novo mundo void → `Schematic.paste` → `flush`. Retorna `boolean`; em falha loga `log.arena_manager.reset_error`.
 - `world/SlimeWorldProvider`: estende o `SchematicWorldProvider` e cria os mundos de partida como mundos Slime vazios via ASP, colando o schematic da arena (não depende de templates vanilla). Usado apenas quando o servidor tem ASP disponível.
 
 Implementações paralelas **NÃO ativas**: `world/SimpleWorldManager`, `slime/SlimeWorldManager`, `slime/SlimeManager` (ver aviso no início).
 
-### 3. Gerenciamento de Partidas (`game/`, `arena/`)
+### 3. Gerenciamento de Partidas (`game/`, `manager/game/`, `arena/`)
 
-O `GameManager` coordena a transição entre `GameState` (READY -> STARTING -> PLAYING -> ENDING -> RESETTING).
+O `GameManager` (em `manager/game/`) coordena a transição entre `GameState` (READY -> STARTING -> PLAYING -> ENDING -> RESETTING).
 O sistema **ativo** descarta o mundo da partida ao fim: `Game.forceEnd()`/`endGame()` chama `ArenaManager.resetArenaMap(name)`, que delega ao provider (`WorldProvider.deleteWorld`) → novo mundo void (`WorldCreator` + `VoidGenerator`) → `Schematic.paste` → `flush`. Isso garante integridade total para a próxima partida. O `ResetManager` (sistema Slime, não ativo) não é usado em produção.
 
 ### 4. NPCs da Loja (`hook/`, `shop/`)
@@ -220,7 +224,7 @@ Os NPCs das lojas usam o contrato `NpcHook` (`hook/NpcHook`) com duas implementa
 
 ### 5. Tempo limite de partida
 
-`time-limit` (segundos, `0` = sem limite) é um campo por arena, lido em `manager/ArenaManager` no load. Durante `GameState.PLAYING`, `Game.handleTimeLimit` emite avisos aos 60s/30s/10..1s restantes (`game.time_limit_warning`) e, ao estourar, `forceTimeLimitEnd` decide o vencedor na ordem: mais jogadores vivos → cama intacta → mais abates → empate (`endGame`/`forceEnd` + `game.time_limit_*`).
+`time-limit` (segundos, `0` = sem limite) é um campo por arena, lido em `manager/arena/ArenaManager` no load. Durante `GameState.PLAYING`, `GameTimeLimit` (`game/ending/`) emite avisos aos 60s/30s/10..1s restantes (`game.time_limit_warning`) e, ao estourar, decide o vencedor na ordem: mais jogadores vivos → cama intacta → mais abates → empate (`endGame`/`forceEnd` + `game.time_limit_*`).
 
 ---
 

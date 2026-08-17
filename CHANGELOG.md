@@ -4,6 +4,12 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-223] - 2026-08-17
+
+### Documentação
+- **`AGENTS.md`**: seção "Estrutura do código" substituída por um **mapa de navegação** em árvore (pacotes + subpacotes + classes por linha) refletindo a reorganização da v222 (`game/{combat,ending,lifecycle,ticker,upgrade,util}`, `shop/{gui,model,parser}`, `manager/{arena,game}`), economizando tokens ao localizar classes sem varrer a árvore. Novas regras: "ECONOMIA DE TOKENS" no Workflow (localizar via mapa e ler apenas a seção afetada, não o arquivo inteiro) e referências de caminho atualizadas (`manager/ArenaManager` → `manager/arena/ArenaManager`).
+- **`ARCHITECTURE.md`**: "Estrutura de Código (Package Map)" atualizada com a visão por pacote e o mapa completo delegado ao `AGENTS.md`; referências de caminho corrigidas nas seções 2 (`world/`, `manager/arena/`), 3 (`game/`, `manager/game/`), 5 (`GameTimeLimit` em `game/ending/`), no aviso do topo e no diagrama Mermaid.
+
 ## [0.0.1-222] - 2026-08-17
 
 ### Refatorado
