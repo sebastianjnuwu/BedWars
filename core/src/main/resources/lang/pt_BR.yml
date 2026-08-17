@@ -199,6 +199,7 @@ game:
   respawned: "§aVocê reviveu!"
   no_bed: "Sua cama foi destruída! Aguarde o fim da partida."
   time_limit_warning: "§cO tempo limite será atingido em {0} segundo(s)!"
+  time_limit_ending: "§cFim da partida"
   time_limit_winner: "§7Tempo limite atingido! O time §c{0} §7venceu por ter mais jogadores."
   time_limit_tie: "§7Tempo limite atingido! Partida empatada."
   validate_spawn: "Spawn da arena (use /bw admin arena {0} spawn)"

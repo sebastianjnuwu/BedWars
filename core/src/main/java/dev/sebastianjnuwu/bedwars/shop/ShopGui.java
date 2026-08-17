@@ -464,7 +464,7 @@ public class ShopGui implements InventoryHolder {
         if ("forge".equals(item.getUpgrade())) {
             final ForgeLevel next = forgeUpgradeLevel();
             if (next == null || next.upgradeMaterial() == null) {
-                stack.setType(Material.RED_STAINED_GLASS_PANE);
+                stack = new ItemStack(Material.RED_STAINED_GLASS_PANE, stack.getAmount());
                 meta = stack.getItemMeta();
                 lore.add(MM.deserialize(this.lang.raw("shop.forge_maxed")));
             } else {
@@ -474,7 +474,7 @@ public class ShopGui implements InventoryHolder {
         } else if (item.getUpgrade() != null) {
             final ForgeLevel next = teamUpgradeLevel(item.getUpgrade());
             if (next == null || next.upgradeMaterial() == null) {
-                stack.setType(Material.RED_STAINED_GLASS_PANE);
+                stack = new ItemStack(Material.RED_STAINED_GLASS_PANE, stack.getAmount());
                 meta = stack.getItemMeta();
                 lore.add(MM.deserialize(this.lang.raw("shop.upgrade_maxed", upgradeName(item.getUpgrade()))));
             } else {
