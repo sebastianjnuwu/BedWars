@@ -4,6 +4,18 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-224] - 2026-08-17
+
+### Adicionado
+- **Integração com PlaceholderAPI**: novo `hook/PlaceholderApiHook.java` estendendo `PlaceholderExpansion` (identificador `bedwars`, `persist()`), registrado no `onEnable` do `BedWarsPlugin` somente quando o plugin está presente (softdepend). Dependência `me.clip:placeholderapi:2.11.6` (scope `provided`) adicionada no `core/pom.xml` com o repositório ExtendedClip no POM raiz; `plugin.yml` ganhou `PlaceholderAPI` na lista de softdepend.
+- **Placeholders globais**: `%bedwars_all_players%` (jogadores + espectadores em todas as partidas), `%bedwars_playing%`, `%bedwars_waiting%` (partidas em WAITING/STARTING), `%bedwars_spectators%`, `%bedwars_games%`, `%bedwars_games_playing%`, `%bedwars_games_waiting%` e `%bedwars_arena_<nome>%` (todos os jogadores nas instâncias de uma arena).
+- **Placeholders do jogador**: `%bedwars_in_game%` (1/0), `%bedwars_state%`, `%bedwars_team%`, `%bedwars_code%` e `%bedwars_arena%` — resolvidos pela partida do jogador solicitante (via UUID).
+- **`manager/game/GameManager.java`**: novos métodos públicos `getActiveGames()` (view de `games`) e overloads `getPlayerGame(UUID)`/`isInGame(UUID)` sobre `playerGames`, usados pelo hook.
+- **`lang/pt_BR.yml`**: chaves `startup.placeholderapi_hook` e `startup.placeholderapi_unavailable`.
+
+### Documentação
+- **`README.md`**: nova seção "16. Placeholders (PlaceholderAPI)" com tabela completa dos placeholders `%bedwars_*%`; PlaceholderAPI incluído em "Requisitos" e na lista de instalação; tabela "Modos e times" ganhou a coluna "Mapa com 6 camas"; seção "Comandos" reescrita em duas tabelas (Jogador `bw.player` e Administrador `bw.admin`), incluindo o comando `/spawn`.
+
 ## [0.0.1-223] - 2026-08-17
 
 ### Documentação

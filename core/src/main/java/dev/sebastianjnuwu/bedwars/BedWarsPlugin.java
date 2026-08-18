@@ -17,6 +17,7 @@ import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.command.BWCommand;
 import dev.sebastianjnuwu.bedwars.command.SpawnCommand;
 import dev.sebastianjnuwu.bedwars.compat.CompatProvider;
+import dev.sebastianjnuwu.bedwars.hook.PlaceholderApiHook;
 import dev.sebastianjnuwu.bedwars.lang.LangManager;
 import dev.sebastianjnuwu.bedwars.libs.bstats.Metrics;
 import dev.sebastianjnuwu.bedwars.listener.ArenaListener;
@@ -108,6 +109,13 @@ public class BedWarsPlugin extends JavaPlugin implements BedWarsAPI {
             this.getLogger().info(this.lang.raw("startup.npcs_hook_citizens"));
         } else {
             this.getLogger().info(this.lang.raw("startup.npcs_unavailable"));
+        }
+
+        if (this.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new PlaceholderApiHook(this, this.gameManager).register();
+            this.getLogger().info(this.lang.raw("startup.placeholderapi_hook"));
+        } else {
+            this.getLogger().info(this.lang.raw("startup.placeholderapi_unavailable"));
         }
 
         final BWCommand bwCommand = new BWCommand(

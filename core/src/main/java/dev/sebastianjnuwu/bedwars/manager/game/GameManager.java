@@ -1,6 +1,7 @@
 package dev.sebastianjnuwu.bedwars.manager.game;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,14 +93,26 @@ public class GameManager implements dev.sebastianjnuwu.bedwars.api.GameManager {
         return this.games.get(worldName);
     }
 
+    public Collection<Game> getActiveGames() {
+        return this.games.values();
+    }
+
     @Override
     public @Nullable dev.sebastianjnuwu.bedwars.api.model.Game getPlayerGame(final Player player) {
         return this.playerGames.get(player.getUniqueId());
     }
 
+    public @Nullable Game getPlayerGame(final UUID playerId) {
+        return this.playerGames.get(playerId);
+    }
+
     @Override
     public boolean isInGame(final Player player) {
         return this.playerGames.containsKey(player.getUniqueId());
+    }
+
+    public boolean isInGame(final UUID playerId) {
+        return this.playerGames.containsKey(playerId);
     }
 
     @Override

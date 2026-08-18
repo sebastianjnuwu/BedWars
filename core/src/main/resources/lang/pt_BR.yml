@@ -358,6 +358,8 @@ startup:
   npcs_hook_fancynpcs: "Hook de NPCs ativo para FancyNPCs!"
   npcs_hook_citizens: "Hook de NPCs ativo para Citizens!"
   npcs_unavailable: "Nenhum plugin de NPC (FancyNpcs/Citizens) encontrado - interação com NPC da loja desativada."
+  placeholderapi_hook: "Hook de placeholders ativo para PlaceholderAPI!"
+  placeholderapi_unavailable: "PlaceholderAPI não encontrado - placeholders desativados."
   world_backend_schematic: "Gerenciamento de mundos: Schematic/FAWE."
   world_backend_slime: "Gerenciamento de mundos: AdvancedSlimePaper (Slime)."
 

@@ -23,7 +23,7 @@
         </developer>
     </developers>
     <properties>
-        <revision>0.0.1-223</revision>
+        <revision>0.0.1-224</revision>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -47,6 +47,11 @@
             <id>fancyinnovations-releases</id>
             <name>FancyInnovations Repository</name>
             <url>https://repo.fancyinnovations.com/releases</url>
+        </repository>
+        <repository>
+            <id>extendedclip</id>
+            <name>ExtendedClip Repository</name>
+            <url>https://repo.extendedclip.com/releases/</url>
         </repository>
     </repositories>
 </project>

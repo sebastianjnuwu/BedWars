@@ -29,6 +29,7 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 - FastAsyncWorldEdit **v2.15+**
 - AdvancedSlimePaper **v4.0+**
 - FancyNPCs **v2.9+** ou Citizens **v2.0+** (opcional, para NPCs da loja)
+- PlaceholderAPI **v2.11+** (opcional, para os placeholders `%bedwars_*%`)
 
 ## Tutorial — Como utilizar o plugin?
 
@@ -41,6 +42,7 @@ Antes de usar o BedWars, você precisa preparar um servidor Paper 1.21.4 com os 
   - FastAsyncWorldEdit **v2.15+**
   - AdvancedSlimePaper **v4.0+**
   - FancyNPCs **v2.9+** ou Citizens **v2.0+** (um dos dois, para NPCs da loja)
+  - PlaceholderAPI **v2.11+** (opcional, para os placeholders `%bedwars_*%`)
 
 Depois, coloque o arquivo do BedWars gerado em `core/target/sBedWars-v${revision}.jar` na pasta `plugins/` do servidor.
 
@@ -263,12 +265,12 @@ Isso permite, por exemplo, rodar **partidas solo, dupla e quarteto** do mesmo ma
 
 O modo define **quantos jogadores cabem por time**; o número de times/camas é fixo do mapa:
 
-| Modo | Jogadores por time | Mapa com 4 camas |
-|------|--------------------|------------------|
-| `solo` | 1 | até 4 jogadores (1v1 x4) |
-| `dupla` | 2 | até 8 (2v2 x4) |
-| `trio` | 3 | **bloqueado** (4 não é divisível por 3) |
-| `quarteto` | 4 | até 16 (4v4 x4) |
+| Modo | Jogadores por time | Mapa com 4 camas | Mapa com 6 camas |
+|------|--------------------|------------------|------------------|
+| `solo` | 1 | até 4 (1v1 x4) | até 6 (1v1 x6) |
+| `dupla` | 2 | até 8 (2v2 x4) | até 12 (2v2 x6) |
+| `trio` | 3 | **bloqueado** (4 não é divisível por 3) | até 18 (3v3 x6) |
+| `quarteto` | 4 | até 16 (4v4 x4) | **bloqueado** (6 não é divisível por 4) |
 
 Regras importantes:
 
@@ -346,36 +348,67 @@ Para gerenciar:
 ```
 
 > Internamente cada NPC é identificado como `bw-shop-<arena>-<id>` e marcado pelo plugin — ao interagir, a loja da arena é aberta. O `displayName` configurado é o nome visível do NPC.
+
+### 16. Placeholders (PlaceholderAPI)
+
+Com o **PlaceholderAPI** instalado, o plugin registra automaticamente a expansão `bedwars` (softdepend). Use os placeholders em qualquer plugin que suporte PlaceholderAPI — scoreboards, tablist, nametags, hologramas, chat, etc.
+
+| Placeholder | Descrição |
+|-------------|-----------|
+| `%bedwars_all_players%` | Jogadores + espectadores em todas as partidas ativas |
+| `%bedwars_playing%` | Jogadores em partidas em andamento (`PLAYING`) |
+| `%bedwars_waiting%` | Jogadores em salas de espera (`WAITING`/`STARTING`) |
+| `%bedwars_spectators%` | Espectadores em todas as partidas ativas |
+| `%bedwars_games%` | Número de partidas ativas |
+| `%bedwars_games_playing%` | Partidas em andamento (`PLAYING`) |
+| `%bedwars_games_waiting%` | Partidas em espera (`WAITING`/`STARTING`) |
+| `%bedwars_arena_<nome>%` | Jogadores + espectadores em todas as instâncias da arena `<nome>` |
+| `%bedwars_in_game%` | `1` se o jogador está numa partida, `0` caso contrário |
+| `%bedwars_state%` | Estado da partida do jogador (`waiting`, `starting`, `playing`, `ending`) ou `none` |
+| `%bedwars_team%` | Nome do time do jogador na partida (vazio se fora) |
+| `%bedwars_code%` | Código público da partida do jogador (vazio se fora) |
+| `%bedwars_arena%` | Nome da arena da partida do jogador (vazio se fora) |
+
+> Exemplo: `Agora: %bedwars_playing% jogadores em partida e %bedwars_waiting% na sala de espera!`
+
 ### Comandos
 
-| Comando | Descrição | Permissão |
-|---------|-----------|-----------|
-| `/bw admin create <nome>` | Cria uma nova arena | `bw.admin` |
-| `/bw admin delete <nome>` | Deleta uma arena | `bw.admin` |
-| `/bw admin list` | Lista todas as arenas registradas | `bw.admin` |
-| `/bw admin save <nome>` | Salva o schematic da arena | `bw.admin` |
-| `/bw admin load <nome>` | Carrega o schematic em um mundo void | `bw.admin` |
-| `/bw admin edit <nome>` | Entra no modo de edição da arena | `bw.admin` |
-| `/bw admin discard <nome>` | Sai do modo de edição sem salvar as alterações | `bw.admin` |
-| `/bw admin setlobby` | Define o lobby principal | `bw.admin` |
-| `/bw admin reload` | Recarrega arquivos de configuração | `bw.admin` |
-| `/bw admin arena <arena> spawn` | Define o spawn de espera | `bw.admin` |
-| `/bw admin arena <arena> status` | Exibe o status da arena | `bw.admin` |
-| `/bw admin arena <arena> setcountdown <seg>` | Define contagem regressiva | `bw.admin` |
-| `/bw admin arena <arena> setmap <mapa\|default>` | Aponta a arena para um schematic compartilhado | `bw.admin` |
-| `/bw admin arena <arena> addteam <cor>` | Adiciona um time | `bw.admin` |
-| `/bw admin arena <arena> removeteam <cor>` | Remove um time | `bw.admin` |
-| `/bw admin arena <arena> setspawn <cor>` | Define o spawn do time | `bw.admin` |
-| `/bw admin arena <arena> setbed <cor>` | Define a cama do time | `bw.admin` |
-| `/bw admin arena <arena> teams` | Lista os times | `bw.admin` |
-| `/bw admin arena <arena> addgenerator <tipo>` | Adiciona um gerador | `bw.admin` |
-| `/bw admin arena <arena> shop-npc add [skin] [displayName]` | Adiciona NPC da loja | `bw.admin` |
-| `/bw admin arena <arena> shop-npc displayName <id> <nome>` | Define o nome de exibição de um NPC | `bw.admin` |
-| `/bw admin arena <arena> shop-npc list` | Lista NPCs da loja | `bw.admin` |
-| `/bw admin arena <arena> shop-npc remove <id>` | Remove NPC da loja | `bw.admin` |
-| `/bw join <arena> [time]` | Entra em uma partida | `bw.player` |
-| `/bw leave` | Sai da partida atual | `bw.player` |
-| `/bw start <arena>` | Inicia a partida manualmente | `bw.player` |
+**Jogador** (`bw.player`):
+
+| Comando | Descrição |
+|---------|-----------|
+| `/bw join <arena> [time/modo]` | Entra em uma partida da arena (time específico ou modo `solo`/`dupla`/`trio`/`quarteto`) |
+| `/bw start <arena>` | Inicia a partida manualmente |
+| `/bw leave` | Sai da partida atual |
+| `/spawn` (ou `/lobby`) | Volta para o lobby principal |
+
+**Administrador** (`bw.admin`):
+
+| Comando | Descrição |
+|---------|-----------|
+| `/bw admin create <nome>` | Cria uma nova arena |
+| `/bw admin delete <nome>` | Deleta uma arena |
+| `/bw admin list` | Lista todas as arenas registradas |
+| `/bw admin save <nome>` | Salva o schematic da arena |
+| `/bw admin load <nome>` | Carrega o schematic em um mundo void |
+| `/bw admin edit <nome>` | Entra no modo de edição da arena |
+| `/bw admin discard <nome>` | Sai do modo de edição sem salvar as alterações |
+| `/bw admin setlobby` | Define o lobby principal |
+| `/bw admin reload` | Recarrega os arquivos de configuração |
+| `/bw admin arena <arena> spawn` | Define o spawn de espera |
+| `/bw admin arena <arena> status` | Exibe o status da arena (times e modos válidos) |
+| `/bw admin arena <arena> setcountdown <seg>` | Define a contagem regressiva |
+| `/bw admin arena <arena> setmap <mapa\|default>` | Aponta a arena para um schematic compartilhado |
+| `/bw admin arena <arena> addteam <cor>` | Adiciona um time |
+| `/bw admin arena <arena> removeteam <cor>` | Remove um time |
+| `/bw admin arena <arena> setspawn <cor>` | Define o spawn do time |
+| `/bw admin arena <arena> setbed <cor>` | Define a cama do time |
+| `/bw admin arena <arena> teams` | Lista os times |
+| `/bw admin arena <arena> addgenerator <tipo>` | Adiciona um gerador |
+| `/bw admin arena <arena> shop-npc add [skin] [displayName]` | Adiciona NPC da loja |
+| `/bw admin arena <arena> shop-npc displayName <id> <nome>` | Define o nome de exibição de um NPC |
+| `/bw admin arena <arena> shop-npc list` | Lista NPCs da loja |
+| `/bw admin arena <arena> shop-npc remove <id>` | Remove NPC da loja |
 
 ## 🚀 Compilação
 
