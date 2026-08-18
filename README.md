@@ -353,23 +353,41 @@ Para gerenciar:
 
 Com o **PlaceholderAPI** instalado, o plugin registra automaticamente a expansão `bedwars` (softdepend). Use os placeholders em qualquer plugin que suporte PlaceholderAPI — scoreboards, tablist, nametags, hologramas, chat, etc.
 
+**Servidor (globais):**
+
 | Placeholder | Descrição |
 |-------------|-----------|
-| `%bedwars_all_players%` | Jogadores + espectadores em todas as partidas ativas |
-| `%bedwars_playing%` | Jogadores em partidas em andamento (`PLAYING`) |
-| `%bedwars_waiting%` | Jogadores em salas de espera (`WAITING`/`STARTING`) |
+| `%bedwars_players%` | Jogadores + espectadores em todas as partidas ativas |
+| `%bedwars_players_playing%` | Jogadores em partidas em andamento (`PLAYING`) |
+| `%bedwars_players_waiting%` | Jogadores em salas de espera (`WAITING`/`STARTING`) |
 | `%bedwars_spectators%` | Espectadores em todas as partidas ativas |
 | `%bedwars_games%` | Número de partidas ativas |
 | `%bedwars_games_playing%` | Partidas em andamento (`PLAYING`) |
 | `%bedwars_games_waiting%` | Partidas em espera (`WAITING`/`STARTING`) |
 | `%bedwars_arena_<nome>%` | Jogadores + espectadores em todas as instâncias da arena `<nome>` |
-| `%bedwars_in_game%` | `1` se o jogador está numa partida, `0` caso contrário |
-| `%bedwars_state%` | Estado da partida do jogador (`waiting`, `starting`, `playing`, `ending`) ou `none` |
-| `%bedwars_team%` | Nome do time do jogador na partida (vazio se fora) |
-| `%bedwars_code%` | Código público da partida do jogador (vazio se fora) |
-| `%bedwars_arena%` | Nome da arena da partida do jogador (vazio se fora) |
 
-> Exemplo: `Agora: %bedwars_playing% jogadores em partida e %bedwars_waiting% na sala de espera!`
+**Por jogador (resolvem para quem vê o scoreboard):**
+
+| Placeholder | Descrição |
+|-------------|-----------|
+| `%bedwars_in_game%` | `1` se está numa partida, `0` caso contrário |
+| `%bedwars_state%` | Estado da partida (`waiting`, `starting`, `playing`, `ending`) ou `none` |
+| `%bedwars_mode%` | Modo da partida (`solo`, `dupla`, `trio`, `quarteto` ou `livre`) |
+| `%bedwars_map%` | Nome da arena (mapa) da partida |
+| `%bedwars_team%` | Nome do time |
+| `%bedwars_team_color%` | Cor do time |
+| `%bedwars_team_players%` | Jogadores no time |
+| `%bedwars_team_eliminated%` | `1` se o time foi eliminado, `0` caso contrário |
+| `%bedwars_bed%` | `1` se a cama do time está intacta, `0` se quebrada |
+| `%bedwars_alive%` | `1` se vivo, `0` se morto/eliminado |
+| `%bedwars_kills%` | Abates na partida atual |
+| `%bedwars_deaths%` | Mortes na partida atual |
+| `%bedwars_code%` | Código público da partida |
+| `%bedwars_spectating%` | `1` se é espectador, `0` caso contrário |
+
+> Os placeholders por jogador devolvem **vazio** (`""`) quando o jogador não está em nenhuma partida (exceto `in_game`, `state` e `spectating`).
+
+> Exemplo: `Agora: %bedwars_players_playing% jogadores em partida e %bedwars_players_waiting% na sala de espera!`
 
 ### Comandos
 

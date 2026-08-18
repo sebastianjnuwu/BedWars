@@ -4,6 +4,17 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-225] - 2026-08-17
+
+### Refatorado
+- **Nomenclatura dos placeholders remodelada** (estilo Hypixel/MUSH) em `hook/PlaceholderApiHook.java`:
+  - Globais agora distinguem **jogadores** de **partidas**: `all_players` → `players`, `playing` → `players_playing`, `waiting` → `players_waiting`, eliminando a ambiguidade com `games_playing`/`games_waiting`.
+  - `arena` (do jogador) → `map`, removendo a confusão com `arena_<nome>` (contagem de jogadores por arena).
+- **`README.md`**: seção "16. Placeholders" reescrita com o novo esquema (tabelas separadas "Servidor" e "Por jogador") e nota sobre vazio quando o jogador está fora de partida.
+
+### Adicionado
+- Novos placeholders por jogador em `hook/PlaceholderApiHook.java`: `mode` (`solo`/`dupla`/`trio`/`quarteto`/`livre`), `team_color`, `team_players`, `team_eliminated`, `bed` (cama do time intacta), `alive`, `kills`, `deaths` e `spectating` — resolvidos via `GamePlayer` (kills/deaths/alive) e campos públicos de `Game` (`teams`, `eliminatedTeams`, `bedlessTeams`, `spectators`, `mode`).
+
 ## [0.0.1-224] - 2026-08-17
 
 ### Adicionado

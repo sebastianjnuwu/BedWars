@@ -3,11 +3,14 @@ package dev.sebastianjnuwu.bedwars.hook;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
+import dev.sebastianjnuwu.bedwars.api.model.ArenaMode;
+import dev.sebastianjnuwu.bedwars.api.model.ArenaTeam;
 import dev.sebastianjnuwu.bedwars.api.model.GamePlayer;
 import dev.sebastianjnuwu.bedwars.api.model.GameState;
 import dev.sebastianjnuwu.bedwars.game.Game;
@@ -50,9 +53,9 @@ public class PlaceholderApiHook extends PlaceholderExpansion {
     @Override
     public List<String> getPlaceholders() {
         return List.of(
-                "all_players",
-                "playing",
-                "waiting",
+                "players",
+                "players_playing",
+                "players_waiting",
                 "spectators",
                 "games",
                 "games_playing",
@@ -60,9 +63,18 @@ public class PlaceholderApiHook extends PlaceholderExpansion {
                 "arena_<nome>",
                 "in_game",
                 "state",
+                "mode",
+                "map",
                 "team",
+                "team_color",
+                "team_players",
+                "team_eliminated",
+                "bed",
+                "alive",
+                "kills",
+                "deaths",
                 "code",
-                "arena"
+                "spectating"
         );
     }
 
@@ -74,9 +86,9 @@ public class PlaceholderApiHook extends PlaceholderExpansion {
         final String id = params.toLowerCase(Locale.ROOT);
         final Collection<Game> games = this.gameManager.getActiveGames();
         return switch (id) {
-            case "all_players" -> String.valueOf(this.totalPlayers(games));
-            case "playing" -> String.valueOf(this.playersInState(games, GameState.PLAYING));
-            case "waiting" -> String.valueOf(this.playersInLobby(games));
+            case "players" -> String.valueOf(this.totalPlayers(games));
+            case "players_playing" -> String.valueOf(this.playersInState(games, GameState.PLAYING));
+            case "players_waiting" -> String.valueOf(this.playersInLobby(games));
             case "spectators" -> String.valueOf(this.totalSpectators(games));
             case "games" -> String.valueOf(games.size());
             case "games_playing" -> String.valueOf(this.countInState(games, GameState.PLAYING));
@@ -97,22 +109,60 @@ public class PlaceholderApiHook extends PlaceholderExpansion {
             return null;
         }
         final Game game = this.gameManager.getPlayerGame(player.getUniqueId());
+        if (game == null) {
+            return switch (id) {
+                case "in_game", "spectating" -> "0";
+                case "state" -> "none";
+                case "map", "mode", "code", "team", "team_color", "team_players",
+                        "team_eliminated", "bed", "alive", "kills", "deaths" -> "";
+                default -> null;
+            };
+        }
         return switch (id) {
-            case "in_game" -> String.valueOf(game != null ? 1 : 0);
-            case "state" -> game != null ? game.getState().name().toLowerCase(Locale.ROOT) : "none";
-            case "team" -> this.teamName(game, player);
-            case "code" -> game != null ? game.getCode() : "";
-            case "arena" -> game != null ? game.getArena().getName() : "";
+            case "in_game" -> "1";
+            case "state" -> game.getState().name().toLowerCase(Locale.ROOT);
+            case "map" -> game.getArena().getName();
+            case "mode" -> this.modeName(game);
+            case "code" -> game.getCode();
+            case "spectating" -> String.valueOf(game.spectators.contains(player.getUniqueId()) ? 1 : 0);
+            default -> this.playerStats(game, player.getUniqueId(), id);
+        };
+    }
+
+    private @Nullable String playerStats(final Game game, final UUID playerId, final String id) {
+        final GamePlayer gp = game.players.get(playerId);
+        if (gp == null) {
+            return switch (id) {
+                case "team", "team_color", "team_players", "team_eliminated",
+                        "bed", "alive", "kills", "deaths" -> "";
+                default -> null;
+            };
+        }
+        final ArenaTeam team = gp.getTeam();
+        return switch (id) {
+            case "team" -> team.getName();
+            case "team_color" -> team.getColor();
+            case "team_players" -> String.valueOf(game.teams.get(team).size());
+            case "team_eliminated" -> String.valueOf(game.eliminatedTeams.contains(team) ? 1 : 0);
+            case "bed" -> String.valueOf(!game.bedlessTeams.contains(team) ? 1 : 0);
+            case "alive" -> String.valueOf(gp.isAlive() ? 1 : 0);
+            case "kills" -> String.valueOf(gp.getKills());
+            case "deaths" -> String.valueOf(gp.getDeaths());
             default -> null;
         };
     }
 
-    private String teamName(final Game game, final OfflinePlayer player) {
-        if (game == null) {
-            return "";
+    private String modeName(final Game game) {
+        final ArenaMode mode = game.mode;
+        if (mode == null) {
+            return "livre";
         }
-        final GamePlayer gp = game.players.get(player.getUniqueId());
-        return gp != null ? gp.getTeam().getName() : "";
+        return switch (mode) {
+            case SOLO -> "solo";
+            case DOUBLES -> "dupla";
+            case THREES -> "trio";
+            case FOURS -> "quarteto";
+        };
     }
 
     private int totalPlayers(final Collection<Game> games) {
