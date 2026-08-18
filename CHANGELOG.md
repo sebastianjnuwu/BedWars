@@ -4,6 +4,22 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-226] - 2026-08-17
+
+### Refatorado
+- **Expansão de placeholders reescrita** em `hook/PlaceholderApiHook.java` + novo `hook/PlaceholderData.java` (resolução de dados), com identificador **`sbedwars`** (`%sbedwars_*%`) no estilo ScreamingBedWars/BedWars1058:
+  - **Servidor**: `players`, `spectators`, `total_players`, `games`, `games_playing`, `games_waiting`, `games_ending`, `max_players` (soma das capacidades), `any_playing`, `any_waiting` (booleanos `true`/`false`).
+  - **Partida do jogador**: `in_game`, `arena`, `state`, `game_players`, `min_players` (times mínimos × jogadores mínimos), `game_max_players` (capacidade via `maxTeamSlots`), `time`/`time_formatted`/`elapsed`/`elapsed_formatted` (via `game.tick` + `arena.getTimeLimit()`; `-1`/`∞` sem limite), `world`, `teams`, `teams_playing`.
+  - **Time do jogador**: `team`, `team_color`, `team_colored` (mapeia a cor para §), `team_players`, `team_max_players`, `team_bed`, `team_bed_symbol` (🛏).
+  - **Qualquer time da partida**: `team_<time>_name/color/colored/players/max_players/alive/bed/bed_symbol` (parse por sufixo de propriedade, tolerante a underscore no nome).
+  - **Arena específica**: `arena_<arena>_name/players/spectators/total/min_players/max_players/state/world/time/time_formatted`.
+  - Conflitos resolvidos: `game_players` e `game_max_players` para a partida do jogador (servidor mantém `players`/`max_players`).
+- **`README.md`**: seção "16. Placeholders" reescrita com o novo esquema em 5 tabelas.
+- **`lang/pt_BR.yml`**: `startup.placeholderapi_unavailable` referencia `%sbedwars_*%`.
+
+### Não implementado (exige sistemas novos)
+- `team_chests` (não existe sistema de baús de time), `stats_*`/`player_<jogador>_*`/`top_<pos>_*` (não existe stats persistente — `StatType` só tem `KILLS`/`DEATHS` e o `DataManager` só persiste arenas).
+
 ## [0.0.1-225] - 2026-08-17
 
 ### Refatorado

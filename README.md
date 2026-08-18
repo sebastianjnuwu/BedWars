@@ -351,43 +351,82 @@ Para gerenciar:
 
 ### 16. Placeholders (PlaceholderAPI)
 
-Com o **PlaceholderAPI** instalado, o plugin registra automaticamente a expansão `bedwars` (softdepend). Use os placeholders em qualquer plugin que suporte PlaceholderAPI — scoreboards, tablist, nametags, hologramas, chat, etc.
+Com o **PlaceholderAPI** instalado, o plugin registra automaticamente a expansão `sbedwars` (softdepend). Use os placeholders em qualquer plugin que suporte PlaceholderAPI — scoreboards, tablist, nametags, hologramas, chat, etc.
 
 **Servidor (globais):**
 
-| Placeholder | Descrição |
-|-------------|-----------|
-| `%bedwars_players%` | Jogadores + espectadores em todas as partidas ativas |
-| `%bedwars_players_playing%` | Jogadores em partidas em andamento (`PLAYING`) |
-| `%bedwars_players_waiting%` | Jogadores em salas de espera (`WAITING`/`STARTING`) |
-| `%bedwars_spectators%` | Espectadores em todas as partidas ativas |
-| `%bedwars_games%` | Número de partidas ativas |
-| `%bedwars_games_playing%` | Partidas em andamento (`PLAYING`) |
-| `%bedwars_games_waiting%` | Partidas em espera (`WAITING`/`STARTING`) |
-| `%bedwars_arena_<nome>%` | Jogadores + espectadores em todas as instâncias da arena `<nome>` |
+| Placeholder | Retorno |
+|-------------|---------|
+| `%sbedwars_players%` | Jogadores em todas as partidas ativas |
+| `%sbedwars_spectators%` | Espectadores em todas as partidas ativas |
+| `%sbedwars_total_players%` | Jogadores + espectadores |
+| `%sbedwars_games%` | Total de partidas ativas |
+| `%sbedwars_games_playing%` | Partidas em andamento |
+| `%sbedwars_games_waiting%` | Partidas em espera (`WAITING`/`STARTING`) |
+| `%sbedwars_games_ending%` | Partidas encerrando |
+| `%sbedwars_max_players%` | Capacidade total das partidas |
+| `%sbedwars_any_playing%` | `true`/`false` — existe partida em andamento |
+| `%sbedwars_any_waiting%` | `true`/`false` — existe partida em espera |
 
-**Por jogador (resolvem para quem vê o scoreboard):**
+**Partida atual do jogador** (resolvem para quem vê o scoreboard; vazio se o jogador não estiver em partida):
 
-| Placeholder | Descrição |
-|-------------|-----------|
-| `%bedwars_in_game%` | `1` se está numa partida, `0` caso contrário |
-| `%bedwars_state%` | Estado da partida (`waiting`, `starting`, `playing`, `ending`) ou `none` |
-| `%bedwars_mode%` | Modo da partida (`solo`, `dupla`, `trio`, `quarteto` ou `livre`) |
-| `%bedwars_map%` | Nome da arena (mapa) da partida |
-| `%bedwars_team%` | Nome do time |
-| `%bedwars_team_color%` | Cor do time |
-| `%bedwars_team_players%` | Jogadores no time |
-| `%bedwars_team_eliminated%` | `1` se o time foi eliminado, `0` caso contrário |
-| `%bedwars_bed%` | `1` se a cama do time está intacta, `0` se quebrada |
-| `%bedwars_alive%` | `1` se vivo, `0` se morto/eliminado |
-| `%bedwars_kills%` | Abates na partida atual |
-| `%bedwars_deaths%` | Mortes na partida atual |
-| `%bedwars_code%` | Código público da partida |
-| `%bedwars_spectating%` | `1` se é espectador, `0` caso contrário |
+| Placeholder | Retorno |
+|-------------|---------|
+| `%sbedwars_in_game%` | `true`/`false` |
+| `%sbedwars_arena%` | Nome da arena |
+| `%sbedwars_state%` | Estado (`waiting`, `starting`, `playing`, `ending`) ou `none` |
+| `%sbedwars_game_players%` | Jogadores na partida |
+| `%sbedwars_min_players%` | Mínimo de jogadores para começar |
+| `%sbedwars_game_max_players%` | Capacidade da partida |
+| `%sbedwars_time%` | Tempo restante em segundos (`-1` sem limite) |
+| `%sbedwars_time_formatted%` | Tempo restante em `MM:SS` (`∞` sem limite) |
+| `%sbedwars_elapsed%` | Tempo decorrido em segundos |
+| `%sbedwars_elapsed_formatted%` | Tempo decorrido em `MM:SS` |
+| `%sbedwars_world%` | Mundo da partida |
+| `%sbedwars_teams%` | Quantidade de times |
+| `%sbedwars_teams_playing%` | Times ainda vivos |
 
-> Os placeholders por jogador devolvem **vazio** (`""`) quando o jogador não está em nenhuma partida (exceto `in_game`, `state` e `spectating`).
+**Time do jogador** (vazio se o jogador não estiver em partida):
 
-> Exemplo: `Agora: %bedwars_players_playing% jogadores em partida e %bedwars_players_waiting% na sala de espera!`
+| Placeholder | Retorno |
+|-------------|---------|
+| `%sbedwars_team%` | Nome do time |
+| `%sbedwars_team_color%` | Cor do time (`BLUE`, `RED`...) |
+| `%sbedwars_team_colored%` | Nome do time já colorido |
+| `%sbedwars_team_players%` | Jogadores no time |
+| `%sbedwars_team_max_players%` | Limite de jogadores do time |
+| `%sbedwars_team_bed%` | `true`/`false` — cama intacta |
+| `%sbedwars_team_bed_symbol%` | 🛏 se a cama está intacta, vazio se quebrada |
+
+**Qualquer time da partida** (consulta pelo nome do time, exemplo: `team_azul_players`):
+
+| Placeholder | Retorno |
+|-------------|---------|
+| `%sbedwars_team_<time>_name%` | Nome do time |
+| `%sbedwars_team_<time>_color%` | Cor do time |
+| `%sbedwars_team_<time>_colored%` | Nome colorido |
+| `%sbedwars_team_<time>_players%` | Jogadores do time |
+| `%sbedwars_team_<time>_max_players%` | Limite de jogadores do time |
+| `%sbedwars_team_<time>_alive%` | `true`/`false` — time não eliminado |
+| `%sbedwars_team_<time>_bed%` | `true`/`false` — cama intacta |
+| `%sbedwars_team_<time>_bed_symbol%` | 🛏 se a cama está intacta, vazio se quebrada |
+
+**Arena específica** (útil para lobby, hologramas e NPCs):
+
+| Placeholder | Retorno |
+|-------------|---------|
+| `%sbedwars_arena_<arena>_name%` | Nome da arena |
+| `%sbedwars_arena_<arena>_players%` | Jogadores nas instâncias |
+| `%sbedwars_arena_<arena>_spectators%` | Espectadores nas instâncias |
+| `%sbedwars_arena_<arena>_total%` | Jogadores + espectadores |
+| `%sbedwars_arena_<arena>_min_players%` | Mínimo de jogadores para começar |
+| `%sbedwars_arena_<arena>_max_players%` | Capacidade de uma partida |
+| `%sbedwars_arena_<arena>_state%` | Estado da primeira instância ou `none` |
+| `%sbedwars_arena_<arena>_world%` | Mundo da primeira instância |
+| `%sbedwars_arena_<arena>_time%` | Tempo restante da primeira instância (`-1` sem limite) |
+| `%sbedwars_arena_<arena>_time_formatted%` | Tempo em `MM:SS` (`∞` sem limite) |
+
+> Exemplo: `Jogando agora: %sbedwars_players% jogadores | %sbedwars_games_waiting% partidas na espera`
 
 ### Comandos
 
