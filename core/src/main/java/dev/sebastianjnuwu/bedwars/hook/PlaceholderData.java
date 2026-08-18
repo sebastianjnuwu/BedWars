@@ -25,6 +25,10 @@ final class PlaceholderData {
     private static final String[] TEAM_PROPS = {
             "max_players", "bed_symbol", "colored", "players", "alive", "color", "name", "bed"
     };
+    private static final String[] MODE_PROPS = {
+            "games_waiting", "games_playing", "max_players",
+            "players", "spectators", "total", "games"
+    };
 
     private final GameManager gameManager;
 
@@ -45,6 +49,30 @@ final class PlaceholderData {
             case "max_players" -> String.valueOf(this.serverCapacity(games));
             case "any_playing" -> String.valueOf(this.anyInState(games, GameState.PLAYING));
             case "any_waiting" -> String.valueOf(this.anyInLobby(games));
+            default -> id.startsWith("mode_") ? this.mode(games, id.substring("mode_".length())) : null;
+        };
+    }
+
+    @Nullable
+    private String mode(final Collection<Game> games, final String rest) {
+        final String prop = this.matchProp(rest, MODE_PROPS);
+        if (prop == null) {
+            return null;
+        }
+        final String modeKey = rest.substring(0, rest.length() - prop.length() - 1);
+        final boolean libre = modeKey.equals("livre");
+        final ArenaMode mode = libre ? null : ArenaMode.fromAlias(modeKey);
+        if (!libre && mode == null) {
+            return null;
+        }
+        return switch (prop) {
+            case "players" -> String.valueOf(this.modePlayers(games, mode, libre));
+            case "spectators" -> String.valueOf(this.modeSpectators(games, mode, libre));
+            case "total" -> String.valueOf(this.modePlayers(games, mode, libre) + this.modeSpectators(games, mode, libre));
+            case "games" -> String.valueOf(this.modeGames(games, mode, libre));
+            case "games_playing" -> String.valueOf(this.modeGamesInState(games, mode, libre, GameState.PLAYING));
+            case "games_waiting" -> String.valueOf(this.modeGamesInLobby(games, mode, libre));
+            case "max_players" -> String.valueOf(this.modeCapacity(games, mode, libre));
             default -> null;
         };
     }
@@ -243,6 +271,70 @@ final class PlaceholderData {
     private String nullableWorld(final Arena arena) {
         final String name = arena.getWorldName();
         return name != null ? name : "";
+    }
+
+    private boolean matchesMode(final Game game, final ArenaMode mode, final boolean libre) {
+        return libre ? game.mode == null : game.mode == mode;
+    }
+
+    private int modePlayers(final Collection<Game> games, final ArenaMode mode, final boolean libre) {
+        int total = 0;
+        for (final Game game : games) {
+            if (this.matchesMode(game, mode, libre)) {
+                total += game.players.size();
+            }
+        }
+        return total;
+    }
+
+    private int modeSpectators(final Collection<Game> games, final ArenaMode mode, final boolean libre) {
+        int total = 0;
+        for (final Game game : games) {
+            if (this.matchesMode(game, mode, libre)) {
+                total += game.spectators.size();
+            }
+        }
+        return total;
+    }
+
+    private int modeGames(final Collection<Game> games, final ArenaMode mode, final boolean libre) {
+        int total = 0;
+        for (final Game game : games) {
+            if (this.matchesMode(game, mode, libre)) {
+                total++;
+            }
+        }
+        return total;
+    }
+
+    private int modeGamesInState(final Collection<Game> games, final ArenaMode mode, final boolean libre, final GameState state) {
+        int total = 0;
+        for (final Game game : games) {
+            if (this.matchesMode(game, mode, libre) && game.getState() == state) {
+                total++;
+            }
+        }
+        return total;
+    }
+
+    private int modeGamesInLobby(final Collection<Game> games, final ArenaMode mode, final boolean libre) {
+        int total = 0;
+        for (final Game game : games) {
+            if (this.matchesMode(game, mode, libre) && this.isLobby(game)) {
+                total++;
+            }
+        }
+        return total;
+    }
+
+    private int modeCapacity(final Collection<Game> games, final ArenaMode mode, final boolean libre) {
+        int total = 0;
+        for (final Game game : games) {
+            if (this.matchesMode(game, mode, libre)) {
+                total += this.capacity(game);
+            }
+        }
+        return total;
     }
 
     private int serverPlayers(final Collection<Game> games) {

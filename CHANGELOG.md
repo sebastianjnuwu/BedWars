@@ -4,6 +4,12 @@ Todas as mudanças notáveis do plugin **BedWars** (Paper 1.21.4, Java 21) são 
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões pares de "bump" (apenas atualização do número no `pom.xml`) são omitidas.
 
+## [0.0.1-227] - 2026-08-17
+
+### Adicionado
+- **Placeholders por modo** em `hook/PlaceholderData.java` + `hook/PlaceholderApiHook.java`: `mode_<modo>_players`, `mode_<modo>_spectators`, `mode_<modo>_total`, `mode_<modo>_games`, `mode_<modo>_games_playing`, `mode_<modo>_games_waiting` e `mode_<modo>_max_players`, filtrando as partidas ativas pelo `Game.mode` (modos `solo`/`dupla`/`trio`/`quarteto` via `ArenaMode.fromAlias`; `livre` para partidas sem modo). Contadores reutilizam `capacity`/`isLobby`.
+- **`README.md`**: seção "16. Placeholders" ganhou 7 linhas `mode_<modo>_*` na tabela de servidor.
+
 ## [0.0.1-226] - 2026-08-17
 
 ### Refatorado

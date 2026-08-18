@@ -367,6 +367,13 @@ Com o **PlaceholderAPI** instalado, o plugin registra automaticamente a expansã
 | `%sbedwars_max_players%` | Capacidade total das partidas |
 | `%sbedwars_any_playing%` | `true`/`false` — existe partida em andamento |
 | `%sbedwars_any_waiting%` | `true`/`false` — existe partida em espera |
+| `%sbedwars_mode_<modo>_players%` | Jogadores nas partidas do modo (`solo`, `dupla`, `trio`, `quarteto`, `livre`) |
+| `%sbedwars_mode_<modo>_spectators%` | Espectadores nas partidas do modo |
+| `%sbedwars_mode_<modo>_total%` | Jogadores + espectadores do modo |
+| `%sbedwars_mode_<modo>_games%` | Total de partidas do modo |
+| `%sbedwars_mode_<modo>_games_playing%` | Partidas do modo em andamento |
+| `%sbedwars_mode_<modo>_games_waiting%` | Partidas do modo em espera |
+| `%sbedwars_mode_<modo>_max_players%` | Capacidade total das partidas do modo |
 
 **Partida atual do jogador** (resolvem para quem vê o scoreboard; vazio se o jogador não estiver em partida):
 
