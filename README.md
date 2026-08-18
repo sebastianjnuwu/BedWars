@@ -29,7 +29,7 @@ Qualidade e segurança do código analisadas pelo [Codacy](https://www.codacy.co
 - FastAsyncWorldEdit **v2.15+**
 - AdvancedSlimePaper **v4.0+**
 - FancyNPCs **v2.9+** ou Citizens **v2.0+** (opcional, para NPCs da loja)
-- PlaceholderAPI **v2.11+** (opcional, para os placeholders `%bedwars_*%`)
+- PlaceholderAPI **v2.11+** (opcional, para os placeholders `%sbedwars_*%`)
 
 ## Tutorial — Como utilizar o plugin?
 
@@ -42,7 +42,7 @@ Antes de usar o BedWars, você precisa preparar um servidor Paper 1.21.4 com os 
   - FastAsyncWorldEdit **v2.15+**
   - AdvancedSlimePaper **v4.0+**
   - FancyNPCs **v2.9+** ou Citizens **v2.0+** (um dos dois, para NPCs da loja)
-  - PlaceholderAPI **v2.11+** (opcional, para os placeholders `%bedwars_*%`)
+  - PlaceholderAPI **v2.11+** (opcional, para os placeholders `%sbedwars_*%`)
 
 Depois, coloque o arquivo do BedWars gerado em `core/target/sBedWars-v${revision}.jar` na pasta `plugins/` do servidor.
 

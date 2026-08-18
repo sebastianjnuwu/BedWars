@@ -36,7 +36,8 @@ bedwars/
 │   ├── ticker/   GameTicker, GameGeneratorTicker  # ciclos de ticks, countdown, geradores
 │   ├── upgrade/  GameUpgrades, GameForge       # upgrades de time e forjas
 │   └── util/     GameCodeGenerator, GameDebug, GameQueries  # código, log, consultas
-├── hook/                   # NPCs da loja: CitizensHook, FancyNpcsHook, NpcHook
+├── hook/                   # Integrações: NPCs (NpcHook, FancyNpcsHook, CitizensHook) +
+│                           # PlaceholderAPI (PlaceholderApiHook, PlaceholderData, %sbedwars_*)
 ├── lang/                   # LangManager + lang/pt_BR.yml
 ├── libs/                   # Código embarcado (bStats)
 ├── listener/               # Listeners Bukkit (Arena, Game, UI, NPCs da loja)

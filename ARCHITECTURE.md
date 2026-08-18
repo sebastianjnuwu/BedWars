@@ -1,4 +1,4 @@
-# BedWars Architecture — AdvancedSlimePaper World System
+# BedWars Architecture — Schematic FAWE World System
 
 ## Visão Geral
 
@@ -110,8 +110,6 @@ subgraph RUNTIME["⚔️ Runtime da Partida"]
 
     Events --> Shop["Loja\n(NpcHook: FancyNpcs/Citizens)"]
 
-    Events --> Score["Scoreboard"]
-
     Events --> TimeLimit["Tempo Limite\ngame.time_limit_*"]
 
 end
@@ -172,7 +170,8 @@ dev.sebastianjnuwu.bedwars
 ├── editor/         # Lógica específica do editor de arenas (ArenaCreator)
 ├── game/           # Core do jogo. Fachada Game + GameItems; helpers em combat/, ending/, lifecycle/,
 │                   # ticker/, upgrade/, util/
-├── hook/           # Integrações com backends de NPC (FancyNpcs, Citizens) — NpcHook
+├── hook/           # Integrações externas: NPCs (NpcHook, FancyNpcsHook, CitizensHook) e
+│                   # PlaceholderAPI (PlaceholderApiHook + PlaceholderData, prefixo %sbedwars_*)
 ├── lang/           # Internacionalização (lang/pt_BR.yml) via LangManager
 ├── libs/           # Código embarcado (bStats)
 ├── listener/       # Eventos do Bukkit (Arena, Game, UI, NPCs da loja)
@@ -215,7 +214,7 @@ Implementações paralelas **NÃO ativas**: `world/SimpleWorldManager`, `slime/S
 
 ### 3. Gerenciamento de Partidas (`game/`, `manager/game/`, `arena/`)
 
-O `GameManager` (em `manager/game/`) coordena a transição entre `GameState` (READY -> STARTING -> PLAYING -> ENDING -> RESETTING).
+O `GameManager` (em `manager/game/`) coordena a transição entre `GameState` (WAITING -> STARTING -> PLAYING -> ENDING), enum ativo em `api/model/GameState`. (READY/RESETTING são estados do `arena/ArenaState` do sistema Slime paralelo, não ativo.)
 O sistema **ativo** descarta o mundo da partida ao fim: `Game.forceEnd()`/`endGame()` chama `ArenaManager.resetArenaMap(name)`, que delega ao provider (`WorldProvider.deleteWorld`) → novo mundo void (`WorldCreator` + `VoidGenerator`) → `Schematic.paste` → `flush`. Isso garante integridade total para a próxima partida. O `ResetManager` (sistema Slime, não ativo) não é usado em produção.
 
 ### 4. NPCs da Loja (`hook/`, `shop/`)
